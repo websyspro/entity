@@ -1,0 +1,56 @@
+{
+    "_readme": [
+        "This file locks the dependencies of your project to a known state",
+        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
+        "This file is @generated automatically"
+    ],
+    "content-hash": "1c8266a0bd4ccc023c1245fe6c9e25e5",
+    "packages": [
+        {
+            "name": "websyspro/common-api",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/websyspro/common-api.git",
+                "reference": "44e65fa71dce80f1aab3ce449b9211da50ac9a6b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/websyspro/common-api/zipball/44e65fa71dce80f1aab3ce449b9211da50ac9a6b",
+                "reference": "44e65fa71dce80f1aab3ce449b9211da50ac9a6b",
+                "shasum": ""
+            },
+            "default-branch": true,
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Websyspro\\CommonApi\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "authors": [
+                {
+                    "name": "websyspro",
+                    "email": "cpd.emersontsa@gmail.com"
+                }
+            ],
+            "description": "Feature Set",
+            "support": {
+                "issues": "https://github.com/websyspro/common-api/issues",
+                "source": "https://github.com/websyspro/common-api/tree/main"
+            },
+            "time": "2024-08-28T23:03:27+00:00"
+        }
+    ],
+    "packages-dev": [],
+    "aliases": [],
+    "minimum-stability": "stable",
+    "stability-flags": {
+        "websyspro/common-api": 20
+    },
+    "prefer-stable": false,
+    "prefer-lowest": false,
+    "platform": [],
+    "platform-dev": [],
+    "plugin-api-version": "2.6.0"
+}

@@ -7,4 +7,5 @@ $baseDir = dirname($vendorDir);
 
 return array(
     'Websyspro\\EntityApi\\' => array($baseDir . '/src'),
+    'Websyspro\\CommonApi\\' => array($vendorDir . '/websyspro/common-api/src'),
 );

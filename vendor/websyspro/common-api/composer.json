@@ -1,0 +1,17 @@
+{
+    "name": "websyspro/common-api",
+    "description": "Feature Set",
+    "type": "library",
+    "autoload": {
+        "psr-4": {
+            "Websyspro\\CommonApi\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "websyspro",
+            "email": "cpd.emersontsa@gmail.com"
+        }
+    ],
+    "require": {}
+}

@@ -4,24 +4,19 @@
 
 namespace Composer\Autoload;
 
-class ComposerStaticInit3a197aa58acc64b2b6e6cd700517414b
+class ComposerStaticInit768c844d8264c0c9d6ea4f71cd060e9d
 {
     public static $prefixLengthsPsr4 = array (
         'W' => 
         array (
-            'Websyspro\\EntityApi\\' => 20,
             'Websyspro\\CommonApi\\' => 20,
         ),
     );
 
     public static $prefixDirsPsr4 = array (
-        'Websyspro\\EntityApi\\' => 
-        array (
-            0 => __DIR__ . '/../..' . '/src',
-        ),
         'Websyspro\\CommonApi\\' => 
         array (
-            0 => __DIR__ . '/..' . '/websyspro/common-api/src',
+            0 => __DIR__ . '/../..' . '/src',
         ),
     );
 
@@ -32,9 +27,9 @@ class ComposerStaticInit3a197aa58acc64b2b6e6cd700517414b
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->prefixLengthsPsr4 = ComposerStaticInit3a197aa58acc64b2b6e6cd700517414b::$prefixLengthsPsr4;
-            $loader->prefixDirsPsr4 = ComposerStaticInit3a197aa58acc64b2b6e6cd700517414b::$prefixDirsPsr4;
-            $loader->classMap = ComposerStaticInit3a197aa58acc64b2b6e6cd700517414b::$classMap;
+            $loader->prefixLengthsPsr4 = ComposerStaticInit768c844d8264c0c9d6ea4f71cd060e9d::$prefixLengthsPsr4;
+            $loader->prefixDirsPsr4 = ComposerStaticInit768c844d8264c0c9d6ea4f71cd060e9d::$prefixDirsPsr4;
+            $loader->classMap = ComposerStaticInit768c844d8264c0c9d6ea4f71cd060e9d::$classMap;
 
         }, null, ClassLoader::class);
     }

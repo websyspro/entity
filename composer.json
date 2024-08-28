@@ -18,5 +18,7 @@
             "email": "cpd.emersontsa@gmail.com"
         }
     ],
-    "require": {}
+    "require": {
+        "websyspro/common-api": "dev-main"
+    }
 }

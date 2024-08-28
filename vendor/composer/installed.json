@@ -1,0 +1,44 @@
+{
+    "packages": [
+        {
+            "name": "websyspro/common-api",
+            "version": "dev-main",
+            "version_normalized": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/websyspro/common-api.git",
+                "reference": "44e65fa71dce80f1aab3ce449b9211da50ac9a6b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/websyspro/common-api/zipball/44e65fa71dce80f1aab3ce449b9211da50ac9a6b",
+                "reference": "44e65fa71dce80f1aab3ce449b9211da50ac9a6b",
+                "shasum": ""
+            },
+            "time": "2024-08-28T23:03:27+00:00",
+            "default-branch": true,
+            "type": "library",
+            "installation-source": "dist",
+            "autoload": {
+                "psr-4": {
+                    "Websyspro\\CommonApi\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "authors": [
+                {
+                    "name": "websyspro",
+                    "email": "cpd.emersontsa@gmail.com"
+                }
+            ],
+            "description": "Feature Set",
+            "support": {
+                "issues": "https://github.com/websyspro/common-api/issues",
+                "source": "https://github.com/websyspro/common-api/tree/main"
+            },
+            "install-path": "../websyspro/common-api"
+        }
+    ],
+    "dev": true,
+    "dev-package-names": []
+}
