@@ -1,0 +1,22 @@
+{
+    "name": "websyspro/entity-api",
+    "description": "Set of features for database management",
+    "type": "library",
+    "autoload": {
+        "psr-4": {
+            "Websyspro\\EntityApi\\": "src/"
+        }
+    },
+    "scripts": {
+        "migrate": [
+            "php index.php --migrate"
+        ]
+    },    
+    "authors": [
+        {
+            "name": "websyspro",
+            "email": "cpd.emersontsa@gmail.com"
+        }
+    ],
+    "require": {}
+}
