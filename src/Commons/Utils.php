@@ -7,6 +7,6 @@ class Utils
   static function IsMigrate(): void {
     [ "argv" => $argv ] = $_SERVER;
     
-    
+    print_r("args"); 
   }
 }
