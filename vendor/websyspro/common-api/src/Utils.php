@@ -71,4 +71,12 @@ class Utils
       );
     }
   }
+
+  static function ArrayFlip(
+    array $ArrayFlip = []
+  ): array {
+    return array_flip(
+      $ArrayFlip
+    );
+  }
 }
