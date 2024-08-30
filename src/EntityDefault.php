@@ -1,51 +1,53 @@
 <?php
 
-namespace Websyspro\EntityApi;
-use Websyspro\EntityApi\Decorations\AutoInc;
-use Websyspro\EntityApi\Decorations\BigInt;
-use Websyspro\EntityApi\Decorations\Datetime;
-use Websyspro\EntityApi\Decorations\Required;
-use Websyspro\EntityApi\Decorations\TinyInt;
-
-abstract class EntityDefault
+namespace Websyspro\Entity
 {
-  #[BigInt()]
-  #[AutoInc()]
-  #[Required()]
-  public int $Id;
-
-  #[TinyInt()]
-  #[Required()]
-  public int $Actived;
-
-  #[BigInt()]
-  #[Required()]
-  public int $ActivedBy;
-
-  #[Datetime()]
-  #[Required()]
-  public string $ActivedAt;
-
-  #[BigInt()]
-  #[Required()]
-  public string $CreatedBy;
+  use Websyspro\Entity\Decorations\AutoInc;
+  use Websyspro\Entity\Decorations\BigInt;
+  use Websyspro\Entity\Decorations\Datetime;
+  use Websyspro\Entity\Decorations\Required;
+  use Websyspro\Entity\Decorations\TinyInt;
   
-  #[Datetime()]
-  #[Required()]
-  public string $CreatedAt;
+  abstract class EntityDefault
+  {
+    #[BigInt()]
+    #[AutoInc()]
+    #[Required()]
+    public int $Id;
   
-  #[BigInt()]
-  public int $UpdatedBy;
+    #[TinyInt()]
+    #[Required()]
+    public int $Actived;
   
-  #[Datetime()]
-  public string $UpdatedAt;
-
-  #[TinyInt()]
-  public int $Deleted;
+    #[BigInt()]
+    #[Required()]
+    public int $ActivedBy;
   
-  #[BigInt()]
-  public int $DeletedBy;
+    #[Datetime()]
+    #[Required()]
+    public string $ActivedAt;
   
-  #[Datetime()]
-  public string $DeletedAt;  
+    #[BigInt()]
+    #[Required()]
+    public string $CreatedBy;
+    
+    #[Datetime()]
+    #[Required()]
+    public string $CreatedAt;
+    
+    #[BigInt()]
+    public int $UpdatedBy;
+    
+    #[Datetime()]
+    public string $UpdatedAt;
+  
+    #[TinyInt()]
+    public int $Deleted;
+    
+    #[BigInt()]
+    public int $DeletedBy;
+    
+    #[Datetime()]
+    public string $DeletedAt;  
+  }
 }

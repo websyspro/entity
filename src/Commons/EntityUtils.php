@@ -1,27 +1,29 @@
 <?php
 
-namespace Websyspro\EntityApi\Commons;
-use Websyspro\CommonApi\Utils;
-
-class EntityUtils
+namespace Websyspro\Entity\Commons 
 {
-  static function IsMigrate(): bool {
-    [ "argv" => $argv ] = $_SERVER;
-    
-    $IsMigrate = Utils::Filter($argv, fn(string $arg) => (
-      preg_match("/^\-\-/", $arg)
-    ));
+  use Websyspro\CommonApi\Utils;
 
-    return Utils::IsValidArray(
-      $IsMigrate
-    );
-  }
-
-  static function GetEntityName(
-    string $EntityClass
-  ): string {
-    return preg_replace(
-      "/Entity$/", "", $EntityClass
-    );
+  class EntityUtils
+  {
+    static function IsMigrate(): bool {
+      [ "argv" => $argv ] = $_SERVER;
+      
+      $IsMigrate = Utils::Filter($argv, fn(string $arg) => (
+        preg_match("/^\-\-/", $arg)
+      ));
+  
+      return Utils::IsValidArray(
+        $IsMigrate
+      );
+    }
+  
+    static function GetEntityName(
+      string $EntityClass
+    ): string {
+      return preg_replace(
+        "/Entity$/", "", $EntityClass
+      );
+    }
   }
 }

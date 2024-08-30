@@ -1,11 +1,12 @@
 <?php
 
-namespace Websyspro\EntityApi;
-
-class EntityConstraint
+namespace Websyspro\Entity
 {
-  function __construct(
-    public string $Entity,
-    public array $Constraints = []
-  ){}
+  class EntityConstraint
+  {
+    function __construct(
+      public string $Entity,
+      public array $Constraints = []
+    ){}
+  }
 }

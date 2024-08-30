@@ -1,23 +1,24 @@
 <?php
 
-namespace Websyspro\EntityApi\Decorations;
-
-use Attribute;
-
-#[Attribute(Attribute::TARGET_PROPERTY)]
-class Foreign
+namespace Websyspro\Entity\Decorations
 {
-  public function __construct(
-    private string $ReferenceEntity,
-    private string $ReferenceKey = "Id"
-  ){}
+  use Attribute;
 
-  public function get(): array {
-    return [
-      "Foreign" => [
-        "ReferenceEntity" => $this->ReferenceEntity,
-        "ReferenceKey" => $this->ReferenceKey
-      ] 
-    ];
+  #[Attribute(Attribute::TARGET_PROPERTY)]
+  class Foreign
+  {
+    public function __construct(
+      private string $ReferenceEntity,
+      private string $ReferenceKey = "Id"
+    ){}
+
+    public function get(): array {
+      return [
+        "Foreign" => [
+          "ReferenceEntity" => $this->ReferenceEntity,
+          "ReferenceKey" => $this->ReferenceKey
+        ] 
+      ];
+    }
   }
 }

@@ -1,12 +1,11 @@
 <?php
 
-namespace Websyspro\Entity;
-
-class Entity
+namespace Websyspro\Entity
 {
-  function __construct(
-    private array $Entitys = []
-  ){}
-
-  
+  class Entity
+  {
+    function __construct(
+      private array $Entitys = []
+    ){}
+  }  
 }

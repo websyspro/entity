@@ -1,17 +1,18 @@
 <?php
 
-namespace Websyspro\EntityApi\Decorations;
-
-use Attribute;
-
-#[Attribute(Attribute::TARGET_PROPERTY)]
-class SmallInt
+namespace Websyspro\Entity\Decorations
 {
-  public function __construct(){}
+  use Attribute;
 
-  public function get(): array {
-    return [
-      "type" => "smallint"
-    ];
+  #[Attribute(Attribute::TARGET_PROPERTY)]
+  class SmallInt
+  {
+    public function __construct(){}
+
+    public function get(): array {
+      return [
+        "type" => "smallint"
+      ];
+    }
   }
 }

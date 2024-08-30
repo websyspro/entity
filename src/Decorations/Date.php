@@ -1,17 +1,18 @@
 <?php
 
-namespace Websyspro\EntityApi\Decorations;
-
-use Attribute;
-
-#[Attribute(Attribute::TARGET_PROPERTY)]
-class Date
+namespace Websyspro\Entity\Decorations
 {
-  public function __construct(){}
+  use Attribute;
 
-  public function get(): array {
-    return [
-      "type" => "date"
-    ];
+  #[Attribute(Attribute::TARGET_PROPERTY)]
+  class Date
+  {
+    public function __construct(){}
+  
+    public function get(): array {
+      return [
+        "type" => "date"
+      ];
+    }
   }
 }

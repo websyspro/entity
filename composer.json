@@ -1,10 +1,10 @@
 {
-    "name": "websyspro/entity-api",
+    "name": "websyspro/entity",
     "description": "Set of features for database management",
     "type": "library",
     "autoload": {
         "psr-4": {
-            "Websyspro\\EntityApi\\": "src/"
+            "Websyspro\\Entity\\": "src/"
         }
     },
     "scripts": {
