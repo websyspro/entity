@@ -19,6 +19,6 @@
         }
     ],
     "require": {
-        "websyspro/common-api": "dev-main"
+        "websyspro/common": "dev-master"
     }
 }

@@ -2,7 +2,7 @@
 
 namespace Websyspro\Entity
 {
-  use Websyspro\CommonApi\Utils;
+  use Websyspro\Common\Utils;
   use Websyspro\Entity\Commons\EntityUtils;
   
   class EntityColletion

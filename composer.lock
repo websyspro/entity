@@ -4,27 +4,27 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0f9ce23ff740c910a30796dd8bd8d42c",
+    "content-hash": "3d1e635ec6a806aed7b92cc16663ed5a",
     "packages": [
         {
-            "name": "websyspro/common-api",
-            "version": "dev-main",
+            "name": "websyspro/common",
+            "version": "dev-master",
             "source": {
                 "type": "git",
-                "url": "https://github.com/websyspro/common-api.git",
-                "reference": "2f2c67842457642731db6638588f595d92b14d66"
+                "url": "https://github.com/websyspro/common.git",
+                "reference": "e0cee7d2d405ac5b18a19dad7d7b3f5f3f955094"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/websyspro/common-api/zipball/2f2c67842457642731db6638588f595d92b14d66",
-                "reference": "2f2c67842457642731db6638588f595d92b14d66",
+                "url": "https://api.github.com/repos/websyspro/common/zipball/e0cee7d2d405ac5b18a19dad7d7b3f5f3f955094",
+                "reference": "e0cee7d2d405ac5b18a19dad7d7b3f5f3f955094",
                 "shasum": ""
             },
             "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
-                    "Websyspro\\CommonApi\\": "src/"
+                    "Websyspro\\Common\\": "src/"
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
@@ -36,17 +36,17 @@
             ],
             "description": "Feature Set",
             "support": {
-                "issues": "https://github.com/websyspro/common-api/issues",
-                "source": "https://github.com/websyspro/common-api/tree/main"
+                "issues": "https://github.com/websyspro/common/issues",
+                "source": "https://github.com/websyspro/common/tree/master"
             },
-            "time": "2024-08-29T00:15:31+00:00"
+            "time": "2024-08-30T00:30:58+00:00"
         }
     ],
     "packages-dev": [],
     "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
-        "websyspro/common-api": 20
+        "websyspro/common": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,
