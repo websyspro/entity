@@ -6,8 +6,7 @@ namespace Websyspro\Entity
   {
     function __construct(
       public string $Entity,
-      public array $Properties = [],
-      public array $Constraints = []
+      public array $Properties = []
     ){}
   }
 }

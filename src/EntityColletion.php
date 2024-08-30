@@ -25,9 +25,7 @@ namespace Websyspro\Entity
     private function SetEntityName(
     ): void {
       $this->Items = Utils::ArrayFlip(
-        Utils::Mapper($this->Items, fn($EntityClass) => (
-          EntityUtils::GetEntityName($EntityClass)
-        ))
+        Utils::Mapper($this->Items, fn($EntityClass) => $EntityClass)
       );
     }
   
