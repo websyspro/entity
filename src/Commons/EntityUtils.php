@@ -3,7 +3,7 @@
 namespace Websyspro\Entity\Commons 
 {
   use Websyspro\CommonApi\Utils;
-
+  
   class EntityUtils
   {
     static function IsMigrate(): bool {
