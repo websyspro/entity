@@ -2,21 +2,34 @@
 
 namespace Websyspro\Entity
 {
-use Websyspro\Reflect\ClassReflectLoader;
+use Websyspro\Common\Utils;
+    use Websyspro\Reflect\ClassAttributs;
+    use Websyspro\Reflect\ClassReflectLoader;
   class EntityStructure
   {
-    public ClassReflectLoader $Properties;
+    private array $Properties  = [];
 
     function __construct(
-      public string $Entity
+      private string $Entity
     ){
       $this->SetEntityStructure();
     }
 
-    function SetEntityStructure(
-    ): void {
-      $this->Properties = new ClassReflectLoader(
+    private function ObterEntityStructure(
+    ): ClassReflectLoader {
+      return new ClassReflectLoader(
         objectOrClass: $this->Entity
+      );
+    }
+
+    private function SetEntityStructure(
+    ): void {
+      Utils::Mapper($this->ObterEntityStructure()->ObterAttributes(),
+        function( array $Properties, string $name ) {
+          $this->Properties[$name] = Utils::Mapper(
+            $Properties, fn( ClassAttributs $Property) => $Property->New()->Execute()
+          );
+        }
       );
     }
   }

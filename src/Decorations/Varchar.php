@@ -11,7 +11,7 @@ namespace Websyspro\Entity\Decorations
       private int $size = 0
     ){}
 
-    public function get(): array {
+    public function Execute(): array {
       return [
         "type" => "varchar({$this->size})"
       ];

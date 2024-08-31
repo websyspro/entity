@@ -47,12 +47,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/websyspro/reflect.git",
-                "reference": "c3ccafcee43f58ddb4b16f7adafd20464cf9f95a"
+                "reference": "cac74ba05e9ed48ec292f5f81f7871a859ef4f85"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/websyspro/reflect/zipball/c3ccafcee43f58ddb4b16f7adafd20464cf9f95a",
-                "reference": "c3ccafcee43f58ddb4b16f7adafd20464cf9f95a",
+                "url": "https://api.github.com/repos/websyspro/reflect/zipball/cac74ba05e9ed48ec292f5f81f7871a859ef4f85",
+                "reference": "cac74ba05e9ed48ec292f5f81f7871a859ef4f85",
                 "shasum": ""
             },
             "require": {
@@ -77,7 +77,7 @@
                 "issues": "https://github.com/websyspro/reflect/issues",
                 "source": "https://github.com/websyspro/reflect/tree/master"
             },
-            "time": "2024-08-31T20:44:04+00:00"
+            "time": "2024-08-31T21:04:27+00:00"
         }
     ],
     "packages-dev": [],

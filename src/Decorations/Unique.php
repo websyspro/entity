@@ -11,7 +11,7 @@ namespace Websyspro\Entity\Decorations
       private int $Unique
     ){}
 
-    public function get(): array {
+    public function Execute(): array {
       return [
         "Unique" => $this->Unique
       ];

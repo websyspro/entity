@@ -12,7 +12,7 @@ namespace Websyspro\Entity\Decorations
       private string $ReferenceKey = "Id"
     ){}
 
-    public function get(): array {
+    public function Execute(): array {
       return [
         "Foreign" => [
           "ReferenceEntity" => $this->ReferenceEntity,

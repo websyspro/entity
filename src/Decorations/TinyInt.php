@@ -9,7 +9,7 @@ namespace Websyspro\Entity\Decorations
   {
     public function __construct(){}
 
-    public function get(): array {
+    public function Execute(): array {
       return [
         "type" => "tinyint"
       ];
