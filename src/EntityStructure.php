@@ -10,12 +10,16 @@ namespace Websyspro\Entity
   class EntityStructure
   {
     private array $Properties  = [];
+    private array $ConstraintIndexes = [];
+    private array $ConstraintUniques = [];
+    private array $ConstraintForeigns = [];
 
     function __construct(
       private string $Entity
     ){
       $this->SetEntityStructure();
       $this->SetEntityColumnOrder();
+      $this->SetEntityConstraints();
     }
 
     private function ObterEntityStructure(
@@ -44,5 +48,8 @@ namespace Websyspro\Entity
         Utils::Filter( $this->Properties, fn($_, string $key) =>  in_array( $key, ColumnOrder::$Footer))
       );
     }
+
+    private function SetEntityConstraints(
+    ): void {}
   }
 }
