@@ -11,7 +11,7 @@ namespace Websyspro\Entity\Decorations
 
     public function Execute(): array {
       return [
-        "required" => "sim"
+        "required" => true
       ];
     }
   }

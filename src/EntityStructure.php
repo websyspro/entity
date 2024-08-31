@@ -55,6 +55,7 @@ namespace Websyspro\Entity
       $this->SetEntityConstraintsIndexes();
       $this->SetEntityConstraintsUniques();
       $this->SetEntityConstraintsForeigns();
+      $this->SetEntityRequiredColumns();
     }
 
     private function SetEntityConstraintsIndexes(
@@ -85,6 +86,16 @@ namespace Websyspro\Entity
         if (in_array( ConstraintType::$Foreign, array_keys( $propertys ))) {
           $this->ConstraintForeigns[] = $propertys; 
         }
+      });
+    }
+
+    private function SetEntityRequiredColumns(
+    ): void {
+      Utils::Mapper( $this->Properties, function( array $propertys, string $key ){
+        $this->Properties[ $key ] = [
+          "type" => $propertys["type"],
+          "required" => isset( $propertys["required"] ) ?? false 
+        ];
       });
     }
   }
