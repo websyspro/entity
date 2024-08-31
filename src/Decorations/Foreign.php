@@ -14,9 +14,9 @@ namespace Websyspro\Entity\Decorations
 
     public function Execute(): array {
       return [
-        "Foreign" => [
-          "ReferenceEntity" => $this->ReferenceEntity,
-          "ReferenceKey" => $this->ReferenceKey
+        "foreign" => [
+          "entity" => $this->ReferenceEntity,
+          "key" => $this->ReferenceKey
         ] 
       ];
     }
