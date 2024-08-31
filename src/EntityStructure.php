@@ -26,7 +26,7 @@ use Websyspro\Common\Utils;
     ): void {
       Utils::Mapper($this->ObterEntityStructure()->ObterAttributes(),
         function( array $Properties, string $name ) {
-          $this->Properties[$name] = Utils::Mapper(
+          $this->Properties[$name][] = Utils::Mapper(
             $Properties, fn( ClassAttributs $Property) => $Property->New()->Execute()
           );
         }
