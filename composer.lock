@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3d1e635ec6a806aed7b92cc16663ed5a",
+    "content-hash": "4da0f66df1a97e67ab09576698bf19a2",
     "packages": [
         {
             "name": "websyspro/common",
@@ -12,12 +12,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/websyspro/common.git",
-                "reference": "e0cee7d2d405ac5b18a19dad7d7b3f5f3f955094"
+                "reference": "f399c87620c97b9468263f03655dcd6dd4bf9a86"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/websyspro/common/zipball/e0cee7d2d405ac5b18a19dad7d7b3f5f3f955094",
-                "reference": "e0cee7d2d405ac5b18a19dad7d7b3f5f3f955094",
+                "url": "https://api.github.com/repos/websyspro/common/zipball/f399c87620c97b9468263f03655dcd6dd4bf9a86",
+                "reference": "f399c87620c97b9468263f03655dcd6dd4bf9a86",
                 "shasum": ""
             },
             "default-branch": true,
@@ -39,14 +39,53 @@
                 "issues": "https://github.com/websyspro/common/issues",
                 "source": "https://github.com/websyspro/common/tree/master"
             },
-            "time": "2024-08-30T00:30:58+00:00"
+            "time": "2024-08-31T19:08:33+00:00"
+        },
+        {
+            "name": "websyspro/reflect",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/websyspro/reflect.git",
+                "reference": "5f9485c9e6eb612806e14c2af5eba85690bfa1db"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/websyspro/reflect/zipball/5f9485c9e6eb612806e14c2af5eba85690bfa1db",
+                "reference": "5f9485c9e6eb612806e14c2af5eba85690bfa1db",
+                "shasum": ""
+            },
+            "require": {
+                "websyspro/common": "dev-master"
+            },
+            "default-branch": true,
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Websyspro\\Reflect\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "authors": [
+                {
+                    "name": "websyspro",
+                    "email": "cpd.emersontsa@gmail.com"
+                }
+            ],
+            "description": "Feature for Reflect Mapper Methods",
+            "support": {
+                "issues": "https://github.com/websyspro/reflect/issues",
+                "source": "https://github.com/websyspro/reflect/tree/master"
+            },
+            "time": "2024-08-31T20:07:30+00:00"
         }
     ],
     "packages-dev": [],
     "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
-        "websyspro/common": 20
+        "websyspro/common": 20,
+        "websyspro/reflect": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,

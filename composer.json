@@ -9,7 +9,7 @@
     },
     "scripts": {
         "migrate": [
-            "php index.php --migrate"
+            "php test/index.php --migrate"
         ]
     },    
     "authors": [
@@ -19,6 +19,7 @@
         }
     ],
     "require": {
-        "websyspro/common": "dev-master"
+        "websyspro/common": "dev-master",
+        "websyspro/reflect": "dev-master"
     }
 }
