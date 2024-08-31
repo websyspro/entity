@@ -7,18 +7,16 @@ use Websyspro\Reflect\ClassReflectLoader;
   {
     function __construct(
       public string $Entity,
-      public array $Properties = []
+      public ClassReflectLoader $Properties
     ){
       $this->SetEntityStructure();
     }
 
     function SetEntityStructure(
     ): void {
-      $ClassReflectLoader = new ClassReflectLoader(
+      $this->Properties = new ClassReflectLoader(
         objectOrClass: $this->Entity
       );
-
-      print_r($ClassReflectLoader);
     }
   }
 }
