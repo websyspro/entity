@@ -3,6 +3,7 @@
 namespace Websyspro\Entity
 {
   use Websyspro\Common\Utils;
+  use Websyspro\Entity\Consts\ColumnOrder;
   use Websyspro\Reflect\ClassAttributs;
   use Websyspro\Reflect\ClassReflectLoader;
   
@@ -14,6 +15,7 @@ namespace Websyspro\Entity
       private string $Entity
     ){
       $this->SetEntityStructure();
+      $this->SetEntityColumnOrder();
     }
 
     private function ObterEntityStructure(
@@ -32,6 +34,15 @@ namespace Websyspro\Entity
           )
         )
       ));
+    }
+
+    private function SetEntityColumnOrder(
+    ): void {
+      $this->Properties = array_merge(
+        Utils::Filter( $this->Properties, fn($_, string $key) =>  in_array( $key, ColumnOrder::$Header)),
+        Utils::Filter( $this->Properties, fn($_, string $key) => !in_array( $key, ColumnOrder::$Body)),
+        Utils::Filter( $this->Properties, fn($_, string $key) =>  in_array( $key, ColumnOrder::$Footer))
+      );
     }
   }
 }
