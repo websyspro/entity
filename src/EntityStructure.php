@@ -2,9 +2,10 @@
 
 namespace Websyspro\Entity
 {
-use Websyspro\Common\Utils;
-    use Websyspro\Reflect\ClassAttributs;
-    use Websyspro\Reflect\ClassReflectLoader;
+  use Websyspro\Common\Utils;
+  use Websyspro\Reflect\ClassAttributs;
+  use Websyspro\Reflect\ClassReflectLoader;
+  
   class EntityStructure
   {
     private array $Properties  = [];
