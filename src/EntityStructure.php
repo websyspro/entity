@@ -21,6 +21,7 @@ namespace Websyspro\Entity
       $this->SetEntityStructure();
       $this->SetEntityColumnOrder();
       $this->SetEntityConstraints();
+      $this->SetEntityColumnRiquered();
     }
 
     private function ObterEntityStructure(
@@ -55,7 +56,6 @@ namespace Websyspro\Entity
       $this->SetEntityConstraintsIndexes();
       $this->SetEntityConstraintsUniques();
       $this->SetEntityConstraintsForeigns();
-      $this->SetEntityRequiredColumns();
     }
 
     private function SetEntityConstraintsIndexes(
@@ -89,7 +89,7 @@ namespace Websyspro\Entity
       });
     }
 
-    private function SetEntityRequiredColumns(
+    private function SetEntityColumnRiquered(
     ): void {
       Utils::Mapper( $this->Properties, function( array $propertys, string $key ){
         $this->Properties[ $key ] = [
