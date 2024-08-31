@@ -13,7 +13,7 @@ namespace Websyspro\Entity\Decorations
   
     public function Execute(): array {
       return [
-        "Index" => $this->Index
+        "index" => $this->Index
       ];
     }
   }
