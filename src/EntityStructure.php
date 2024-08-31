@@ -5,9 +5,10 @@ namespace Websyspro\Entity
 use Websyspro\Reflect\ClassReflectLoader;
   class EntityStructure
   {
+    public ClassReflectLoader $Properties;
+
     function __construct(
-      public string $Entity,
-      public ClassReflectLoader $Properties
+      public string $Entity
     ){
       $this->SetEntityStructure();
     }
