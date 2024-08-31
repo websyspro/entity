@@ -25,13 +25,13 @@ namespace Websyspro\Entity
 
     private function SetEntityStructure(
     ): void {
-      Utils::Mapper($this->ObterEntityStructure()->ObterAttributes(),
-        function( array $Properties, string $name ) {
-          $this->Properties[$name][] = Utils::Mapper(
+      Utils::Mapper( $this->ObterEntityStructure()->ObterProperties(), fn( array $Properties, string $name ) => (
+        $this->Properties[ $name ] = call_user_func_array(
+          "array_merge", Utils::Mapper( 
             $Properties, fn( ClassAttributs $Property) => $Property->New()->Execute()
-          );
-        }
-      );
+          )
+        )
+      ));
     }
   }
 }
