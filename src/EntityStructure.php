@@ -93,8 +93,8 @@ namespace Websyspro\Entity
     ): void {
       Utils::Mapper( $this->Properties, function( array $propertys, string $key ){
         $this->Properties[ $key ] = [
-          "type" => $propertys["type"],
-          "required" => isset( $propertys["required"] ) ?? false 
+          "type" => $propertys[ "type" ],
+          "required" => isset( $propertys[ "required" ] ) ?? false 
         ];
       });
     }
