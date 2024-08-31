@@ -4,6 +4,7 @@ namespace Websyspro\Entity
 {
   use Websyspro\Common\Utils;
   use Websyspro\Entity\Consts\ColumnOrder;
+  use Websyspro\Entity\Consts\ConstraintType;
   use Websyspro\Reflect\ClassAttributs;
   use Websyspro\Reflect\ClassReflectLoader;
   
@@ -50,6 +51,41 @@ namespace Websyspro\Entity
     }
 
     private function SetEntityConstraints(
-    ): void {}
+    ): void {
+      $this->SetEntityConstraintsIndexes();
+      $this->SetEntityConstraintsUniques();
+      $this->SetEntityConstraintsForeigns();
+    }
+
+    private function SetEntityConstraintsIndexes(
+    ): void {
+      Utils::Mapper( $this->Properties, function( array $propertys, string $key ){
+        if (in_array( ConstraintType::$Index, array_keys( $propertys ))) {
+          $this->ConstraintIndexes[$this->Entity][
+            $propertys[ ConstraintType::$Index ]
+          ][] = $key; 
+        }
+      });
+    }
+
+    private function SetEntityConstraintsUniques(
+    ): void {
+      Utils::Mapper( $this->Properties, function( array $propertys, string $key ){
+        if (in_array( ConstraintType::$Unique, array_keys( $propertys ))) {
+          $this->ConstraintUniques[$this->Entity][
+            $propertys[ ConstraintType::$Unique ]
+          ][] = $key; 
+        }
+      });      
+    }
+
+    private function SetEntityConstraintsForeigns(
+    ): void {
+      Utils::Mapper( $this->Properties, function( array $propertys, string $key ){
+        if (in_array( ConstraintType::$Foreign, array_keys( $propertys ))) {
+          $this->ConstraintForeigns[] = $propertys; 
+        }
+      });
+    }
   }
 }
