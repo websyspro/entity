@@ -145,7 +145,11 @@ namespace Websyspro\Entity
 
     private function SetEntityCreatedForeigns(
     ): void {
-      print_r($this->persistedArr);
+      Utils::Mapper( $this->Items, function(array $Structure, string $Entity){
+        if( $Structure[EntityVersion::$New] instanceof EntityStructure ) {
+          print_r($Structure[EntityVersion::$New]->ObterConstraintForeigns());
+        }
+      });
     }
   }
 }
