@@ -119,6 +119,11 @@ namespace Websyspro\Entity
     public function ObterConstraintUniques(
     ): array {
       return $this->ConstraintUniques;
+    }
+    
+    public function ObterConstraintForeigns(
+    ): array {
+      return $this->ConstraintForeigns;
     }     
   }
 }
