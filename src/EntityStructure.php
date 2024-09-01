@@ -112,8 +112,13 @@ namespace Websyspro\Entity
     }
 
     public function ObterConstraintIndexes(
-      ): array {
-        return $this->ConstraintIndexes;
-      }    
+    ): array {
+      return $this->ConstraintIndexes;
+    } 
+    
+    public function ObterConstraintUniques(
+    ): array {
+      return $this->ConstraintUniques;
+    }     
   }
 }
