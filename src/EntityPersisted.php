@@ -8,6 +8,8 @@ use Websyspro\Common\Utils;
 
   class EntityPersisted
   {
+    private array $persistedArr = [];
+
     function __construct(
       private array $Items = [] 
     ){
@@ -21,12 +23,47 @@ use Websyspro\Common\Utils;
           && Utils::IsEmptyArray( $structure[EntityVersion::$Old]);
     }
 
+    private function IsNullable(
+      bool $required = true
+    ): string {
+      return $required ? "not null" : "null";
+    }
+
+    private function IsAutoInc(
+      bool $autoinc = true
+    ): string {
+      return $autoinc ? "primary key auto_increment" : "";
+    }
+
+    private function SetCreatedEntitys(
+      array $propertys, 
+     string $key
+    ): string {
+      [ "type" => $type, 
+        "autoinc" => $autoinc,
+        "required" => $required,
+      ] = $propertys;
+
+      return trim( "`{$key}` {$type} {$this->IsNullable($required)} {$this->IsAutoInc($autoinc)}");
+    }
+
     private function SetCreateds(
       string $entity,
-      array $structure = []
+      array $structure = [],
+      array $structureEntity = []
     ): void {
       if ( $this->HasEntityExists($structure) === false ) {
-        print_r($structure[EntityVersion::$New]);
+        if( $structure[EntityVersion::$New] instanceof EntityStructure ) {
+          $structureEntity = Utils::Mapper( $structure[EntityVersion::$New]->ObterProperties(), 
+            fn(array $propertys, string $key) => (
+              $this->persistedArr[] = $this->SetCreatedEntitys(
+                propertys: $propertys, key: $key
+              )
+            )
+          );
+
+          print_r($structureEntity);
+        }
       }
     }
 

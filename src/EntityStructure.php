@@ -98,6 +98,9 @@ namespace Websyspro\Entity
           ],
           ConstraintType::$Required => isset(
             $propertys[ ConstraintType::$Required ]
+          ) ?? false,
+          ConstraintType::$Autoinc => isset(
+            $propertys[ ConstraintType::$Autoinc ]
           ) ?? false 
         ];
       });
