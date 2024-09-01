@@ -143,13 +143,29 @@ namespace Websyspro\Entity
       });
     }
 
+    // "alter table `{$entity}` add constraint {$this->ObterForeignsName($entity, $constraint)} foreign key ({$key}) references {$reference}({$referenceKey})"
+
     private function SetEntityCreatedForeigns(
     ): void {
       Utils::Mapper( $this->Items, function(array $Structure, string $Entity){
         if( $Structure[EntityVersion::$New] instanceof EntityStructure ) {
-          print_r($Structure[EntityVersion::$New]->ObterConstraintForeigns());
+          Utils::Mapper($Structure[EntityVersion::$New]->ObterConstraintForeigns(), 
+            function(array $Propertys, string $Key) use($Entity) {
+              [ $ReferenceEntity, $ReferenceKey ] = $Propertys;
+
+              $this->persistedArr[] = call_user_func_array("sprintf", [
+                "alter table `%s` add constraint `Fk_%s_in_%s_to_%s` foreign key (`%s`) references `%s`(`%s`)",
+                 EntityUtils::ObterEntityName($Entity), 
+                 EntityUtils::ObterEntityName($ReferenceEntity), 
+                 EntityUtils::ObterEntityName($Entity), $ReferenceKey, $Key, 
+                 EntityUtils::ObterEntityName($ReferenceEntity), $ReferenceKey
+              ]);
+            }
+          );
         }
       });
+
+      print_r($this->persistedArr);
     }
   }
 }

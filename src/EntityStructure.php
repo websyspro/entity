@@ -84,7 +84,10 @@ namespace Websyspro\Entity
     ): void {
       Utils::Mapper( $this->Properties, function( array $propertys, string $key ){
         if (in_array( ConstraintType::$Foreign, array_keys( $propertys ))) {
-          $this->ConstraintForeigns[$key] = $propertys; 
+          $this->ConstraintForeigns[$key] = [
+            $propertys[ConstraintType::$Foreign]["entity"],
+            $propertys[ConstraintType::$Foreign]["key"]
+          ]; 
         }
       });
     }
