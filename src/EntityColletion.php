@@ -3,8 +3,8 @@
 namespace Websyspro\Entity
 {
   use Websyspro\Common\Utils;
-  use Websyspro\Entity\Commons\EntityUtils;
-  
+  use Websyspro\Entity\Consts\EntityVersion;
+
   class EntityColletion
   {
     function __construct(
@@ -17,6 +17,8 @@ namespace Websyspro\Entity
     ): void {
       $this->SetEntityName();
       $this->SetEntityProperties();
+
+      print_r($this->Items);
     }
   
     private function SetEntityName(
@@ -29,9 +31,10 @@ namespace Websyspro\Entity
     private function SetEntityProperties(
     ): void {
       Utils::Mapper( $this->Items, fn($_, string $Entity) => (
-        $this->Items[$Entity] = new EntityStructure(
-          Entity: $Entity
-        )
+        $this->Items[$Entity] = [
+          EntityVersion::$Old => [],
+          EntityVersion::$New => new EntityStructure( Entity: $Entity )
+        ]
       ));
     }
   }
