@@ -18,7 +18,7 @@ namespace Websyspro\Entity\Commons
       );
     }
   
-    static function GetEntityName(
+    static function ObterEntityName(
       string $EntityClass
     ): string {
       $Entity = explode("\\", $EntityClass);

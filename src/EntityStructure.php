@@ -110,5 +110,10 @@ namespace Websyspro\Entity
     ): array {
       return $this->Properties;
     }
+
+    public function ObterConstraintIndexes(
+      ): array {
+        return $this->ConstraintIndexes;
+      }    
   }
 }

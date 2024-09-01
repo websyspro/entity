@@ -14,7 +14,7 @@ namespace Websyspro\Entity
       private array $Items = [] 
     ){
       $this->SetEntityCreated();
-      $this->SetentityCreatedIndexes();
+      $this->SetEntityCreatedIndexes();
     }
 
     private function HasEntityExists(
@@ -37,39 +37,39 @@ namespace Websyspro\Entity
     }
 
     private function SetCreatedEntitys(
-      array $propertys, 
-     string $key
+      array $Propertys, 
+     string $Key
     ): string {
       [ "type" => $type, 
         "autoinc" => $autoinc,
         "required" => $required,
-      ] = $propertys;
+      ] = $Propertys;
 
       return Utils::Join(
-        [ "`{$key}`"
+        [ "`{$Key}`"
           ,"{$type}", $this->IsNullable($required), $this->IsAutoInc($autoinc) 
         ], " "
       );
     }
 
     private function SetCreateds(
-      string $entity,
-      array $structure = [],
-      array $structureEntity = []
+      string $Entity,
+      array $Structure = [],
+      array $StructureEntity = []
     ): void {
-      if ( $this->HasEntityExists($structure) === false ) {
-        if( $structure[EntityVersion::$New] instanceof EntityStructure ) {
-          $structureEntity = Utils::Mapper( $structure[EntityVersion::$New]->ObterProperties(), 
-            fn(array $propertys, string $key) => (
+      if ( $this->HasEntityExists($Structure) === false ) {
+        if( $Structure[EntityVersion::$New] instanceof EntityStructure ) {
+          $StructureEntity = Utils::Mapper( $Structure[EntityVersion::$New]->ObterProperties(), 
+            fn(array $Propertys, string $Key) => (
               $this->SetCreatedEntitys(
-                propertys: $propertys, key: $key
+                Propertys: $Propertys, Key: $Key
               )
             )
           );
 
           $this->persistedArr[] = sprintf("create table `%s` (%s)",
-            EntityUtils::GetEntityName( $entity ),
-            Utils::Join( $structureEntity, ", " )
+            EntityUtils::ObterEntityName( $Entity ),
+            Utils::Join( $StructureEntity, ", " )
           );
         }
       }
@@ -78,15 +78,42 @@ namespace Websyspro\Entity
     private function SetEntityCreated(
     ): void {
       Utils::Mapper( $this->Items, 
-        fn(array $structure, string $entity) => $this->SetCreateds(
-          entity: $entity, structure: $structure
+        fn(array $Structure, string $Entity) => $this->SetCreateds(
+          Entity: $Entity, Structure: $Structure
         )
       );
     }
 
-    private function SetentityCreatedIndexes(
+    private function SetCreatedIndexes(
+      string $entity,
+      array $structure = [],
+      array $structureEntity = []
     ): void {
-      print_r($this->Items);
+      if( $structure[EntityVersion::$New] instanceof EntityStructure ) {
+        $structureEntity = Utils::Mapper($structure[EntityVersion::$New]->ObterConstraintIndexes(), 
+          fn(array $propertys, string $key) => (
+            Utils::Mapper($propertys, fn(array $indexArr) => ( 
+              Utils::Join(array_merge(
+                [ "Idx", EntityUtils::ObterEntityName($entity) ], $indexArr
+              ), "_")
+            ))
+          )
+        );
+
+        print_r($structureEntity);
+      }
+    }
+
+    private function SetEntityCreatedIndexes(
+    ): void {
+      Utils::Mapper( $this->Items, 
+        fn(array $structure, string $entity) => (
+          $this->SetCreatedIndexes(
+            structure: $structure,
+            entity: $entity
+          )
+        )
+      );
     }
   }
 }
