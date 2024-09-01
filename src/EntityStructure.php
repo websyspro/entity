@@ -22,7 +22,6 @@ namespace Websyspro\Entity
       $this->SetEntityColumnOrder();
       $this->SetEntityConstraints();
       $this->SetEntityColumnRiquered();
-      $this->SetEntitySaved();
     }
 
     private function ObterEntityStructure(
@@ -104,7 +103,9 @@ namespace Websyspro\Entity
       });
     }
 
-    private function SetEntitySaved(
-    ): void {}
+    public function ObterProperties(
+    ): array {
+      return $this->Properties;
+    }
   }
 }

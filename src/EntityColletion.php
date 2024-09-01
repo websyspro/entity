@@ -17,8 +17,7 @@ namespace Websyspro\Entity
     ): void {
       $this->SetEntityName();
       $this->SetEntityProperties();
-
-      print_r($this->Items);
+      $this->SetEntityPersisted();
     }
   
     private function SetEntityName(
@@ -36,6 +35,13 @@ namespace Websyspro\Entity
           EntityVersion::$New => new EntityStructure( Entity: $Entity )
         ]
       ));
+    }
+
+    private function SetEntityPersisted(
+    ): void {
+      new EntityPersisted(
+        Items: $this->Items
+      );
     }
   }
 }
