@@ -22,6 +22,7 @@ namespace Websyspro\Entity
       $this->SetEntityColumnOrder();
       $this->SetEntityConstraints();
       $this->SetEntityColumnRiquered();
+      $this->SetEntitySaved();
     }
 
     private function ObterEntityStructure(
@@ -93,10 +94,17 @@ namespace Websyspro\Entity
     ): void {
       Utils::Mapper( $this->Properties, function( array $propertys, string $key ){
         $this->Properties[ $key ] = [
-          "type" => $propertys[ "type" ],
-          "required" => isset( $propertys[ "required" ] ) ?? false 
+          ConstraintType::$Type => $propertys[
+            ConstraintType::$Type
+          ],
+          ConstraintType::$Required => isset(
+            $propertys[ ConstraintType::$Required ]
+          ) ?? false 
         ];
       });
     }
+
+    private function SetEntitySaved(
+    ): void {}
   }
 }
