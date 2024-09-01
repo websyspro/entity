@@ -17,9 +17,6 @@ namespace Websyspro\Entity
     ): void {
       $this->SetEntityName();
       $this->SetEntityProperties();
-      $this->SetEntityConstraints();
-  
-      print_r($this->Items);
     }
   
     private function SetEntityName(
@@ -31,14 +28,11 @@ namespace Websyspro\Entity
   
     private function SetEntityProperties(
     ): void {
-      Utils::Mapper($this->Items, fn(mixed $_, string $Entity) => (
+      Utils::Mapper( $this->Items, fn($_, string $Entity) => (
         $this->Items[$Entity] = new EntityStructure(
           Entity: $Entity
         )
       ));
     }
-  
-    private function SetEntityConstraints(
-    ): void {}
   }
 }
