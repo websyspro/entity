@@ -16,6 +16,7 @@ namespace Websyspro\Entity
       $this->SetEntityCreated();
       $this->SetEntityCreatedIndexes();
       $this->SetEntityCreatedUniques();
+      $this->SetEntityCreatedForeigns();
     }
 
     private function HasEntityExists(
@@ -85,62 +86,66 @@ namespace Websyspro\Entity
       );
     }
 
-    private function SetCreatedIndexes(
+    private function SetCreatedIndexOrUnique(
       string $Entity,
       array $Structure = [],
-      array $StructureEntitys = []
+      array $StructureArr = [],
+      array $StructureType = [], 
+      array $StructureEntitys = []      
     ): void {
+      [ $Prefix, $type ] = $StructureType;
+
       if( $Structure[EntityVersion::$New] instanceof EntityStructure ) {
-        $StructureEntitys = Utils::Mapper($Structure[EntityVersion::$New]->ObterConstraintIndexes(), 
-          fn(array $propertys) => (
-            Utils::Mapper($propertys, fn(array $indexArr) => ( 
-              [ Utils::Join( array_merge(
-                [ "Idx", EntityUtils::ObterEntityName($Entity) ], $indexArr
-                ), "_"), Utils::Join( $indexArr, ", ")]
-            ))
-          )
+        $StructureEntitys = Utils::Mapper($StructureArr, fn(array $propertys) => (
+          Utils::Mapper($propertys, fn(array $indexArr) => ( 
+            [ Utils::Join( array_merge(
+              [ $Prefix ], $indexArr
+              ), "_"), Utils::Join( Utils::Mapper($indexArr, fn(string $Key) => "`{$Key}`"), ", ")]
+            )
+          ))
         );
 
         Utils::Mapper($StructureEntitys, fn(array $StructureEntity ) => (
           Utils::Mapper($StructureEntity, fn($IndexesList) => (
             $this->persistedArr[] = call_user_func_array("sprintf", array_merge(
-              [ "alter table `%s` add index `%s` (%s)", EntityUtils::ObterEntityName($Entity) ], $IndexesList
+              [ "alter table `%s` add {$type} `%s` (%s)", EntityUtils::ObterEntityName($Entity) ], $IndexesList
             ))
           ))
         ));
-      }
+      }      
     }
 
     private function SetEntityCreatedIndexes(
     ): void {
-      Utils::Mapper( $this->Items, 
-        fn(array $Structure, string $Entity) => (
-          $this->SetCreatedIndexes(
+      Utils::Mapper( $this->Items, function(array $Structure, string $Entity){
+        if( $Structure[EntityVersion::$New] instanceof EntityStructure ) {
+          $this->SetCreatedIndexOrUnique(
+            Entity: $Entity,
             Structure: $Structure,
-            Entity: $Entity
-          )
-        )
-      );
+            StructureType: [ "Idx", "index" ],
+            StructureArr: $Structure[EntityVersion::$New]->ObterConstraintIndexes()
+          );
+        }
+      });
     }
-
-    private function SetCreatedUniques(
-      string $Entity,
-      array $Structure = [],
-      array $StructureEntitys = []
-    ): void {
-      
-    }    
 
     private function SetEntityCreatedUniques(
     ): void {
-      Utils::Mapper( $this->Items, 
-      fn(array $Structure, string $Entity) => (
-        $this->SetCreatedUniques(
-          Structure: $Structure,
-          Entity: $Entity
-        )
-      )
-    );;
+      Utils::Mapper( $this->Items, function(array $Structure, string $Entity){
+        if( $Structure[EntityVersion::$New] instanceof EntityStructure ) {
+          $this->SetCreatedIndexOrUnique(
+            Entity: $Entity,
+            Structure: $Structure,
+            StructureType: [ "Unq", "unique" ],
+            StructureArr: $Structure[EntityVersion::$New]->ObterConstraintUniques()
+          );
+        }
+      });
+    }
+
+    private function SetEntityCreatedForeigns(
+    ): void {
+      print_r($this->persistedArr);
     }
   }
 }
