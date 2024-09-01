@@ -2,9 +2,9 @@
 
 namespace Websyspro\Entity
 {
-use Websyspro\Common\Utils;
-    use Websyspro\Entity\Consts\ConstraintType;
-    use Websyspro\Entity\Consts\EntityVersion;
+  use Websyspro\Common\Utils;
+  use Websyspro\Entity\Commons\EntityUtils;
+  use Websyspro\Entity\Consts\EntityVersion;
 
   class EntityPersisted
   {
@@ -13,7 +13,8 @@ use Websyspro\Common\Utils;
     function __construct(
       private array $Items = [] 
     ){
-      $this->SetEntityCreateds();
+      $this->SetEntityCreated();
+      $this->SetentityCreatedIndexes();
     }
 
     private function HasEntityExists(
@@ -44,7 +45,11 @@ use Websyspro\Common\Utils;
         "required" => $required,
       ] = $propertys;
 
-      return trim( "`{$key}` {$type} {$this->IsNullable($required)} {$this->IsAutoInc($autoinc)}");
+      return Utils::Join(
+        [ "`{$key}`"
+          ,"{$type}", $this->IsNullable($required), $this->IsAutoInc($autoinc) 
+        ], " "
+      );
     }
 
     private function SetCreateds(
@@ -56,24 +61,32 @@ use Websyspro\Common\Utils;
         if( $structure[EntityVersion::$New] instanceof EntityStructure ) {
           $structureEntity = Utils::Mapper( $structure[EntityVersion::$New]->ObterProperties(), 
             fn(array $propertys, string $key) => (
-              $this->persistedArr[] = $this->SetCreatedEntitys(
+              $this->SetCreatedEntitys(
                 propertys: $propertys, key: $key
               )
             )
           );
 
-          print_r($structureEntity);
+          $this->persistedArr[] = sprintf("create table `%s` (%s)",
+            EntityUtils::GetEntityName( $entity ),
+            Utils::Join( $structureEntity, ", " )
+          );
         }
       }
     }
 
-    private function SetEntityCreateds(
+    private function SetEntityCreated(
     ): void {
       Utils::Mapper( $this->Items, 
         fn(array $structure, string $entity) => $this->SetCreateds(
           entity: $entity, structure: $structure
         )
       );
+    }
+
+    private function SetentityCreatedIndexes(
+    ): void {
+      print_r($this->Items);
     }
   }
 }

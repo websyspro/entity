@@ -21,8 +21,10 @@ namespace Websyspro\Entity\Commons
     static function GetEntityName(
       string $EntityClass
     ): string {
+      $Entity = explode("\\", $EntityClass);
+
       return preg_replace(
-        "/Entity$/", "", $EntityClass
+        "/Entity$/", "", end($Entity)
       );
     }
   }
