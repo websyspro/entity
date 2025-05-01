@@ -1,0 +1,39 @@
+# Websyspro/dynamicsql dev
+
+Library for managing controllers and services
+
+## 📦 Requisitos
+
+- PHP >= 8.0 (ou sua versão)
+- Composer
+
+## 🚀 Instalação
+
+composer websyspro/dynamicsql:dev-main
+
+Como Usar:
+
+<pre>
+<?php
+
+use Websyspro\DynamicSql\TFindByFN;
+
+require_once "./vendor/autoload.php";
+
+class Documet
+{
+  public int $Id;
+  public string $Description;
+}
+
+$findByFN = new TFindByFN(
+  fn(Document $d) => (
+    $d->Id === 1 &&
+    $d->Description === "Compras%"
+  )
+);
+
+var_dump($findByFN->getConditions()); 
+</pre>
+
+Result:: "Document.Id = 1 And Document.Description Like 'Compras%'"
