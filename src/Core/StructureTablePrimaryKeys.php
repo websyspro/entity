@@ -5,13 +5,13 @@ namespace Websyspro\Entity\Core;
 use Websyspro\Commons\TList;
 use Websyspro\Entity\Enums\AttributeType;
 
-class StructureTableColumns
+class StructureTablePrimaryKeys
 extends StructureTableAbstract
 {
   public function List(
-  ): TList  {
+  ): TList {
     return $this->Properties(
-      AttributeType::Column
+      AttributeType::PrimaryKey
     );
   }
 }
