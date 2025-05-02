@@ -1,6 +1,6 @@
 <?php
 
-use Websyspro\Entity\Core\Structure;
+use Websyspro\Entity\Core\StructureTable;
 use Websyspro\Entity\Decorations\Columns\Datetime;
 use Websyspro\Entity\Decorations\Columns\Decimal;
 use Websyspro\Entity\Decorations\Columns\Flag;
@@ -106,6 +106,6 @@ extends BaseEntity
   public string $OpeningBalance;
 }
 
-$structure = new Structure(BoxEntity::class);
+$structure = new StructureTable(BoxEntity::class);
 
 print_r($structure->Columns()->Types());

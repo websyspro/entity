@@ -9,7 +9,7 @@ use Websyspro\Entity\Enums\AttributeType;
 use Websyspro\Entity\Shareds\AbstractColumn;
 use Websyspro\Entity\Shareds\Properties;
 
-class StructureColumns
+class StructureTableColumns
 {
   public TList $columns;
 
