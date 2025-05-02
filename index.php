@@ -1,18 +1,20 @@
 <?php
 
+use Websyspro\Entity\Core\Structure;
+use Websyspro\Entity\Decorations\Columns\Datetime;
 use Websyspro\Entity\Decorations\Columns\Decimal;
 use Websyspro\Entity\Decorations\Columns\Flag;
 use Websyspro\Entity\Decorations\Columns\Number;
 use Websyspro\Entity\Decorations\Columns\Text;
-use Websyspro\Entity\Decorations\Constraints\AutoIncrement;
 use Websyspro\Entity\Decorations\Constraints\ForeignKey;
-use Websyspro\Entity\Decorations\Constraints\Index;
-use Websyspro\Entity\Decorations\Constraints\NotNull;
 use Websyspro\Entity\Decorations\Constraints\PrimaryKey;
 use Websyspro\Entity\Decorations\Constraints\Unique;
 use Websyspro\Entity\Decorations\Events\Delete;
 use Websyspro\Entity\Decorations\Events\Insert;
 use Websyspro\Entity\Decorations\Events\Update;
+use Websyspro\Entity\Decorations\Generations\AutoIncrement;
+use Websyspro\Entity\Decorations\Requireds\NotNull;
+use Websyspro\Entity\Decorations\Statistics\Index;
 
 require_once "./vendor/autoload.php";
 
@@ -103,3 +105,7 @@ extends BaseEntity
   #[Decimal(10,2)]
   public string $OpeningBalance;
 }
+
+$structure = new Structure(BoxEntity::class);
+
+print_r($structure->Columns()->Types());
