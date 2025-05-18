@@ -15,6 +15,6 @@ class Datetime extends AbstractColumn
 
   public function sql(
   ): string {
-    return "";
+    return "datetime";
   }
 }

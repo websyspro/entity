@@ -19,6 +19,8 @@ class Text extends AbstractColumn
 
   public function sql(
   ): string {
-    return "";
-  }
+    return sprintf("varchar(%s)", ...[
+      $this->size
+    ]);
+  } 
 }

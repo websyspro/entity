@@ -15,6 +15,6 @@ class Flag extends AbstractColumn
 
   public function sql(
   ): string {
-    return "";
+    return "smallint";
   }
 }

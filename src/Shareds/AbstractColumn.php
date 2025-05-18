@@ -9,4 +9,9 @@ class AbstractColumn
 {
   public AttributeType $attributeType = AttributeType::Column;
   public ColumnType $columnType = ColumnType::Date;
+
+  public function sql(
+  ): string {
+    return "";
+  }
 }

@@ -2,29 +2,65 @@
 
 namespace Websyspro\Entity\Core;
 
+use Websyspro\Commons\TList;
+
 class StructureTable
-{
+{ 
+  public string $table;
+
   public function __construct(
-    public string $entity
-  ){}
+    public string $class
+  ){
+    $this->EntityParse();
+  }
+
+  private function EntityParse(
+  ): void {
+    $this->table = (
+      new TList(preg_split(
+        "/(?=[A-Z])/", $this->class
+      ))
+    )->Find(fn(string $path) => empty($path) === false
+    )->Slice(0, preg_match("/Entity$/", $this->class) === 1 ? -1 : null
+    )->JoinNotSpace();
+  }
 
   public function Columns(
   ): StructureTableColumns {
-    return new StructureTableColumns(
-      $this->entity
+    return new StructureTableColumns($this->class);
+  }
+
+  public function Requireds(
+  ): StructureTableRequireds {
+    return new StructureTableRequireds($this->class);
+  }  
+
+  public function PrimaryKeys(
+  ): StructureTablePrimaryKeys {
+    return new StructureTablePrimaryKeys($this->class);
+  }
+
+  public function Generations(
+  ): StructureTableGenerations {
+    return new StructureTableGenerations($this->class);
+  }
+
+  public function Uniques(
+  ): StructureTableUniques {
+    return new StructureTableUniques($this->class);
+  }
+  
+  public function Statistics(
+  ): StructureTableStatistics {
+    return new StructureTableStatistics(
+      $this->class
     );
   }
 
-  public function PrimaryKeys(): void {}
-
-  public function Generations(): void {}
-
-  public function Uniques(): void {}
-  
-  public function Statistics(): void {}
-
-  public function ForeignKeys(): void {}
-
-  public function UpdateStructures(
-  ): void{}
+  public function ForeignKeys(
+  ): StructureTableForeignKeys {
+    return new StructureTableForeignKeys(
+      $this->class
+    );
+  }
 }

@@ -11,7 +11,7 @@ use Websyspro\Entity\Shareds\AbstractColumn;
 class Decimal extends AbstractColumn
 {
   public AttributeType $attributeType = AttributeType::Column;
-  public ColumnType $columnType = ColumnType::Date;
+  public ColumnType $columnType = ColumnType::Decimal;
 
   public function __construct(
     public readonly int $numberOfDigits = 10,
@@ -20,6 +20,9 @@ class Decimal extends AbstractColumn
 
   public function sql(
   ): string {
-    return "";
+    return sprintf("decimal(%s,%s)", ...[
+      $this->numberOfDigits,
+      $this->numberDigitsAfterTheComma
+    ]);
   }  
 }

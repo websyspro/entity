@@ -37,14 +37,18 @@ class StructureTableAbstract
   public function Properties(
     AttributeType $attributeType
   ): TList {
-    return $this->PropertiesBase()->ForEach(
-      fn(Properties $properties) => (
-        $properties->properties->Find(
-          fn(AbstractColumn $abstractColumn) => (
-            $abstractColumn->attributeType === $attributeType
+    return (
+      $this->PropertiesBase()->ForEach(
+        fn(Properties $properties) => (
+          $properties->items->Find(
+            fn(AbstractColumn $abstractColumn) => (
+              $abstractColumn->attributeType === $attributeType
+            )
           )
         )
-      )
+      )->Find(fn(Properties $properties) => (
+        $properties->items->Count() !== 0
+      ))
     );
   }
 }

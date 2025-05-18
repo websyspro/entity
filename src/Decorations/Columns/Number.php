@@ -15,6 +15,6 @@ class Number extends AbstractColumn
 
   public function sql(
   ): string {
-    return "";
+    return "bigint";
   } 
 }

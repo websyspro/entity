@@ -1,5 +1,7 @@
 <?php
 
+use Websyspro\Database\TConnect;
+use Websyspro\Entity\Core\StructureDatabase;
 use Websyspro\Entity\Core\StructureTable;
 use Websyspro\Entity\Decorations\Columns\Datetime;
 use Websyspro\Entity\Decorations\Columns\Decimal;
@@ -9,6 +11,7 @@ use Websyspro\Entity\Decorations\Columns\Text;
 use Websyspro\Entity\Decorations\Constraints\ForeignKey;
 use Websyspro\Entity\Decorations\Constraints\PrimaryKey;
 use Websyspro\Entity\Decorations\Constraints\Unique;
+use Websyspro\Entity\Decorations\EntityList;
 use Websyspro\Entity\Decorations\Events\Delete;
 use Websyspro\Entity\Decorations\Events\Insert;
 use Websyspro\Entity\Decorations\Events\Update;
@@ -106,6 +109,19 @@ extends BaseEntity
   public string $OpeningBalance;
 }
 
-$structure = new StructureTable(BoxEntity::class);
+// $structure = (
+//   new StructureTable(
+//     BoxEntity::class
+//   )
+// )->Requireds()->List();
 
-print_r($structure->Columns()->Types());
+// print_r($structure);
+
+#[EntityList([
+  BoxEntity::class,
+  OperatorEntity::class
+])]
+class ShopDatabase {}
+
+$structureDatabase = new StructureDatabase(ShopDatabase::class);
+$structureDatabase->Update();

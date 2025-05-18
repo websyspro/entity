@@ -9,9 +9,9 @@ class Properties
 {
   public function __construct(
     public string $name,
-    public TList $properties
+    public TList $items
   ){
-    $properties->Mapper(
+    $this->items->Mapper(
       fn(ReflectionAttribute $ra ) => $ra->newInstance()
     );
   }
