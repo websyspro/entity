@@ -1,6 +1,8 @@
 {
   "name": "websyspro/entity",
   "description": "Set of features in PHP for creating entitys for database",
+  "minimum-stability": "dev",
+  "prefer-stable": true,
   "license": "MIT",
   "type": "library",
   "autoload": {
