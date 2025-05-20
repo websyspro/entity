@@ -1,8 +1,6 @@
 {
   "name": "websyspro/entity",
   "description": "Set of features in PHP for creating entitys for database",
-  "minimum-stability": "dev",
-  "prefer-stable": true,
   "license": "MIT",
   "type": "library",
   "autoload": {
@@ -19,7 +17,7 @@
   "scripts": {
     "watch": "powershell -ExecutionPolicy Bypass -File ./vendor/websyspro/watch/src/watch.ps1"
   },
-  "require": {
+  "require-dev": {
     "websyspro/dynamicsql": "dev-main",
     "websyspro/common": "dev-main",
     "websyspro/watch": "dev-main",

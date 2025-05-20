@@ -2,8 +2,8 @@
 
 namespace Websyspro\Entity\Core;
 
-use Websyspro\Commons\TList;
-use Websyspro\Commons\TReflect;
+use Websyspro\Commons\Collection;
+use Websyspro\Commons\Reflect;
 use Websyspro\Database\TConnect;
 use Websyspro\Entity\Core\Designs\MySql\TMySqlUpdateColumn;
 use Websyspro\Entity\Core\Persisteds\MySqlScript;
@@ -19,14 +19,14 @@ class StructureDatabase
 {
   public string $database;
 
-  public TList $structureTable;
-  public TList $persistedColumn;
-  public TList $persistedPrimaryKeys;
-  public TList $persistedGenerations;
-  public TList $persistedRequireds;
-  public TList $persistedUniques;
-  public TList $persistedStatistics;
-  public TList $persistedForeignKeys;
+  public Collection $structureTable;
+  public Collection $persistedColumn;
+  public Collection $persistedPrimaryKeys;
+  public Collection $persistedGenerations;
+  public Collection $persistedRequireds;
+  public Collection $persistedUniques;
+  public Collection $persistedStatistics;
+  public Collection $persistedForeignKeys;
 
   public function __construct(
     public string $class
@@ -35,7 +35,7 @@ class StructureDatabase
   private function GetDatabase(
   ): void {
     $this->database = (
-      new TList(preg_split(
+      new Collection(preg_split(
         "/(?=[A-Z])/", $this->class
       ))
     )->Find(fn(string $path) => empty($path) === false
@@ -46,14 +46,14 @@ class StructureDatabase
   private function GetDecorationEntitys(
   ): void {
     $reflectClass = (
-      TReflect::Class(
+      Reflect::Class(
         $this->class
       )
     );
 
     [$attributeEntites] = $reflectClass->getAttributes();
     if($attributeEntites !== null){
-      $this->structureTable = new TList(
+      $this->structureTable = new Collection(
         $attributeEntites->newInstance()->entitys
       );
 
@@ -65,12 +65,12 @@ class StructureDatabase
 
   private function Get(
     string $query
-  ): TList {
+  ): Collection {
     return (new TConnect())->Get($query)->All();
   }
 
   private function SetPersistedsColumns(
-  ): TList {
+  ): Collection {
     return $this->Get(
       MySqlScript::Columns()
     )->Mapper(fn(object $obj) => (
@@ -81,7 +81,7 @@ class StructureDatabase
   }
 
   private function SetPersistedsPrimaryKeys(
-  ): TList {
+  ): Collection {
     return $this->Get(
       MySqlScript::PrimaryKeys()
     )->Mapper(fn(object $obj) => (
@@ -92,7 +92,7 @@ class StructureDatabase
   }
   
   private function SetPersistedsGenerations(
-  ): TList {
+  ): Collection {
     return $this->Get(
       MySqlScript::Generations()
     )->Mapper(fn(object $obj) => (
@@ -103,7 +103,7 @@ class StructureDatabase
   }
   
   private function SetPersistedsRequireds(
-  ): TList {
+  ): Collection {
     return $this->Get(
       MySqlScript::Requireds()
     )->Mapper(fn(object $obj) => (
@@ -114,7 +114,7 @@ class StructureDatabase
   }
   
   private function SetPersistedsUniques(
-  ): TList {
+  ): Collection {
     return $this->Get(
       MySqlScript::Uniques()
     )->Mapper(fn(object $obj) => (
@@ -125,7 +125,7 @@ class StructureDatabase
   }
   
   private function SetPersistedsStatistics(
-  ): TList {
+  ): Collection {
     return $this->Get(
       MySqlScript::Statistics()
     )->Mapper(fn(object $obj) => (
@@ -136,7 +136,7 @@ class StructureDatabase
   }
 
   private function SetPersistedsForeignKeys(
-  ): TList {
+  ): Collection {
     return $this->Get(
       MySqlScript::ForeignKeys()
     )->Mapper(fn(object $obj) => (
@@ -161,7 +161,7 @@ class StructureDatabase
 
   private function GetPersistedColumnsFromTable(
     StructureTable $structureTable
-  ): TList {
+  ): Collection {
     return $this->persistedColumn->Copy()->Find(
       fn(PersistedColumn $persistedColumn) => (
         $persistedColumn->table === $structureTable->table

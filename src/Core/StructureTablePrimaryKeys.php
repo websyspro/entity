@@ -2,14 +2,14 @@
 
 namespace Websyspro\Entity\Core;
 
-use Websyspro\Commons\TList;
+use Websyspro\Commons\Collection;
 use Websyspro\Entity\Enums\AttributeType;
 
 class StructureTablePrimaryKeys
 extends StructureTableAbstract
 {
   public function List(
-  ): TList {
+  ): Collection {
     return $this->Properties(
       AttributeType::PrimaryKey
     );

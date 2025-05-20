@@ -3,8 +3,8 @@
 namespace Websyspro\Entity\Core;
 
 use ReflectionProperty;
-use Websyspro\Commons\TList;
-use Websyspro\Commons\TReflect;
+use Websyspro\Commons\Collection;
+use Websyspro\Commons\Reflect;
 use Websyspro\Entity\Enums\AttributeType;
 use Websyspro\Entity\Shareds\AbstractColumn;
 use Websyspro\Entity\Shareds\Properties;
@@ -16,9 +16,9 @@ class StructureTableAbstract
   ){}
 
   private function PropertiesBase(
-  ): TList {
-    $properts = new TList(
-      TReflect::PropertsFromClass(
+  ): Collection {
+    $properts = new Collection(
+      Reflect::PropertsFromClass(
         $this->entity
       )
     );
@@ -27,7 +27,7 @@ class StructureTableAbstract
       $properts->Mapper(
         fn(ReflectionProperty $reflectionProperty) => (
           new Properties($reflectionProperty->name, (
-            new TList($reflectionProperty->getAttributes())
+            new Collection($reflectionProperty->getAttributes())
           ))
         )
       )
@@ -36,7 +36,7 @@ class StructureTableAbstract
 
   public function Properties(
     AttributeType $attributeType
-  ): TList {
+  ): Collection {
     return (
       $this->PropertiesBase()->ForEach(
         fn(Properties $properties) => (

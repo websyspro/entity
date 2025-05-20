@@ -2,17 +2,17 @@
 
 namespace Websyspro\Entity\Shareds;
 
-use ReflectionAttribute;
-use Websyspro\Commons\TList;
+use CollectionionAttribute;
+use Websyspro\Commons\Collection;
 
 class Properties
 {
   public function __construct(
     public string $name,
-    public TList $items
+    public Collection $items
   ){
     $this->items->Mapper(
-      fn(ReflectionAttribute $ra ) => $ra->newInstance()
+      fn(CollectionionAttribute $ra ) => $ra->newInstance()
     );
   }
 }

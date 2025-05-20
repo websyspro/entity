@@ -2,13 +2,13 @@
 
 namespace Websyspro\Entity\Core\Designs\MySql;
 
-use Websyspro\Commons\TList;
+use Websyspro\Commons\Collection;
 use Websyspro\Entity\Core\StructureTable;
 
 class TMySqlUpdateColumn
 {
   public function __construct(
-    public TList $persistedColumn,
+    public Collection $persistedColumn,
     public StructureTable $structureTable
   ){}
 
@@ -29,7 +29,7 @@ class TMySqlUpdateColumn
   }
 
   public function GetSqlList(
-  ): TList {
-    return new TList();
+  ): Collection {
+    return new Collection();
   }
 }

@@ -2,7 +2,7 @@
 
 namespace Websyspro\Entity\Core;
 
-use Websyspro\Commons\TList;
+use Websyspro\Commons\Collection;
 
 class StructureTable
 { 
@@ -17,7 +17,7 @@ class StructureTable
   private function EntityParse(
   ): void {
     $this->table = (
-      new TList(preg_split(
+      new Collection(preg_split(
         "/(?=[A-Z])/", $this->class
       ))
     )->Find(fn(string $path) => empty($path) === false

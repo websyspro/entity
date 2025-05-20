@@ -2,7 +2,7 @@
 
 namespace Websyspro\Entity\Core;
 
-use Websyspro\Commons\TList;
+use Websyspro\Commons\Collection;
 use Websyspro\Entity\Enums\AttributeType;
 use Websyspro\Entity\Shareds\AbstractColumn;
 use Websyspro\Entity\Shareds\ColumnType;
@@ -12,14 +12,14 @@ class StructureTableColumns
 extends StructureTableAbstract
 {
   public function List(
-  ): TList  {
+  ): Collection  {
     return $this->Properties(
       AttributeType::Column
     );
   }
 
   public function ListType(
-  ): TList {
+  ): Collection {
     return (
       $this->List()->Mapper(
         fn( Properties $properties ) => (
