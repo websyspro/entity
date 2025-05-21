@@ -2,7 +2,7 @@
 
 namespace Websyspro\Entity\Shareds;
 
-use CollectionionAttribute;
+use ReflectionAttribute;
 use Websyspro\Commons\Collection;
 
 class Properties
@@ -12,7 +12,7 @@ class Properties
     public Collection $items
   ){
     $this->items->Mapper(
-      fn(CollectionionAttribute $ra ) => $ra->newInstance()
+      fn(ReflectionAttribute $ra ) => $ra->newInstance()
     );
   }
 }
