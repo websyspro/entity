@@ -38,7 +38,7 @@ class StructureDatabase
       new Collection(preg_split(
         "/(?=[A-Z])/", $this->class
       ))
-    )->Find(fn(string $path) => empty($path) === false
+    )->Where(fn(string $path) => empty($path) === false
     )->Slice(0, preg_match("/Database$/", $this->class) === 1 ? -1 : null
     )->JoinNotSpace();
   }
@@ -162,7 +162,7 @@ class StructureDatabase
   private function GetPersistedColumnsFromTable(
     StructureTable $structureTable
   ): Collection {
-    return $this->persistedColumn->Copy()->Find(
+    return $this->persistedColumn->Copy()->Where(
       fn(PersistedColumn $persistedColumn) => (
         $persistedColumn->table === $structureTable->table
       )

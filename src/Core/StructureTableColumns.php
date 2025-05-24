@@ -40,7 +40,7 @@ extends StructureTableAbstract
     string $name
   ): bool {
     return (
-      $this->ListType()->Find(
+      $this->ListType()->Where(
         fn(ColumnType $properties) => (
           $properties->name === $name
         )

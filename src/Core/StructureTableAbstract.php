@@ -40,13 +40,13 @@ class StructureTableAbstract
     return (
       $this->PropertiesBase()->ForEach(
         fn(Properties $properties) => (
-          $properties->items->Find(
+          $properties->items->Where(
             fn(AbstractColumn $abstractColumn) => (
               $abstractColumn->attributeType === $attributeType
             )
           )
         )
-      )->Find(fn(Properties $properties) => (
+      )->Where(fn(Properties $properties) => (
         $properties->items->Count() !== 0
       ))
     );

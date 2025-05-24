@@ -20,7 +20,7 @@ class StructureTable
       new Collection(preg_split(
         "/(?=[A-Z])/", $this->class
       ))
-    )->Find(fn(string $path) => empty($path) === false
+    )->Where(fn(string $path) => empty($path) === false
     )->Slice(0, preg_match("/Entity$/", $this->class) === 1 ? -1 : null
     )->JoinNotSpace();
   }
