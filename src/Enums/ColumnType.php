@@ -15,10 +15,12 @@ enum ColumnType: string
   private function datetimeEncode(
     string $datetime
   ): string {
+    if( preg_match( "/(\d{2})\/(\d{2})\/(\d{4})/", $datetime )){
+      $datetime = preg_replace( "/(\d{2})\/(\d{2})\/(\d{4})/", "$3-$2-$1", $datetime );
+    }
+
     if( preg_match( "/(\d{2})\/(\d{2})\/(\d{4}) (\d{2}:\d{2}:\d{2})/", $datetime )){
-      $datetime = preg_replace( "/(\d{2})\/(\d{2})\/(\d{4}) (\d{2}:\d{2}:\d{2})/",
-        "$3-$2-$1 $4", $datetime
-      );
+      $datetime = preg_replace( "/(\d{2})\/(\d{2})\/(\d{4}) (\d{2}:\d{2}:\d{2})/", "$3-$2-$1 $4", $datetime );
     }
 
     return sprintf( "'%s'", $datetime );   
@@ -34,9 +36,7 @@ enum ColumnType: string
     string $date
   ): string {
     if( preg_match( "/(\d{2})\/(\d{2})\/(\d{4})/", $date )){
-      $date = preg_replace( "/(\d{2})\/(\d{2})\/(\d{4})/",
-        "$3-$2-$1", $date
-      );
+      $date = preg_replace( "/(\d{2})\/(\d{2})\/(\d{4})/", "$3-$2-$1", $date );
     }
 
     return sprintf( "'%s'", $date );
