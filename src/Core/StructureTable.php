@@ -17,12 +17,10 @@ class StructureTable
   private function EntityParse(
   ): void {
     $this->table = (
-      new Collection(preg_split(
-        "/(?=[A-Z])/", $this->class
-      ))
-    )->Where(fn(string $path) => empty($path) === false
-    )->Slice(0, preg_match("/Entity$/", $this->class) === 1 ? -1 : null
-    )->JoinNotSpace();
+      new Collection(explode( "\\", $this->class))
+    )->Slice(-1)->Mapper(
+      fn(string $str) => preg_replace("/Entity$/", "", $str)
+    )->First();
   }
 
   public function Columns(
