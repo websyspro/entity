@@ -15,7 +15,7 @@ use Websyspro\Entity\Decorations\Events\TInsert;
 use Websyspro\Entity\Decorations\Events\TUpdate;
 use Websyspro\Entity\Decorations\Generations\TAutoIncrement;
 use Websyspro\Entity\Decorations\Requireds\TNotNull;
-use Websyspro\Entity\Decorations\Statistics\Index;
+use Websyspro\Entity\Decorations\Statistics\TIndex;
 
 require_once "./vendor/autoload.php";
 
@@ -86,7 +86,7 @@ class BoxEntity
 extends BaseEntity
 {
   #[TText(32)]
-  #[Index()]
+  #[TIndex()]
   #[TUnique()]
   public string $Name;
 
