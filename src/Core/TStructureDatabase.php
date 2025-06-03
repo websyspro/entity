@@ -3,7 +3,7 @@
 namespace Websyspro\Entity\Core;
 
 use Websyspro\Commons\TList;
-use Websyspro\Commons\Reflect;
+use Websyspro\Commons\TReflect;
 use Websyspro\Entity\Core\Designs\MySql\TMySqlUpdateColumn;
 use Websyspro\Entity\Core\Persisteds\TMySqlScript;
 use Websyspro\Entity\Shareds\TPersistedColumn;
@@ -45,7 +45,7 @@ class TStructureDatabase
   private function GetDecorationEntitys(
   ): void {
     $reflectClass = (
-      Reflect::Class(
+      TReflect::Class(
         $this->class
       )
     );
