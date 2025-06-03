@@ -2,14 +2,14 @@
 
 namespace Websyspro\Entity\Core\Designs\MySql;
 
-use Websyspro\Commons\Collection;
-use Websyspro\Entity\Core\StructureTable;
+use Websyspro\Commons\TList;
+use Websyspro\Entity\Core\TStructureTable;
 
 class TMySqlUpdateColumn
 {
   public function __construct(
-    public Collection $persistedColumn,
-    public StructureTable $structureTable
+    public TList $persistedColumn,
+    public TStructureTable $structureTable
   ){}
 
   private function GetHasCreateds(
@@ -29,7 +29,7 @@ class TMySqlUpdateColumn
   }
 
   public function GetSqlList(
-  ): Collection {
-    return new Collection();
+  ): TList {
+    return new TList();
   }
 }
