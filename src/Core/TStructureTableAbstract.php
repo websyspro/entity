@@ -4,7 +4,7 @@ namespace Websyspro\Entity\Core;
 
 use ReflectionProperty;
 use Websyspro\Commons\TList;
-use Websyspro\Commons\Reflect;
+use Websyspro\Commons\TReflect;
 use Websyspro\Entity\Enums\TAttributeType;
 use Websyspro\Entity\Shareds\TAbstractColumn;
 use Websyspro\Entity\Shareds\TProperties;
@@ -18,7 +18,7 @@ class TStructureTableAbstract
   private function PropertiesBase(
   ): TList {
     $properts = new TList(
-      Reflect::PropertsFromClass(
+      TReflect::PropertsFromClass(
         $this->entity
       )
     );
