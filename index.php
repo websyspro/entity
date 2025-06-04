@@ -1,109 +1,109 @@
 <?php
 
-use Websyspro\Entity\Core\TStructureDatabase;
-use Websyspro\Entity\Decorations\Columns\TDatetime;
-use Websyspro\Entity\Decorations\Columns\TDecimal;
-use Websyspro\Entity\Decorations\Columns\TFlag;
-use Websyspro\Entity\Decorations\Columns\TNumber;
-use Websyspro\Entity\Decorations\Columns\TText;
-use Websyspro\Entity\Decorations\Constraints\TForeignKey;
-use Websyspro\Entity\Decorations\Constraints\TPrimaryKey;
-use Websyspro\Entity\Decorations\Constraints\TUnique;
-use Websyspro\Entity\Decorations\TEntityList;
-use Websyspro\Entity\Decorations\Events\TDelete;
-use Websyspro\Entity\Decorations\Events\TInsert;
-use Websyspro\Entity\Decorations\Events\TUpdate;
-use Websyspro\Entity\Decorations\Generations\TAutoIncrement;
-use Websyspro\Entity\Decorations\Requireds\TNotNull;
-use Websyspro\Entity\Decorations\Statistics\TIndex;
+use Websyspro\Entity\Core\StructureDatabase;
+use Websyspro\Entity\Decorations\Columns\Datetime;
+use Websyspro\Entity\Decorations\Columns\Decimal;
+use Websyspro\Entity\Decorations\Columns\Flag;
+use Websyspro\Entity\Decorations\Columns\Number;
+use Websyspro\Entity\Decorations\Columns\Text;
+use Websyspro\Entity\Decorations\Constraints\ForeignKey;
+use Websyspro\Entity\Decorations\Constraints\PrimaryKey;
+use Websyspro\Entity\Decorations\Constraints\Unique;
+use Websyspro\Entity\Decorations\EntityList;
+use Websyspro\Entity\Decorations\Events\Delete;
+use Websyspro\Entity\Decorations\Events\Insert;
+use Websyspro\Entity\Decorations\Events\Update;
+use Websyspro\Entity\Decorations\Generations\AutoIncrement;
+use Websyspro\Entity\Decorations\Requireds\NotNull;
+use Websyspro\Entity\Decorations\Statistics\Index;
 
 require_once "./vendor/autoload.php";
 
 class BaseEntity
 {
-  #[TNotNull()]
-  #[TNumber()]
-  #[TPrimaryKey()]
-  #[TAutoIncrement()]    
+  #[NotNull()]
+  #[Number()]
+  #[PrimaryKey()]
+  #[AutoIncrement()]    
   public int $Id;
 
-  #[TFlag()]
-  #[TNotNull()]
-  #[TInsert(1)]
+  #[Flag()]
+  #[NotNull()]
+  #[Insert(1)]
   public bool $Actived;
 
-  #[TNotNull()]
-  #[TNumber()]
-  #[TInsert(1)]
+  #[NotNull()]
+  #[Number()]
+  #[Insert(1)]
   public int $ActivedBy;
 
-  #[TNotNull()]
-  #[TDatetime()]
-  #[TInsert(1)]
+  #[NotNull()]
+  #[Datetime()]
+  #[Insert(1)]
   public string $ActivedAt;
 
-  #[TNotNull()]
-  #[TNumber()]
-  #[TInsert(1)] 
+  #[NotNull()]
+  #[Number()]
+  #[Insert(1)] 
   public int $CreatedBy;
 
-  #[TNotNull()]
-  #[TDatetime()]
-  #[TInsert(1)]
+  #[NotNull()]
+  #[Datetime()]
+  #[Insert(1)]
   public string $CreatedAt;
 
-  #[TNumber()]
-  #[TUpdate(1)]
+  #[Number()]
+  #[Update(1)]
   public int $UpdatedBy;
 
-  #[TDatetime()]
-  #[TUpdate(1)]
+  #[Datetime()]
+  #[Update(1)]
   public string $UpdatedAt;
 
-  #[TFlag()]
-  #[TDelete(1)]
-  #[TInsert(0)]
+  #[Flag()]
+  #[Delete(1)]
+  #[Insert(0)]
   public bool $Deleted;
 
-  #[TNumber()]
-  #[TDelete(1)]
+  #[Number()]
+  #[Delete(1)]
   public int $DeletedBy;
 
-  #[TDatetime()]
-  #[TDelete(1)]
+  #[Datetime()]
+  #[Delete(1)]
   public string $DeletedAt;
 }
 
 class OperatorEntity
 extends BaseEntity
 {
-  #[TText(64)]
-  #[TUnique(1)]
+  #[Text(64)]
+  #[Unique(1)]
   public string $Name;
 }
 
 class BoxEntity 
 extends BaseEntity
 {
-  #[TText(32)]
-  #[TIndex()]
-  #[TUnique()]
+  #[Text(32)]
+  #[Index()]
+  #[Unique()]
   public string $Name;
 
-  #[TText(1)]
+  #[Text(1)]
   public string $State;
 
-  #[TNumber()]
-  #[TForeignKey(OperatorEntity::class)]
+  #[Number()]
+  #[ForeignKey(OperatorEntity::class)]
   public string $OperatorId;
 
-  #[TText(255)]
+  #[Text(255)]
   public string $Printer;
 
-  #[TDatetime()]
+  #[Datetime()]
   public string $OpeningAt;
 
-  #[TDecimal(10,2)]
+  #[Decimal(10,2)]
   public string $OpeningBalance;
 }
 
@@ -115,11 +115,11 @@ extends BaseEntity
 
 // print_r($structure);
 
-#[TEntityList([
+#[EntityList([
   BoxEntity::class,
   OperatorEntity::class
 ])]
 class ShopDatabase {}
 
-$structureDatabase = new TStructureDatabase(ShopDatabase::class);
+$structureDatabase = new StructureDatabase(ShopDatabase::class);
 $structureDatabase->Update();
