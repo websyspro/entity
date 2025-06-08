@@ -13,6 +13,9 @@ use Websyspro\Entity\Core\Designs\MySql\MySqlUpdatePrimaryKeys;
 use Websyspro\Entity\Core\Designs\MySql\MySqlUpdateStatistics;
 use Websyspro\Entity\Core\Designs\MySql\MySqlUpdateUniques;
 use Websyspro\Entity\Core\Persisteds\MySqlScript;
+use Websyspro\Entity\Core\Persisteds\PersistedColumnsList;
+use Websyspro\Entity\Core\Persisteds\PersistedPrimaryKeysList;
+use Websyspro\Entity\Core\Persisteds\PersistedRequiredsList;
 use Websyspro\Entity\Enums\ScriptType;
 use Websyspro\Entity\Interfaces\IPersistedColumn;
 use Websyspro\Entity\Interfaces\IPersistedForeignKeys;
@@ -47,7 +50,7 @@ class StructureDatabase
     $this->connect = (
       Connect::Set(
         strtolower(
-          Util::className(
+          Util::ClassName(
             $this->class
           )
         )
@@ -187,38 +190,48 @@ class StructureDatabase
 
   private function GetPersistedColumns(
     StructureTable $structureTable
-  ): DataList {
+  ): PersistedColumnsList {
     if(isset($this->persistedColumn) === false){
-      return DataList::Create();
+      return new PersistedColumnsList(
+        DataList::Create()
+      );
     }
 
-    return $this->persistedColumn->Copy()->Where(
-      fn(IPersistedColumn $persistedColumn) => (
-        $persistedColumn->table === $structureTable->table
+    return new PersistedColumnsList(
+      $this->persistedColumn->Copy()->Where(
+        fn(IPersistedColumn $persistedColumn) => (
+          $persistedColumn->table === $structureTable->table
+        )
       )
     );
   }
 
   private function GetPersistedRequireds(
     StructureTable $structureTable
-  ): DataList {
-    return $this->persistedRequireds->Copy()->Where(
-      fn(IPersistedRequireds $persistedRequireds) => (
-        $persistedRequireds->table === $structureTable->table
+  ): PersistedRequiredsList {
+    return new PersistedRequiredsList( 
+      $this->persistedRequireds->Copy()->Where(
+        fn(IPersistedRequireds $persistedRequireds) => (
+          $persistedRequireds->table === $structureTable->table
+        )
       )
     );
   }
   
   private function GetPersistedPrimaryKeys(
     StructureTable $structureTable
-  ): DataList {
+  ): PersistedPrimaryKeysList {
     if(isset($this->persistedPrimaryKeys) === false){
-      return DataList::Create();
+      return new PersistedPrimaryKeysList(
+        DataList::Create()
+      );
     }
 
-    return $this->persistedPrimaryKeys->Copy()->Where(
-      fn(IPersistedPrimaryKey $persistedPrimaryKey) => (
-        $persistedPrimaryKey->table === $structureTable->table
+    return new PersistedPrimaryKeysList(
+      $this->persistedPrimaryKeys->Copy()->Where(
+        fn(IPersistedPrimaryKey $persistedPrimaryKey) => (
+          $persistedPrimaryKey->table === $structureTable->table
+        )
       )
     );
   }
@@ -297,7 +310,7 @@ class StructureDatabase
     );
   }
 
-  private function GetUpdateStructureEntitys(
+  private function GetUpdateStructureColumns(
     StructureTable $structureTable
   ): void {
     $this->AddUpdateScripts(
@@ -362,7 +375,7 @@ class StructureDatabase
   ): void {
     $this->structureTable->ForEach(
       function(StructureTable $structureTable){
-        $this->GetUpdateStructureEntitys($structureTable);
+        $this->GetUpdateStructureColumns($structureTable);
         $this->GetUpdateStructurePrimaryKeys($structureTable);
         $this->GetUpdateStructureGenerations($structureTable);
         $this->GetUpdateStructureUniques($structureTable);

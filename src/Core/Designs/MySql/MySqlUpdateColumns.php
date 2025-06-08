@@ -3,11 +3,12 @@
 namespace Websyspro\Entity\Core\Designs\MySql;
 
 use Websyspro\Commons\DataList;
+use Websyspro\Entity\Core\Persisteds\PersistedColumnsList;
+use Websyspro\Entity\Core\Persisteds\PersistedRequiredsList;
 use Websyspro\Entity\Core\StructureTable;
 use Websyspro\Entity\Enums\ScriptType;
 use Websyspro\Entity\Interfaces\IColumnType;
 use Websyspro\Entity\Interfaces\IPersistedColumn;
-use Websyspro\Entity\Interfaces\IPersistedRequireds;
 use Websyspro\Entity\Interfaces\IUpdateScript;
 
 class MySqlUpdateColumns
@@ -15,49 +16,21 @@ class MySqlUpdateColumns
   public DataList $updateScripts;
 
   public function __construct(
-    public DataList $persistedColumns,
-    public DataList $persistedRequireds,
+    public PersistedColumnsList $persistedColumnsList,
+    public PersistedRequiredsList $persistedRequiredsList,
     public StructureTable $structureTable
   ){}
 
-  public function SetInicial(
+  public function SetStarteds(
   ): void {
-    $this->updateScripts = DataList::Create();
-  }
-
-  private function IsColumnExistInPersisted(
-    string $name
-  ): bool {
-    $persisteedColumn = $this->persistedColumns->Copy()->Where(
-      fn(IPersistedColumn $persistedColumn) => $persistedColumn->name === $name
+    $this->updateScripts = (
+      DataList::Create()
     );
-
-    return $persisteedColumn->Exist();
-  }
-
-  private function IsColumnNotEqualTypeWithPersisted(
-    string $name
-  ): bool {
-    $persistedColumn = $this->persistedColumns->Copy()->Where(
-      fn(IPersistedColumn $p) => $p->name === $name
-    );
-
-    return $this->structureTable->Columns()->Type($name) === $persistedColumn->First()->type;
-  }  
-
-  private function IsColumnNotEqualRequiredWithPersisted(
-    string $name
-  ): bool {
-    $persistedRequiredColumn = $this->persistedRequireds->Copy()->Where(
-      fn(IPersistedRequireds $persistedRequireds) => $persistedRequireds->name === $name
-    );
-
-    return $this->structureTable->Requireds()->IsRequired($name) === $persistedRequiredColumn->Exist();
   }
 
   private function SetCreateds(
   ): void {
-    if($this->persistedColumns->Exist() === false){
+    if($this->persistedColumnsList->Exist() === false){
       $columnsTypes = $this->structureTable->Columns()->ListType()->Mapper(
         fn(IColumnType $columnType) => "{$columnType->name} {$columnType->type} {$this->structureTable->Requireds()->Sql($columnType->name)}"
       );
@@ -73,9 +46,9 @@ class MySqlUpdateColumns
 
   private function SetAdd(
   ): void {
-    if($this->persistedColumns->Exist() === true){
+    if($this->persistedColumnsList->Exist() === true){
       $columnsAdd = $this->structureTable->Columns()->ListType()->Where(
-        fn(IColumnType $columnType) => $this->IsColumnExistInPersisted($columnType->name) === false
+        fn(IColumnType $columnType) => $this->persistedColumnsList->ColumnExist($columnType->name) === false
       );
 
       if($columnsAdd->Exist() === true){
@@ -93,12 +66,12 @@ class MySqlUpdateColumns
 
   private function SetModify(
   ): void {
-    if($this->persistedColumns->Exist() === true){
+    if($this->persistedColumnsList->Exist() === true){
       $columnsModify = $this->structureTable->Columns()->ListType()->Where(
         fn(IColumnType $columnType) => (
-          $this->IsColumnExistInPersisted($columnType->name) === true && (
-            $this->IsColumnNotEqualTypeWithPersisted($columnType->name) === false || 
-            $this->IsColumnNotEqualRequiredWithPersisted($columnType->name) === false
+          $this->persistedColumnsList->ColumnExist($columnType->name) === true && (
+            $this->structureTable->Columns()->Type($columnType->name) !== $this->persistedColumnsList->Type($columnType->name) || 
+            $this->structureTable->Requireds()->IsRequired($columnType->name) !== $this->persistedRequiredsList->IsRequired($columnType->name)
           )
         )
       );
@@ -118,8 +91,8 @@ class MySqlUpdateColumns
   
   private function SetDrops(
   ): void {
-    if($this->persistedColumns->Exist() === true){
-      $persistedColumns = $this->persistedColumns->Copy()->Where(
+    if($this->persistedColumnsList->Exist() === true){
+      $persistedColumns = $this->persistedColumnsList->Columns()->Where(
         fn(IPersistedColumn $persistedColumn) => (
           $this->structureTable->Columns()->ColumnExist($persistedColumn->name) 
         ) === false
@@ -140,7 +113,7 @@ class MySqlUpdateColumns
   
   public function StartUpdates(
   ): MySqlUpdateColumns {
-    $this->SetInicial();
+    $this->SetStarteds();
     $this->SetCreateds();
     $this->SetAdd();
     $this->SetModify();

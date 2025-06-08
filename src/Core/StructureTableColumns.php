@@ -44,7 +44,7 @@ extends StructureTableAbstract
         fn(IColumnType $properties) => (
           $properties->name === $name
         )
-      )->Count() !== 0
+      )->Exist()
     );
   }
 
