@@ -47,4 +47,34 @@ extends StructureTableAbstract
       )->Count() !== 0
     );
   }
+
+  public function Type(
+    string $name
+  ): string {
+    return (
+      $this->ListType()->Where(
+        fn(IColumnType $properties) => (
+          $properties->name === $name
+        )
+      )->First()->type
+    );
+  }  
+
+  public function Before(
+    string $name
+  ): string {
+    $columnBefore = $this->ListType()->Eq(
+      $this->ListType()->IndexOf(
+        fn(IColumnType $columnType) => (
+          $columnType->name === $name
+        )
+      ) - 1
+    );
+
+    if($columnBefore === null){
+      return "";
+    }
+
+    return "after {$columnBefore->name}";
+  }
 }

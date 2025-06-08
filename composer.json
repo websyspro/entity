@@ -19,6 +19,7 @@
   },
   "require-dev": {
     "websyspro/dynamicsql": "dev-main",
+    "websyspro/logger": "dev-main",
     "websyspro/common": "dev-main",
     "websyspro/watch": "dev-main",
     "websyspro/database": "dev-main"
