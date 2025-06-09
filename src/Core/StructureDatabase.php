@@ -14,8 +14,12 @@ use Websyspro\Entity\Core\Designs\MySql\MySqlUpdateStatistics;
 use Websyspro\Entity\Core\Designs\MySql\MySqlUpdateUniques;
 use Websyspro\Entity\Core\Persisteds\MySqlScript;
 use Websyspro\Entity\Core\Persisteds\PersistedColumnsList;
+use Websyspro\Entity\Core\Persisteds\PersistedForeignKeysList;
+use Websyspro\Entity\Core\Persisteds\PersistedGenerationsList;
 use Websyspro\Entity\Core\Persisteds\PersistedPrimaryKeysList;
 use Websyspro\Entity\Core\Persisteds\PersistedRequiredsList;
+use Websyspro\Entity\Core\Persisteds\PersistedStatisticsList;
+use Websyspro\Entity\Core\Persisteds\PersistedUniquesList;
 use Websyspro\Entity\Enums\ScriptType;
 use Websyspro\Entity\Interfaces\IPersistedColumn;
 use Websyspro\Entity\Interfaces\IPersistedForeignKeys;
@@ -180,7 +184,7 @@ class StructureDatabase
     if(isset($this->structureTable)){
       $this->persistedColumn = $this->SetPersistedsColumns();
       $this->persistedRequireds = $this->SetPersistedsRequireds();
-      $this->persistedForeignKeys = $this->SetPersistedsPrimaryKeys();
+      $this->persistedPrimaryKeys = $this->SetPersistedsPrimaryKeys();
       $this->persistedGenerations = $this->SetPersistedsGenerations();
       $this->persistedUniques = $this->SetPersistedsUniques();
       $this->persistedStatistics = $this->SetPersistedsStatistics();
@@ -238,56 +242,72 @@ class StructureDatabase
 
   private function GetPersistedGenerations(
     StructureTable $structureTable
-  ): DataList {
+  ): PersistedGenerationsList {
     if(isset($this->persistedGenerations) === false){
-      return DataList::Create();
+      return new PersistedGenerationsList(
+        DataList::Create()
+      );
     }
 
-    return $this->persistedGenerations->Copy()->Where(
-      fn(IPersistedGeneration $persistedGeneration) => (
-        $persistedGeneration->table === $structureTable->table
+    return new PersistedGenerationsList(
+      $this->persistedGenerations->Copy()->Where(
+        fn(IPersistedGeneration $persistedGeneration) => (
+          $persistedGeneration->table === $structureTable->table
+        )
       )
     );
   }
 
   private function GetPersistedUniques(
     StructureTable $structureTable
-  ): DataList {
+  ): PersistedUniquesList {
     if(isset($this->persistedUniques) === false){
-      return DataList::Create();
+      return new PersistedUniquesList(
+        DataList::Create()
+      );
     }
 
-    return $this->persistedUniques->Copy()->Where(
-      fn(IPersistedUnique $persistedUnique) => (
-        $persistedUnique->table === $structureTable->table
+    return new PersistedUniquesList(
+      $this->persistedUniques->Copy()->Where(
+        fn(IPersistedUnique $persistedUnique) => (
+          $persistedUnique->table === $structureTable->table
+        )
       )
     );
   }
 
   private function GetPersistedStatistics(
     StructureTable $structureTable
-  ): DataList {
+  ): PersistedStatisticsList {
     if(isset($this->persistedStatistics) === false){
-      return DataList::Create();
+      return new PersistedStatisticsList(
+        DataList::Create()
+      );
     }
 
-    return $this->persistedStatistics->Copy()->Where(
-      fn(IPersistedStatistics $persistedStatistic) => (
-        $persistedStatistic->table === $structureTable->table
+    return new PersistedStatisticsList(
+      $this->persistedStatistics->Copy()->Where(
+        fn(IPersistedStatistics $persistedStatistic) => (
+          $persistedStatistic->table === $structureTable->table
+        )
       )
     );
   }
 
   private function GetPersistedForeignKeys(
     StructureTable $structureTable
-  ): DataList {
+  ): PersistedForeignKeysList {
     if(isset($this->persistedForeignKeys) === false){
-      return DataList::Create();
+      return new PersistedForeignKeysList(
+        DataList::Create()
+      );
     }
 
-    return $this->persistedForeignKeys->Copy()->Where(
-      fn(IPersistedForeignKeys $persistedForeignKey) => (
-        $persistedForeignKey->table === $structureTable->table
+    return new PersistedForeignKeysList(
+      $this->persistedForeignKeys->Copy()->Where(
+        fn(IPersistedForeignKeys $persistedForeignKey) => (
+          $persistedForeignKey->table === $structureTable->table
+        )
       )
     );
   }  

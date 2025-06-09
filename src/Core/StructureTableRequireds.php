@@ -19,11 +19,11 @@ extends StructureTableAbstract
   public function IsRequired(
     string $name
   ): bool {
-    return in_array(
-      $name, $this->List()->Mapper(
-        fn(IProperties $properties) => $properties->name
-      )->All()
-    );
+    return $this->List()->Where(
+      fn(IProperties $properties) => (
+        $properties->name === $name
+      )
+    )->Exist();
   } 
   
   public function Sql(

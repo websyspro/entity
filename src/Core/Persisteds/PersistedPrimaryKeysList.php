@@ -14,7 +14,11 @@ class PersistedPrimaryKeysList
 
   public function List(
   ): DataList {
-    return $this->primaryKeys->Copy();
+    return $this->primaryKeys->Copy()->Mapper(
+      fn(IPersistedPrimaryKey $persistedPrimaryKey) => (
+        $persistedPrimaryKey->name
+      )
+    );
   }
 
   public function IsRequired(
