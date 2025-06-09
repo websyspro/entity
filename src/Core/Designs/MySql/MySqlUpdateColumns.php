@@ -55,7 +55,7 @@ class MySqlUpdateColumns
         $columnsAdd->ForEach(fn(IColumnType $columnType) => (
           $this->updateScripts->Add(
             new IUpdateScript(
-              "alter table {$this->structureTable->table} add column {$columnType->name} {$columnType->type} {$this->structureTable->Requireds()->Sql($columnType->name)} {$this->structureTable->Columns()->Before($columnType->name)}",
+              "Alter Table {$this->structureTable->table} Add Column {$columnType->name} {$columnType->type} {$this->structureTable->Requireds()->Sql($columnType->name)} {$this->structureTable->Columns()->Before($columnType->name)}",
               "Column {$columnType->name} added with successfully to {$this->structureTable->table}", ScriptType::NotDependence
             )
           )
@@ -80,7 +80,7 @@ class MySqlUpdateColumns
         $columnsModify->ForEach(fn(IColumnType $columnType) => (
           $this->updateScripts->Add(
             new IUpdateScript(
-              "alter table {$this->structureTable->table} modify column {$columnType->name} {$columnType->type} {$this->structureTable->Requireds()->Sql($columnType->name)}",
+              "Alter Table {$this->structureTable->table} Modify Column {$columnType->name} {$columnType->type} {$this->structureTable->Requireds()->Sql($columnType->name)}",
               "Column {$columnType->name} modify with successfully to {$this->structureTable->table}", ScriptType::NotDependence
             )
           )
@@ -102,7 +102,7 @@ class MySqlUpdateColumns
         $persistedColumns->ForEach(fn(IPersistedColumn $persistedColumn) => (
           $this->updateScripts->Add(
             new IUpdateScript(
-              "alter table {$this->structureTable->table} drop {$persistedColumn->name}",
+              "Alter Table {$this->structureTable->table} Drop {$persistedColumn->name}",
               "Column {$persistedColumn->name} drop with successfully to {$this->structureTable->table}", ScriptType::NotDependence
             )
           )          

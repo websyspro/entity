@@ -19,12 +19,12 @@ class MySqlUpdateForeignKeys
     public StructureTable $structureTable
   ){}
 
-  public function SetInicial(
+  private function SetInicial(
   ): void {
     $this->updateScripts = DataList::Create();
   }
 
-  public function SetAdd(
+  private function SetAdd(
   ): void {
     if($this->persistedForeignKeysList->ListNames()->Exist() === false){
       if($this->structureTable->ForeignKeys()->ListNames($this->structureTable->table)->Exist() === true){
@@ -32,7 +32,7 @@ class MySqlUpdateForeignKeys
           ->Mapper(fn(ForeignKeyItem $foreignKeyItem) => (
             $this->updateScripts->Add(
               new IUpdateScript(
-                "Alter table {$this->structureTable->table} add constraint {$foreignKeyItem->name} foreign key ({$foreignKeyItem->key}) references {$foreignKeyItem->foreignKeyReferenceItem->table}({$foreignKeyItem->foreignKeyReferenceItem->key})",
+                "Alter Table {$this->structureTable->table} Add Constraint {$foreignKeyItem->name} Foreign Key ({$foreignKeyItem->key}) References {$foreignKeyItem->foreignKeyReferenceItem->table}({$foreignKeyItem->foreignKeyReferenceItem->key})",
                 "Foreign key constraint {$foreignKeyItem->name} added with successfully to {$this->structureTable->table}", ScriptType::Dependence
               )
             )
@@ -41,7 +41,7 @@ class MySqlUpdateForeignKeys
     }
   }  
 
-  public function SetModify(
+  private function SetModify(
   ): void {
     if($this->persistedForeignKeysList->ListNames()->Exist() === true){
       if($this->structureTable->ForeignKeys()->ListNames($this->structureTable->table)->Exist() === true){
@@ -54,7 +54,7 @@ class MySqlUpdateForeignKeys
           ->Mapper(fn(ForeignKeyItem $foreignKeyItem) => (
             $this->updateScripts->Add(
               new IUpdateScript(
-                "Alter table {$this->structureTable->table} add constraint {$foreignKeyItem->name} foreign key ({$foreignKeyItem->key}) references {$foreignKeyItem->foreignKeyReferenceItem->table}({$foreignKeyItem->foreignKeyReferenceItem->key})",
+                "Alter Table {$this->structureTable->table} Add Constraint {$foreignKeyItem->name} Foreign Key ({$foreignKeyItem->key}) References {$foreignKeyItem->foreignKeyReferenceItem->table}({$foreignKeyItem->foreignKeyReferenceItem->key})",
                 "Foreign key constraint {$foreignKeyItem->name} added with successfully to {$this->structureTable->table}", ScriptType::Dependence
               )
             )            
@@ -63,7 +63,7 @@ class MySqlUpdateForeignKeys
     }
   }
 
-  public function SetDrops(
+  private function SetDrops(
   ): void {
     if($this->persistedForeignKeysList->ListNames()->Exist() === true){
       $this->persistedForeignKeysList->ListNames()
@@ -75,17 +75,10 @@ class MySqlUpdateForeignKeys
           function(IPersistedForeignKeys $persistedForeignKeys){
             $this->updateScripts->Add(
               new IUpdateScript(
-                "Alter table {$this->structureTable->table} drop foreign key {$persistedForeignKeys->name}",
+                "Alter Table {$this->structureTable->table} Drop Foreign Key {$persistedForeignKeys->name}",
                 "Foreign key constraint {$persistedForeignKeys->name} drop with successfully to {$this->structureTable->table}", ScriptType::Dependence
               )
             );
-            
-            // $this->updateScripts->Add(
-            //   new IUpdateScript(
-            //     "Alter table {$this->structureTable->table} drop index {$persistedForeignKeys->name}",
-            //     "Index {$persistedForeignKeys->name} drop with successfully to {$this->structureTable->table}", ScriptType::Dependence
-            //   )
-            // );
           }
         );
     }

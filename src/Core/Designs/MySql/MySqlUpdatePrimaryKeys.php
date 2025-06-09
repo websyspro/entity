@@ -37,7 +37,7 @@ class MySqlUpdatePrimaryKeys
         if($this->persistedPrimaryKeysList->List()->Exist()){
           $this->updateScripts->Add(
             new IUpdateScript(
-              "Alter table {$this->structureTable->table} drop primary key",
+              "Alter Table {$this->structureTable->table} Drop Primary Key",
               "Primary key ({$this->persistedPrimaryKeysList->List()->JoinWithComma()}) create for {$this->structureTable->table} table successfully", ScriptType::NotDependence
             )
           );          
@@ -45,7 +45,7 @@ class MySqlUpdatePrimaryKeys
 
         $this->updateScripts->Add(
           new IUpdateScript(
-            "Alter table {$this->structureTable->table} add primary key ({$this->structureTable->PrimaryKeys()->List()->JoinWithComma()})",
+            "Alter Table {$this->structureTable->table} Add Primary Key ({$this->structureTable->PrimaryKeys()->List()->JoinWithComma()})",
             "Primary key ({$this->structureTable->PrimaryKeys()->List()->JoinWithComma()}) create for {$this->structureTable->table} table successfully", ScriptType::NotDependence
           )
         );         
@@ -59,7 +59,7 @@ class MySqlUpdatePrimaryKeys
       if($this->structureTable->PrimaryKeys()->List()->Exist() === false){
         $this->updateScripts->Add(
           new IUpdateScript(
-            "Alter table {$this->structureTable->table} drop primary key",
+            "Alter Table {$this->structureTable->table} Drop Primary Key",
             "Primary key ({$this->persistedPrimaryKeysList->List()->JoinWithComma()}) create for {$this->structureTable->table} table successfully", ScriptType::NotDependence
           )
         );        

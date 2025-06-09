@@ -56,7 +56,7 @@ class MySqlUpdateStatistics
           ->Mapper(fn(IStatisticsNamesItem $statisticsNamesItem) => (
             $this->updateScripts->Add(
               new IUpdateScript(
-                "Create index {$statisticsNamesItem->name} on {$this->structureTable->table} ({$statisticsNamesItem->columns})",
+                "Create Index {$statisticsNamesItem->name} On {$this->structureTable->table} ({$statisticsNamesItem->columns})",
                 "Index {$statisticsNamesItem->name} added with successfully to {$this->structureTable->table}", ScriptType::NotDependence
               )
             )            
@@ -78,7 +78,7 @@ class MySqlUpdateStatistics
           fn(string $indexName) => (
             $this->updateScripts->Add(
               new IUpdateScript(
-                "Alter table {$this->structureTable->table} drop index {$indexName}",
+                "Alter Table {$this->structureTable->table} Drop Index {$indexName}",
                 "Index {$indexName} drop with successfully to {$this->structureTable->table}", ScriptType::NotDependence
               )
             )

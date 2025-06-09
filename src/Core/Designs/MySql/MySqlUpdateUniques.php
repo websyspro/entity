@@ -31,7 +31,7 @@ class MySqlUpdateUniques
           fn(IUniqueNameItems $uniqueNameItems) => (
             $this->updateScripts->Add(
               new IUpdateScript(
-                "Alter table {$this->structureTable->table} add constraint {$uniqueNameItems->name} unique ({$uniqueNameItems->columns})",
+                "Alter Table {$this->structureTable->table} Add Constraint {$uniqueNameItems->name} Unique ({$uniqueNameItems->columns})",
                 "Constraint unique {$uniqueNameItems->name} added with successfully to {$this->structureTable->table}", ScriptType::NotDependence
               )
             )
@@ -54,7 +54,7 @@ class MySqlUpdateUniques
           ->Mapper(fn(IUniqueNameItems $uniqueNameItems) => (
             $this->updateScripts->Add(
               new IUpdateScript(
-                "Alter table {$this->structureTable->table} add constraint {$uniqueNameItems->name} unique ({$uniqueNameItems->columns})",
+                "Alter Table {$this->structureTable->table} Add Constraint {$uniqueNameItems->name} Unique ({$uniqueNameItems->columns})",
                 "Constraint unique {$uniqueNameItems->name} added with successfully to {$this->structureTable->table}", ScriptType::NotDependence
               )
             )            
@@ -76,7 +76,7 @@ class MySqlUpdateUniques
           fn(string $uniqueName) => (
             $this->updateScripts->Add(
               new IUpdateScript(
-                "alter table {$this->structureTable->table} drop constraint {$uniqueName}",
+                "Alter Table {$this->structureTable->table} Drop Constraint {$uniqueName}",
                 "Constraint unique {$uniqueName} drop with successfully to {$this->structureTable->table}", ScriptType::NotDependence
               )
             )

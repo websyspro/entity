@@ -4,6 +4,7 @@ namespace Websyspro\Entity\Core;
 
 use Websyspro\Commons\DataList;
 use Websyspro\Entity\Enums\AttributeType;
+use Websyspro\Entity\Enums\ColumnOrder;
 use Websyspro\Entity\Interfaces\IAbstractColumn;
 use Websyspro\Entity\Interfaces\IColumnType;
 use Websyspro\Entity\Interfaces\IProperties;
@@ -13,8 +14,36 @@ extends StructureTableAbstract
 {
   public function List(
   ): DataList  {
-    return $this->Properties(
+    $propertiesInitial = $this->Properties(
       AttributeType::Column
+    )->Where(fn(IProperties $property) => (
+      in_array( $property->name, explode(
+        "|", ColumnOrder::Initial->value
+      )) === true
+    ));
+
+    $propertiesBase = $this->Properties(
+      AttributeType::Column
+    )->Where(fn(IProperties $property) => (
+      in_array( $property->name, explode(
+        "|", ColumnOrder::Base->value
+      )) === false
+    ));
+    
+    $propertiesEnd = $this->Properties(
+      AttributeType::Column
+    )->Where(fn(IProperties $property) => (
+      in_array( $property->name, explode(
+        "|", ColumnOrder::End->value
+      )) === true
+    ));    
+
+    return DataList::Create(
+      array_merge(
+        $propertiesInitial->All(),
+        $propertiesBase->All(),
+        $propertiesEnd->All()
+      )
     );
   }
 
