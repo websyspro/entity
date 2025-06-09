@@ -3,6 +3,7 @@
 namespace Websyspro\Entity\Core\Designs\MySql;
 
 use Websyspro\Commons\DataList;
+use Websyspro\Database\Connect;
 use Websyspro\Entity\Core\Persisteds\PersistedColumnsList;
 use Websyspro\Entity\Core\Persisteds\PersistedRequiredsList;
 use Websyspro\Entity\Core\StructureTable;
@@ -18,7 +19,8 @@ class MySqlUpdateColumns
   public function __construct(
     public PersistedColumnsList $persistedColumnsList,
     public PersistedRequiredsList $persistedRequiredsList,
-    public StructureTable $structureTable
+    public StructureTable $structureTable,
+    public Connect $connect
   ){}
 
   public function SetStarteds(
@@ -100,12 +102,22 @@ class MySqlUpdateColumns
 
       if($persistedColumns->Exist() === true){
         $persistedColumns->ForEach(fn(IPersistedColumn $persistedColumn) => (
-          $this->updateScripts->Add(
-            new IUpdateScript(
-              "Alter Table {$this->structureTable->table} Drop {$persistedColumn->name}",
-              "Column {$persistedColumn->name} drop with successfully to {$this->structureTable->table}", ScriptType::NotDependence
-            )
-          )          
+          $this->connect->Query(
+            "Select Count(*) as IsNotNull 
+               From {$this->structureTable->table} 
+              Where {$persistedColumn->name} Is Not Null"
+          )->ForEach(
+            function(object $row) use($persistedColumn) {
+              if((int)$row->IsNotNull === 0){
+                $this->updateScripts->Add(
+                  new IUpdateScript(
+                    "Alter Table {$this->structureTable->table} Drop {$persistedColumn->name}",
+                    "Column {$persistedColumn->name} drop with successfully to {$this->structureTable->table}", ScriptType::NotDependence
+                  )
+                );
+              }
+            }
+          )
         ));
       }
     }

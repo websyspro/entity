@@ -336,7 +336,7 @@ class StructureDatabase
     $this->AddUpdateScripts(
       (new MySqlUpdateColumns(
         $this->GetPersistedColumns($structureTable),
-        $this->GetPersistedRequireds($structureTable), $structureTable
+        $this->GetPersistedRequireds($structureTable), $structureTable, $this->connect
       ))->StartUpdates()->UpdateScripts()
     );
   }
