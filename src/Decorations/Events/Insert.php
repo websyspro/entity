@@ -16,13 +16,13 @@ extends IAbstractColumn
     public readonly mixed $value
   ){}
 
-  public function get(
+  public function Get(
   ): mixed {
     if(class_exists($this->value) === false){
       return $this->value;
     } else {
       return call_user_func_array(
-        [$this->value, "get"], []
+        [$this->value, "Get"], []
       );
     }
 

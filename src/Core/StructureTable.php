@@ -55,4 +55,19 @@ class StructureTable
   ): StructureTableForeignKeys {
     return new StructureTableForeignKeys($this->class);
   }
+
+  public function EventInserts(
+  ): StructureTableEventInserts {
+    return new StructureTableEventInserts($this->class);
+  }
+
+  public function EventUpdates(
+  ): StructureTableEventUpdates {
+    return new StructureTableEventUpdates($this->class);
+  }
+
+  public function EventDeletes(
+  ): StructureTableEventDeletes {
+    return new StructureTableEventDeletes($this->class);
+  }  
 }

@@ -2,6 +2,7 @@
 
 namespace Websyspro\Entity\Core\Bases;
 
+use Websyspro\Entity\Core\Commons\Now;
 use Websyspro\Entity\Decorations\Columns\Datetime;
 use Websyspro\Entity\Decorations\Columns\Flag;
 use Websyspro\Entity\Decorations\Columns\Number;
@@ -32,7 +33,7 @@ class BaseEntity
 
   #[NotNull()]
   #[Datetime()]
-  #[Insert(1)]
+  #[Insert(Now::class)]
   public string $ActivedAt;
 
   #[NotNull()]
@@ -42,7 +43,7 @@ class BaseEntity
 
   #[NotNull()]
   #[Datetime()]
-  #[Insert(1)]
+  #[Insert(Now::class)]
   public string $CreatedAt;
 
   #[Number()]
@@ -50,12 +51,12 @@ class BaseEntity
   public int $UpdatedBy;
 
   #[Datetime()]
-  #[Update(1)]
+  #[Update(Now::class)]
   public string $UpdatedAt;
 
   #[Flag()]
   #[Delete(1)]
-  #[Insert(0)]
+  #[Insert(1)]
   public bool $Deleted;
 
   #[Number()]
@@ -63,6 +64,6 @@ class BaseEntity
   public int $DeletedBy;
 
   #[Datetime()]
-  #[Delete(1)]
+  #[Delete(Now::class)]
   public string $DeletedAt;
 }

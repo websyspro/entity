@@ -21,7 +21,7 @@ class Update extends IAbstractColumn
       return $this->value;
     } else {
       return call_user_func_array(
-        [$this->value, "get"], []
+        [$this->value, "Get"], []
       );
     }
 

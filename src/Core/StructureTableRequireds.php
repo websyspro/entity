@@ -16,6 +16,21 @@ extends StructureTableAbstract
     );
   }
 
+  public function ListKeysNames(
+  ): DataList {
+    return (
+      DataList::Create(
+        array_flip(
+          $this->List()->Mapper(
+            fn(IProperties $properties) => (
+              $properties->name
+            )
+          )->All()
+        )
+      )->Mapper(fn() => null)
+    );
+  }  
+
   public function IsRequired(
     string $name
   ): bool {
