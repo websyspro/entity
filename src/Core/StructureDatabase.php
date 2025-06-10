@@ -46,7 +46,8 @@ class StructureDatabase
   public DataList $persistedForeignKeys;
 
   public function __construct(
-    public string $class
+    public DataList $entitys,
+    public string $module
   ){}
 
   public function GetDatabase(
@@ -55,7 +56,7 @@ class StructureDatabase
       Connect::Set(
         strtolower(
           Util::ClassName(
-            $this->class
+            $this->module
           )
         )
       )
@@ -64,20 +65,11 @@ class StructureDatabase
 
   private function GetDecorationEntitys(
   ): void {
-    $reflectClass = (
-      Reflect::Class(
-        $this->class
-      )
-    );
-
-    [$attributeEntites] = $reflectClass->getAttributes();
-    if($attributeEntites !== null){
-      $this->structureTable = new DataList(
-        $attributeEntites->newInstance()->entitys
-      );
-
+    if($this->entitys->Count() !== 0){
+      $this->structureTable = $this->entitys;
+      
       $this->structureTable->Mapper(
-        fn(string $class) => new StructureTable($class)
+        fn(string $entity) => new StructureTable($entity)
       );
     }
   }

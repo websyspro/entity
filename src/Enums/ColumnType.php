@@ -94,6 +94,10 @@ enum ColumnType: string
   public function Encode(
     mixed $mixed
   ): mixed {
+    if(is_null($mixed)){
+      return "NULL";
+    }
+
     return match( $this ){
       ColumnType::Date => $this->dateEncode($mixed),
       ColumnType::Datetime => $this->datetimeEncode($mixed),

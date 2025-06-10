@@ -3,9 +3,13 @@
 namespace Websyspro\Entity;
 
 use Websyspro\Commons\DataList;
+use Websyspro\Commons\Util;
+use Websyspro\Database\Connect;
 use Websyspro\Entity\Core\StructureTable;
 use Websyspro\Entity\Enums\AttributeType;
 use Websyspro\Entity\Interfaces\IProperties;
+use Websyspro\Logger\Enums\LogType;
+use Websyspro\Logger\Message;
 
 class Repository
 {
@@ -96,6 +100,52 @@ class Repository
     );
   }
 
+  private function InsertValues(
+    DataList $dataList
+  ): bool {
+    $dataHeaders = DataList::Create(
+      array_keys($dataList->First())
+    );
+
+    $dataList->Chunk(500);
+    $dataList->Mapper(
+      fn(DataList $dataRows) => (
+        $dataRows->Mapper(
+          fn(array $row) => (
+            sprintf("(%s)", ...[
+              DataList::Create(
+                $row
+              )->JoinWithComma()
+            ])
+          )
+        )
+      )
+    );
+
+    $dataList->Mapper(fn(DataList $dataRows) => (
+      sprintf("Insert Into {$this->structureTable->table} (%s) values %s", ...[
+        $dataHeaders->JoinWithComma(),
+        $dataRows->JoinWithComma()
+      ])
+    ));
+
+    $dataList->Mapper(
+      fn(string $insertScript) => (
+        Connect::Set("shop")->Exec(
+          $insertScript
+        )
+      )
+    );
+
+    Message::Infors(
+      LogType::Database, (
+        "Import of {$this->structureTable->table} table successfully completed"
+      )
+    );
+
+    return true;
+  }
+
   public function Insert(
     array $dataList = []
   ): bool {
@@ -103,21 +153,24 @@ class Repository
       return false;
     }
 
-    $dataList = DataList::Create($dataList);
-    $columnsList = $this->Columns();
+    $columnsList = (
+      $this->Columns()
+    );
     
-    $dataList = $dataList->Mapper(
-      fn(array $row) => (
-        $this->ParseDecode(
-          $this->ParseDefaults(
-            $row, AttributeType::Insert
-          ), $columnsList
-        )->All()
+    return (
+      $this->InsertValues(
+        DataList::Create(
+          $dataList
+        )->Mapper(
+          fn(array $row) => (
+            $this->ParseDecode(
+              $this->ParseDefaults(
+                $row, AttributeType::Insert
+              ), $columnsList
+            )->All()
+          )
+        )
       )
     );
-
-    print_r($dataList);
-
-    return true;
   } 
 }
