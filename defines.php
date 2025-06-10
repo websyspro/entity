@@ -1,5 +1,5 @@
 <?php
 
-if( defined( "rootdir" ) === false ){
-  define( "rootdir", dirname( __FILE__ ));
+if(defined("rootdir") === false){
+  define("rootdir", dirname(__FILE__));
 }
