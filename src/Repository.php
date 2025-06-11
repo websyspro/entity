@@ -86,7 +86,7 @@ class Repository
     DataList $row,
     DataList $columns
   ): DataList {
-    $parseDecode = (
+    $parseEncode = (
       $row->Mapper(
         fn(mixed $value, string $name) => (
           $columns->Copy()->WhereByKey(
@@ -96,7 +96,7 @@ class Repository
       )
     );
 
-    return $parseDecode;
+    return $parseEncode;
   }
 
   private function ParseDecode(
@@ -218,7 +218,7 @@ class Repository
             DataList::Create(
               (array)$row
             ), $columnsList
-          )->First()
+          )->All()
         ))
     );
   }
