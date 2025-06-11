@@ -19,9 +19,11 @@ class StructureTable
 
   private function EntityModule(
   ): void {
-    $this->module = Statics::$modules->Copy()->Where(
-      fn(mixed $itemModule) => $itemModule->entity === $this->entity
-    )->First()->module;
+    if(isset(Statics::$modules)){
+      $this->module = Statics::$modules->Copy()->Where(
+        fn(mixed $itemModule) => $itemModule->entity === $this->entity
+      )->First()->module;
+    }
   } 
 
   private function EntityParse(
