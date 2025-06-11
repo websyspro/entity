@@ -31,8 +31,12 @@ class Repository
 
   public function Connect(
   ): Connect {
-    $module = Util::ClassName(
-      $this->structureTable->module
+    $module = (
+      strtolower(
+        Util::ClassName(
+          $this->structureTable->module
+        )
+      )
     );
 
     return Connect::Set($module);
