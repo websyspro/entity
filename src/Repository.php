@@ -142,7 +142,7 @@ class Repository
 
     $dataList->Mapper(
       fn(string $insertScript) => (
-        Connect::Set("shop")->Exec(
+        $this->Connect()->Exec(
           $insertScript
         )
       )
