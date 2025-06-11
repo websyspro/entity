@@ -20,9 +20,11 @@ class StructureTable
   ): void {
     if(defined("module") === true){
       if(module instanceof DataList){
-        mudule->Where(fn(mixed $itemModule) => (
-          $itemModule->entity === $this->class
-        ));
+        $this->module = mudule->Where(
+          fn(mixed $itemModule) => (
+            $itemModule->entity === $this->class
+          )
+        )->First();
       }
     }
   } 
