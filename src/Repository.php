@@ -180,9 +180,9 @@ class Repository
   }
 
   public function Count(
-  ): DataList {
+  ): int {
     return $this->Connect()->Query(
       "Select Count(*) as CountRows From {$this->structureTable->table}"
-    );
+    )->First()->CountRows;
   }
 }
