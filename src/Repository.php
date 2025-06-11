@@ -166,5 +166,7 @@ class Repository
   }
 
   public function Count(
-  ): int {}
+  ): int {
+    return 0;
+  }
 }
