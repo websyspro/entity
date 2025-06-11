@@ -11,10 +11,10 @@ use Websyspro\Entity\Interfaces\IProperties;
 
 class Repository
 {
-  private StructureTable $structureTable;
+  public StructureTable $structureTable;
 
   public function __construct(
-    private string $table
+    public string $table
   ){
     $this->structureTable = (
       new StructureTable(
