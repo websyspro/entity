@@ -3,6 +3,7 @@
 namespace Websyspro\Entity;
 
 use Websyspro\Commons\DataList;
+use Websyspro\Commons\Util;
 use Websyspro\Database\Connect;
 use Websyspro\Entity\Core\StructureTable;
 use Websyspro\Entity\Enums\AttributeType;
@@ -26,6 +27,15 @@ class Repository
     string $entity
   ): Repository {
     return new static($entity);
+  }
+
+  public function Connect(
+  ): Connect {
+    $module = Util::ClassName(
+      $this->structureTable->module
+    );
+
+    return Connect::Set($module);
   }
 
   private function ListKeysNames(
@@ -166,7 +176,9 @@ class Repository
   }
 
   public function Count(
-  ): int {
-    return 0;
+  ): DataList {
+    return $this->Connect()->Query(
+      "Select Count(*) as CountRows From {$this->structureTable->table}"
+    );
   }
 }
