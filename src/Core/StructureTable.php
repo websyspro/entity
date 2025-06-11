@@ -19,6 +19,8 @@ class StructureTable
 
   private function EntityModule(
   ): void {
+    print_r(Statics::$modules);
+
     $this->module = Statics::$modules->Where(
       fn(mixed $itemModule) => $itemModule->entity === $this->class
     )->First()->module;
