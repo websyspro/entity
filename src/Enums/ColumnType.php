@@ -116,6 +116,8 @@ enum ColumnType: string
     }
 
     return match( $this ){
+      ColumnType::Date => $this->dateDecode($mixed),
+      ColumnType::Datetime => $this->datetimeDecode($mixed),
       ColumnType::Decimal => $this->decimalDecode($mixed),
       ColumnType::Flag => $this->flagDecode($mixed),
         default => $mixed
