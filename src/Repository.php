@@ -82,7 +82,7 @@ class Repository
     return $defaultEvents;
   }
 
-  private function ParseDecode(
+  private function ParseEncode(
     DataList $row,
     DataList $columns
   ): DataList {
@@ -98,6 +98,23 @@ class Repository
 
     return $parseDecode;
   }
+
+  private function ParseDecode(
+    DataList $row,
+    DataList $columns
+  ): DataList {
+    $parseDecode = (
+      $row->Mapper(
+        fn(mixed $value, string $name) => (
+          $columns->Copy()->WhereByKey(
+            fn(string $columnName) => $columnName === $name
+          )->First()->Decode($value)
+        )
+      )
+    );
+
+    return $parseDecode;
+  }  
 
   private function ParseDefaults(
     array $row,
@@ -168,7 +185,7 @@ class Repository
           $dataList
         )->Mapper(
           fn(array $row) => (
-            $this->ParseDecode(
+            $this->ParseEncode(
               $this->ParseDefaults(
                 $row, AttributeType::Insert
               ), $columnsList
@@ -189,6 +206,20 @@ class Repository
   public function QueryBuild(
     string $sql    
   ): DataList {
-    return $this->Connect()->Query($sql);
+    $columnsList = (
+      $this->Columns()
+    );    
+
+    return (
+      $this->Connect()
+        ->Query($sql)
+        ->Mapper(fn(object $row) => (
+          $this->ParseDecode(
+            DataList::Create(
+              (array)$row
+            ), $columnsList
+          )->First()
+        ))
+    );
   }
 }
