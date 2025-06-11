@@ -3,13 +3,10 @@
 namespace Websyspro\Entity;
 
 use Websyspro\Commons\DataList;
-use Websyspro\Commons\Util;
 use Websyspro\Database\Connect;
 use Websyspro\Entity\Core\StructureTable;
 use Websyspro\Entity\Enums\AttributeType;
 use Websyspro\Entity\Interfaces\IProperties;
-use Websyspro\Logger\Enums\LogType;
-use Websyspro\Logger\Message;
 
 class Repository
 {
@@ -24,11 +21,11 @@ class Repository
       )
     );
   }
-
+  
   public static function Entity(
     string $entity
   ): Repository {
-    return new Repository($entity);
+    return new static($entity);
   }
 
   private function ListKeysNames(
@@ -137,12 +134,6 @@ class Repository
       )
     );
 
-    Message::Infors(
-      LogType::Database, (
-        "Import of {$this->structureTable->table} table successfully completed"
-      )
-    );
-
     return true;
   }
 
@@ -172,5 +163,8 @@ class Repository
         )
       )
     );
-  } 
+  }
+
+  public function Count(
+  ): int {}
 }

@@ -7,12 +7,25 @@ use Websyspro\Commons\DataList;
 class StructureTable
 { 
   public string $table;
+  public string $module;
 
   public function __construct(
     public string $class
   ){
+    $this->EntityModule();
     $this->EntityParse();
   }
+
+  private function EntityModule(
+  ): void {
+    if(defined("module") === true){
+      if(module instanceof DataList){
+        mudule->Where(fn(mixed $itemModule) => (
+          $itemModule->entity === $this->class
+        ));
+      }
+    }
+  } 
 
   private function EntityParse(
   ): void {
