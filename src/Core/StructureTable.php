@@ -17,17 +17,7 @@ class StructureTable
   }
 
   private function EntityModule(
-  ): void {
-    if(defined("module") === true){
-      if(module instanceof DataList){
-        $this->module = mudule->Where(
-          fn(mixed $itemModule) => (
-            $itemModule->entity === $this->class
-          )
-        )->First();
-      }
-    }
-  } 
+  ): void {} 
 
   private function EntityParse(
   ): void {
