@@ -111,6 +111,10 @@ enum ColumnType: string
   public function Decode(
     mixed $mixed
   ): mixed {
+    if(is_null($mixed)){
+      return null;
+    }
+
     return match( $this ){
       ColumnType::Date => $this->dateDecode($mixed),
       ColumnType::Datetime => $this->datetimeDecode($mixed),
