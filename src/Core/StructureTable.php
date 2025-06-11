@@ -3,6 +3,7 @@
 namespace Websyspro\Entity\Core;
 
 use Websyspro\Commons\DataList;
+use Websyspro\Commons\Statics;
 
 class StructureTable
 { 
@@ -17,7 +18,11 @@ class StructureTable
   }
 
   private function EntityModule(
-  ): void {} 
+  ): void {
+    $this->module = Statics::$modules->Where(
+      fn(mixed $itemModule) => $itemModule->entity === $this->class
+    )->First()->module;
+  } 
 
   private function EntityParse(
   ): void {
