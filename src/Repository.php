@@ -185,4 +185,10 @@ class Repository
       "Select Count(*) as CountRows From {$this->structureTable->table}"
     )->First()->CountRows;
   }
+
+  public function QueryBuild(
+    string $sql    
+  ): DataList {
+    return $this->Connect()->Query($sql);
+  }
 }
