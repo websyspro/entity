@@ -67,7 +67,6 @@ class StructureDatabase
   ): void {
     if($this->entitys->Count() !== 0){
       $this->structureTable = $this->entitys;
-      
       $this->structureTable->Mapper(
         fn(string $entity) => new StructureTable($entity)
       );
@@ -173,15 +172,13 @@ class StructureDatabase
 
   private function GetPersistedsEntitys(
   ): void {
-    if(isset($this->structureTable)){
-      $this->persistedColumn = $this->SetPersistedsColumns();
-      $this->persistedRequireds = $this->SetPersistedsRequireds();
-      $this->persistedPrimaryKeys = $this->SetPersistedsPrimaryKeys();
-      $this->persistedGenerations = $this->SetPersistedsGenerations();
-      $this->persistedUniques = $this->SetPersistedsUniques();
-      $this->persistedStatistics = $this->SetPersistedsStatistics();
-      $this->persistedForeignKeys = $this->SetPersistedsForeignKeys();
-    }
+    $this->persistedColumn = $this->SetPersistedsColumns();
+    $this->persistedRequireds = $this->SetPersistedsRequireds();
+    $this->persistedPrimaryKeys = $this->SetPersistedsPrimaryKeys();
+    $this->persistedGenerations = $this->SetPersistedsGenerations();
+    $this->persistedUniques = $this->SetPersistedsUniques();
+    $this->persistedStatistics = $this->SetPersistedsStatistics();
+    $this->persistedForeignKeys = $this->SetPersistedsForeignKeys();
   }
 
   private function GetPersistedColumns(
@@ -428,7 +425,10 @@ class StructureDatabase
     $this->GetDatabase();
     $this->GetDecorationEntitys();
     $this->GetPersistedsEntitys();
-    $this->GetUpdateEntitys();
-    $this->SetUpdateDatabase();
+
+    if(isset($this->structureTable)){
+      $this->GetUpdateEntitys();
+      $this->SetUpdateDatabase();
+    }
   }
 }
