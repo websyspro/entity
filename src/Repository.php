@@ -5,6 +5,7 @@ namespace Websyspro\Entity;
 use Websyspro\Commons\DataList;
 use Websyspro\Commons\Util;
 use Websyspro\Database\Connect;
+use Websyspro\DynamicSql\QueryBuild;
 use Websyspro\Entity\Core\StructureTable;
 use Websyspro\Entity\Enums\AttributeType;
 use Websyspro\Entity\Interfaces\IProperties;
@@ -12,6 +13,12 @@ use Websyspro\Entity\Interfaces\IProperties;
 class Repository
 {
   public StructureTable $structureTable;
+
+  public mixed $selectFn;
+  public mixed $whereFn;
+  public mixed $groupByFn;
+  public mixed $orderByAscFn;
+  public mixed $orderByDescFn;
 
   public function __construct(
     public string $table
@@ -206,7 +213,7 @@ class Repository
   public function QueryBuild(
     string $sql    
   ): DataList {
-    $columnsList = (
+    $columns = (
       $this->Columns()
     );    
 
@@ -217,9 +224,81 @@ class Repository
           $this->ParseDecode(
             DataList::Create(
               (array)$row
-            ), $columnsList
+            ), $columns
           )->All()
         ))
+    );
+  }
+
+  public function SetProperty(
+    string $key,
+    mixed $value
+  ): Repository {
+    $this->{$key} = $value;
+    return $this;
+  }
+
+  public function Select(
+    callable $selectFn
+  ): Repository {
+    return $this->SetProperty(
+      "selectFn", $selectFn
+    );    
+  }
+
+  public function Where(
+    callable $whereFn
+  ): Repository {
+    return $this->SetProperty(
+      "whereFn", $whereFn
+    );
+  }
+
+  public function GroupBy(
+    callable $groupByFn
+  ): Repository {
+    return $this->SetProperty(
+      "groupByFn", $groupByFn
+    );
+  }
+
+  public function orderByAsc(
+    callable $orderByAscFn
+  ): Repository {
+    return $this->SetProperty(
+      "orderByAscFn", $orderByAscFn
+    );
+  }  
+
+  public function orderByDesc(
+    callable $orderByDescFn
+  ): Repository {
+    return $this->SetProperty(
+      "orderByDescFn", $orderByDescFn
+    );
+  }
+
+  public function All(
+  ): DataList {
+    $queryBuild = (
+      new QueryBuild(
+        $this->table
+      )
+    );
+
+    if(isset($this->selectFn))
+      $queryBuild->Select($this->selectFn);
+    if(isset($this->whereFn))
+      $queryBuild->Where($this->whereFn);
+    if(isset($this->groupByFn))
+      $queryBuild->GroupBy($this->groupByFn);
+    if(isset($this->orderByAscFn))
+      $queryBuild->OrderByAsc($this->orderByAscFn);
+    if(isset($this->orderByDescFn))
+      $queryBuild->OrderByDesc($this->orderByDescFn);
+
+    return $this->QueryBuild(
+      $queryBuild->Get()
     );
   }
 }
