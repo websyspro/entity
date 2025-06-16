@@ -110,6 +110,17 @@ class Repository
     DataList $row,
     DataList $columns
   ): DataList {
+    print_r(
+      Util::Mapper(
+        $row->First(), fn(string $value, string $name) => (
+          $columns->Copy()->WhereByKey(
+            fn(string $columnName) => $columnName === $name
+          )->First()->Decode($value)
+        )
+      )
+    );
+
+
     $parseDecode = (
       $row->Mapper(
         fn(mixed $value, string $name) => (
@@ -222,9 +233,7 @@ class Repository
         ->Query($sql)
         ->Mapper(fn(object $row) => (
           $this->ParseDecode(
-            DataList::Create(
-              (array)$row
-            ), $columns
+            DataList::Create([$row]), $columns
           )->First()
         ))
     );
