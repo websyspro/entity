@@ -120,8 +120,6 @@ class Repository
       )
     );
 
-    print_r($parseDecode);
-
     return $parseDecode;
   }  
 
@@ -227,7 +225,7 @@ class Repository
             DataList::Create(
               (array)$row
             ), $columns
-          )->All()
+          )->First()
         ))
     );
   }
