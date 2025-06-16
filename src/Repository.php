@@ -120,9 +120,7 @@ class Repository
       )
     );
 
-    return $parseDecode->Mapper(
-      fn(array $row) => $row
-    );
+    return $parseDecode;
   }  
 
   private function ParseDefaults(
