@@ -110,28 +110,17 @@ class Repository
     DataList $row,
     DataList $columns
   ): DataList {
-    print_r(
-      Util::Mapper(
-        $row->First(), fn(string $value, string $name) => (
-          $columns->Copy()->WhereByKey(
-            fn(string $columnName) => $columnName === $name
-          )->First()->Decode($value)
+    return (
+      DataList::Create([
+        Util::Mapper(
+          $row->First(), fn(string $value, string $name) => (
+            $columns->Copy()->WhereByKey(
+              fn(string $columnName) => $columnName === $name
+            )->First()->Decode($value)
+          )
         )
-      )
+      ])
     );
-
-
-    $parseDecode = (
-      $row->Mapper(
-        fn(mixed $value, string $name) => (
-          $columns->Copy()->WhereByKey(
-            fn(string $columnName) => $columnName === $name
-          )->First()->Decode($value)
-        )
-      )
-    );
-
-    return $parseDecode;
   }  
 
   private function ParseDefaults(
