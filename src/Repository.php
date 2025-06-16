@@ -121,7 +121,7 @@ class Repository
     );
 
     return $parseDecode->Mapper(
-      fn(array $row) => (object)$row
+      fn(array $row) => $row
     );
   }  
 
