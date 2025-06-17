@@ -2,10 +2,12 @@
 
 namespace Websyspro\Entity;
 
+use stdClass;
 use Websyspro\Commons\DataList;
 use Websyspro\Commons\Util;
 use Websyspro\Database\Connect;
 use Websyspro\DynamicSql\QueryBuild;
+use Websyspro\Entity\Core\Shareds\StdClassToEntity;
 use Websyspro\Entity\Core\StructureTable;
 use Websyspro\Entity\Enums\AttributeType;
 use Websyspro\Entity\Interfaces\IProperties;
@@ -110,17 +112,24 @@ class Repository
     DataList $row,
     DataList $columns
   ): DataList {
-    return (
-      DataList::Create([
-        Util::Mapper(
-          $row->First(), fn(mixed $value, string $name) => (
-            $columns->Copy()->WhereByKey(
-              fn(string $columnName) => $columnName === $name
-            )->First()->Decode($value)
-          )
-        )
-      ])
-    );
+    $row->Mapper(fn(stdClass $stdClass) => (
+      StdClassToEntity::Parse(
+        $stdClass, $this->table
+      )
+    ));
+
+    return $row; 
+    // return (
+    //   DataList::Create([
+    //     Util::Mapper(
+    //       $row->First(), fn(mixed $value, string $name) => (
+    //         $columns->Copy()->WhereByKey(
+    //           fn(string $columnName) => $columnName === $name
+    //         )->First()->Decode($value)
+    //       )
+    //     )
+    //   ])
+    // );
   }  
 
   private function ParseDefaults(
