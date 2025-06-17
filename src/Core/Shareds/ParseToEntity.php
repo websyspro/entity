@@ -4,7 +4,7 @@ namespace Websyspro\Entity\Core\Shareds;
 
 class StdClassToEntity
 {
-  public static function ParseEntity(
+  public static function Parse(
     array|object $stdClass,
     string $entity
   ): object {
