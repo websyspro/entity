@@ -13,7 +13,6 @@ class StdClassToEntity
     );
 
     foreach($stdClass as $key => $val){
-      var_dump($key, $val);
       $newEntity->{$key} = $val;
     }
     
