@@ -2,7 +2,6 @@
 
 namespace Websyspro\Entity;
 
-use stdClass;
 use Websyspro\Commons\DataList;
 use Websyspro\Commons\Util;
 use Websyspro\Database\Connect;
@@ -57,12 +56,14 @@ class Repository
   }
 
   private function Columns(
-  ): DataList {
-    return $this->structureTable->Columns()->List()->Reduce(
-      [], function(array $curr, IProperties $event){
-        $curr[$event->name] = $event->items->First()->columnType;
-        return $curr;
-      }
+  ): array {
+    return (
+      $this->structureTable->Columns()->List()->Reduce(
+        [], function(array $curr, IProperties $event){
+          $curr[$event->name] = $event->items->First()->columnType;
+          return $curr;
+        }
+      )->All()
     );
   }
 
@@ -92,20 +93,16 @@ class Repository
   }
 
   private function ParseEncode(
-    DataList $row,
-    DataList $columns
-  ): DataList {
-    $parseEncode = (
-      $row->Mapper(
-        fn(mixed $value, string $name) => (
-          $columns->Copy()->WhereByKey(
-            fn(string $columnName) => $columnName === $name
-          )->First()->Encode($value)
+    array $row,
+    array $columns
+  ): array {
+    return (
+      Util::Mapper(
+        $row, fn(mixed $value, string $key) => (
+          $columns[$key]->Encode($value)
         )
       )
     );
-
-    return $parseEncode;
   }
 
   private function ParseDecode(
@@ -141,81 +138,63 @@ class Repository
   private function ParseDefaults(
     array $row,
     AttributeType $attributeType
-  ): DataList {
-    return DataList::Create(
-      array_merge(
-        $this->ListKeysNames()->All(), 
-        $this->DefaultEvents($attributeType)->All(), $row
-      )
+  ): array {
+    return array_merge(
+      $this->ListKeysNames()->All(), 
+      $this->DefaultEvents($attributeType)->All(), $row
     );
   }
 
   private function InsertValues(
-    DataList $dataList
+    DataList $data
   ): bool {
-    $dataHeaders = DataList::Create(
-      array_keys($dataList->First())
+    $headers = array_keys(
+      $data->Copy()->First()
     );
 
-    $dataList->Chunk(500);
-    $dataList->Mapper(
-      fn(DataList $dataRows) => (
-        $dataRows->Mapper(
-          fn(array $row) => (
-            sprintf("(%s)", ...[
-              DataList::Create(
-                $row
-              )->JoinWithComma()
-            ])
+    $data
+      ->Chunk(500)
+      ->Mapper(
+          fn(DataList $chunkRow) => $chunkRow->Mapper(
+            fn(array $row) => Util::JoinWithComma($row, "(%s)")
           )
         )
-      )
-    );
-
-    $dataList->Mapper(fn(DataList $dataRows) => (
-      sprintf("Insert Into {$this->structureTable->table} (%s) values %s", ...[
-        $dataHeaders->JoinWithComma(),
-        $dataRows->JoinWithComma()
-      ])
-    ));
-
-    $dataList->Mapper(
-      fn(string $insertScript) => (
-        $this->Connect()->Exec(
-          $insertScript
+      ->Mapper(
+        fn(DataList $chunkRow) => sprintf(
+          "Insert into {$this->structureTable->table} %s values %s", ...[
+            Util::JoinWithComma($headers, "(%s)"), $chunkRow->JoinWithComma()
+          ]
         )
       )
-    );
+      ->ForEach(
+        fn(string $script) => (
+          $this->Connect()->Exec($script)
+        )
+      );
 
     return true;
   }
 
   public function Insert(
-    array $dataList = []
+    array $data = []
   ): bool {
-    if(sizeof($dataList) === 0){
-      return false;
-    }
+    [ $dataList, $columns ] = [
+      DataList::Create($data), $this->Columns()
+    ];
 
-    $columnsList = (
-      $this->Columns()
-    );
-    
-    return (
-      $this->InsertValues(
-        DataList::Create(
-          $dataList
-        )->Mapper(
-          fn(array $row) => (
-            $this->ParseEncode(
-              $this->ParseDefaults(
-                $row, AttributeType::Insert
-              ), $columnsList
-            )->All()
+    $this->InsertValues(
+      $dataList->Mapper(
+        fn(array $data) => (
+          $this->ParseEncode(
+            $this->ParseDefaults(
+              $data, AttributeType::Insert
+            ), $columns
           )
         )
       )
     );
+    
+    return true;
   }
 
   public function Count(
@@ -228,16 +207,12 @@ class Repository
   public function QueryBuild(
     string $sql    
   ): DataList {
-    $columns = (
-      $this->Columns()
-    );    
-
     return (
       $this->Connect()
         ->Query($sql)
         ->Mapper(fn(object $row) => (
           $this->ParseDecode(
-            DataList::Create([$row]), $columns
+            DataList::Create([$row]), DataList::Create($this->Columns())
           )->First()
         ))
     );
