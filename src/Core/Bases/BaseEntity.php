@@ -48,7 +48,7 @@ class BaseEntity
 
   #[Number()]
   #[Update(1)]
-  public int $UpdatedBy;
+  public ?int $UpdatedBy;
 
   #[Datetime()]
   #[Update(Now::class)]
