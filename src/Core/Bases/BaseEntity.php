@@ -52,11 +52,10 @@ class BaseEntity
 
   #[Datetime()]
   #[Update(Now::class)]
-  public string $UpdatedAt;
+  public ?string $UpdatedAt;
 
   #[Flag()]
   #[Delete(1)]
-  #[Insert(1)]
   public bool $Deleted;
 
   #[Number()]
