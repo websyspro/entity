@@ -112,25 +112,31 @@ class Repository
     DataList $row,
     DataList $columns
   ): DataList {
-    $row->Mapper(fn(stdClass $stdClass) => (
-      StdClassToEntity::Parse(
-        $stdClass, $this->table
+    $row->Mapper(
+      fn(mixed $stdClass) => (
+        StdClassToEntity::Parse(
+          $stdClass, $this->table
+        )
       )
-    ));
+    );
 
-    return $row; 
-    // return (
-    //   DataList::Create([
-    //     Util::Mapper(
-    //       $row->First(), fn(mixed $value, string $name) => (
-    //         $columns->Copy()->WhereByKey(
-    //           fn(string $columnName) => $columnName === $name
-    //         )->First()->Decode($value)
-    //       )
-    //     )
-    //   ])
-    // );
-  }  
+    $row->Mapper(
+      fn(mixed $stdClass) => (
+        Util::Mapper(
+          $stdClass, function(
+            mixed $value, 
+            string $name
+          ) use($columns) {
+            return $columns->Copy()->WhereByKey(
+              fn(string $columnName) => $columnName === $name
+            )->First()->Decode($value);
+          }
+        )
+      )
+    );
+
+    return $row;
+  }   
 
   private function ParseDefaults(
     array $row,
