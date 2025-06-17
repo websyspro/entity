@@ -8,9 +8,12 @@ class StdClassToEntity
     array|object $stdClass,
     string $entity
   ): object {
-    $newEntity = new $entity;
+    $newEntity = (
+      new $entity
+    );
 
     foreach($stdClass as $key => $val){
+      var_dump($key, $val);
       $newEntity->{$key} = $val;
     }
     

@@ -56,13 +56,13 @@ class BaseEntity
 
   #[Flag()]
   #[Delete(1)]
-  public bool $Deleted;
+  public ?bool $Deleted;
 
   #[Number()]
   #[Delete(1)]
-  public int $DeletedBy;
+  public ?int $DeletedBy;
 
   #[Datetime()]
   #[Delete(Now::class)]
-  public string $DeletedAt;
+  public ?string $DeletedAt;
 }
