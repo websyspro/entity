@@ -178,7 +178,7 @@ class Repository
 
   public function Insert(
     array|callable $data = []
-  ): bool {
+  ): bool|int {
     if(is_callable($data) === true){
       $data = (
         DataByFn::Create(
@@ -203,7 +203,9 @@ class Repository
       )
     );
     
-    return true;
+    if(sizeof($data) === 1){
+      return $this->Connect()->LastId();
+    } else return true;
   }
 
   public function Count(
@@ -212,6 +214,13 @@ class Repository
       "Select Count(*) as CountRows From {$this->structureTable->table}"
     )->First()->CountRows;
   }
+
+  public function Exists(
+  ): bool {
+    return $this->Connect()->Query(
+      "Select Count(*) as CountRows From {$this->structureTable->table}"
+    )->First()->CountRows !== 0;
+  }  
 
   public function QueryBuild(
     string $sql    
@@ -298,4 +307,30 @@ class Repository
       $queryBuild->Get()
     );
   }
+
+  public function One(
+  ): DataList {
+    $queryBuild = (
+      new QueryBuild(
+        $this->table
+      )
+    );
+
+    if(isset($this->selectFn))
+      $queryBuild->Select($this->selectFn);
+    if(isset($this->whereFn))
+      $queryBuild->Where($this->whereFn);
+    if(isset($this->groupByFn))
+      $queryBuild->GroupBy($this->groupByFn);
+    if(isset($this->orderByAscFn))
+      $queryBuild->OrderByAsc($this->orderByAscFn);
+    if(isset($this->orderByDescFn))
+      $queryBuild->OrderByDesc($this->orderByDescFn);
+
+    return (
+      $this->QueryBuild(
+        $queryBuild->Get()
+      )->First()
+    );
+  }  
 }
