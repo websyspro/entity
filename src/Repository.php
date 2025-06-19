@@ -167,7 +167,7 @@ class Repository
           ]
         )
       )
-      ->ForEach(
+      ->Mapper(
         fn(string $script) => (
           $this->Connect()->Exec($script)
         )
