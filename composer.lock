@@ -51,12 +51,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/websyspro/database.git",
-                "reference": "41da00e5573158e850d01712fd22cae043dbc7b2"
+                "reference": "6d3f036f6529d1dd18cfe3e9f9b8385b225257e9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/websyspro/database/zipball/41da00e5573158e850d01712fd22cae043dbc7b2",
-                "reference": "41da00e5573158e850d01712fd22cae043dbc7b2",
+                "url": "https://api.github.com/repos/websyspro/database/zipball/6d3f036f6529d1dd18cfe3e9f9b8385b225257e9",
+                "reference": "6d3f036f6529d1dd18cfe3e9f9b8385b225257e9",
                 "shasum": ""
             },
             "require-dev": {
@@ -85,7 +85,7 @@
                 "issues": "https://github.com/websyspro/database/issues",
                 "source": "https://github.com/websyspro/database/tree/main"
             },
-            "time": "2025-06-19T21:33:14+00:00"
+            "time": "2025-06-19T22:14:41+00:00"
         },
         {
             "name": "websyspro/dynamicsql",

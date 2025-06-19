@@ -148,12 +148,12 @@ class Repository
 
   private function InsertValues(
     DataList $data
-  ): bool {
+  ): array {
     $headers = array_keys(
       $data->Copy()->First()
     );
 
-    $data
+    return $data
       ->Chunk(500)
       ->Mapper(
           fn(DataList $chunkRow) => $chunkRow->Mapper(
@@ -171,14 +171,13 @@ class Repository
         fn(string $script) => (
           $this->Connect()->Exec($script)
         )
-      );
-
-    return true;
+      )
+      ->All();
   }
 
   public function Insert(
     array|callable $data = []
-  ): bool|int {
+  ): array {
     if(is_callable($data) === true){
       $data = (
         DataByFn::Create(
@@ -191,21 +190,19 @@ class Repository
       DataList::Create($data), $this->Columns()
     ];
 
-    $this->InsertValues(
-      $dataList->Mapper(
-        fn(array $data) => (
-          $this->ParseEncode(
-            $this->ParseDefaults(
-              $data, AttributeType::Insert
-            ), $columns
+    return (
+      $this->InsertValues(
+        $dataList->Mapper(
+          fn(array $data) => (
+            $this->ParseEncode(
+              $this->ParseDefaults(
+                $data, AttributeType::Insert
+              ), $columns
+            )
           )
         )
       )
     );
-    
-    if(sizeof($data) === 1){
-      return $this->Connect()->LastId();
-    } else return true;
   }
 
   public function Count(
