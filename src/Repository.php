@@ -327,10 +327,14 @@ class Repository
     if(isset($this->orderByDescFn))
       $queryBuild->OrderByDesc($this->orderByDescFn);
 
-    return (
-      $this->QueryBuild(
-        $queryBuild->Get()
-      )->First()
-    );
+    $recordFirst = $this->QueryBuild(
+      $queryBuild->Get()
+    )->First();
+
+    if($recordFirst === false){
+      return new $this->table;
+    }
+
+    return $recordFirst;
   }  
 }
