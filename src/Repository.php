@@ -5,6 +5,7 @@ namespace Websyspro\Entity;
 use Websyspro\Commons\DataList;
 use Websyspro\Commons\Util;
 use Websyspro\Database\Connect;
+use Websyspro\DynamicSql\Core\DataByFn;
 use Websyspro\DynamicSql\QueryBuild;
 use Websyspro\Entity\Core\Shareds\StdClassToEntity;
 use Websyspro\Entity\Core\StructureTable;
@@ -176,8 +177,16 @@ class Repository
   }
 
   public function Insert(
-    array $data = []
+    array|callable $data = []
   ): bool {
+    if(is_callable($data) === true){
+      $data = (
+        DataByFn::Create(
+          $data
+        )->getData()
+      );
+    }
+
     [ $dataList, $columns ] = [
       DataList::Create($data), $this->Columns()
     ];
