@@ -148,7 +148,7 @@ class Repository
 
   private function InsertValues(
     DataList $data
-  ): array {
+  ): DataList {
     $headers = array_keys(
       $data->Copy()->First()
     );
@@ -171,13 +171,12 @@ class Repository
         fn(string $script) => (
           $this->Connect()->Exec($script)
         )
-      )
-      ->All();
+      );
   }
 
   public function Insert(
     array|callable $data = []
-  ): array {
+  ): int|bool {
     if(is_callable($data) === true){
       $data = (
         DataByFn::Create(
@@ -190,7 +189,7 @@ class Repository
       DataList::Create($data), $this->Columns()
     ];
 
-    return (
+    $insertArr = (
       $this->InsertValues(
         $dataList->Mapper(
           fn(array $data) => (
@@ -203,6 +202,10 @@ class Repository
         )
       )
     );
+
+    if($insertArr->Count() === 1){
+      return $insertArr->First();
+    } else return true;
   }
 
   public function Count(
