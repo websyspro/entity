@@ -309,7 +309,7 @@ class Repository
   }
 
   public function One(
-  ): DataList {
+  ): object {
     $queryBuild = (
       new QueryBuild(
         $this->table
