@@ -65,4 +65,9 @@ class BaseEntity
   #[Datetime()]
   #[Delete(Now::class)]
   public ?string $DeletedAt;
+
+  public function Has(
+  ): bool {
+    return isset($this->Id);
+  }
 }
