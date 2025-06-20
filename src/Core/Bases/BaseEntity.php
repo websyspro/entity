@@ -66,7 +66,7 @@ class BaseEntity
   #[Delete(Now::class)]
   public ?string $DeletedAt;
 
-  public function Has(
+  public function Exist(
   ): bool {
     return isset($this->Id);
   }
