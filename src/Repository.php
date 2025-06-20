@@ -223,7 +223,9 @@ class Repository
         "Select * 
            From {$this->structureTable->table} 
           Where {$GenerationId}={$lastId}"
-      )->First()
+      )->Mapper(fn(object $object) => (
+        StdClassToEntity::Parse($object, $this->table)
+      ))->First()
     );
   }   
 
