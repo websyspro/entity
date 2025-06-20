@@ -55,6 +55,7 @@ class BaseEntity
   public ?string $UpdatedAt;
 
   #[Flag()]
+  #[Insert(0)]
   #[Delete(1)]
   public ?bool $Deleted;
 
