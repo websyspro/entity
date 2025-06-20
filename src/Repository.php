@@ -176,7 +176,7 @@ class Repository
 
   public function Insert(
     array|callable $data = []
-  ): int|bool {
+  ): object|bool {
     if(is_callable($data) === true){
       $data = (
         DataByFn::Create(
@@ -204,14 +204,34 @@ class Repository
     );
 
     if($insertArr->Count() === 1){
-      return $insertArr->First();
+      return $this->GetLastId(
+        $insertArr->First()
+      );
     } else return true;
   }
+
+  private function GetLastId(
+    int $lastId
+  ): object {
+    [ $GenerationId ] = $this->structureTable
+      ->Generations()
+      ->ListNames()
+      ->All();
+
+    return (
+      $this->Connect()->Query(
+        "Select * 
+           From {$this->structureTable->table} 
+          Where {$GenerationId}={$lastId}"
+      )->First()
+    );
+  }   
 
   public function Count(
   ): int {
     return $this->Connect()->Query(
-      "Select Count(*) as CountRows From {$this->structureTable->table}"
+      "Select Count(*) as CountRows 
+         From {$this->structureTable->table}"
     )->First()->CountRows;
   }
 
