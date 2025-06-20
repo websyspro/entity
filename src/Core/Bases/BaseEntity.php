@@ -68,6 +68,6 @@ class BaseEntity
 
   public function Exist(
   ): bool {
-    return isset($this->Id);
+    return isset($this->Id) ? true : false;
   }
 }
