@@ -75,12 +75,12 @@ class Repository
       $defaultEvents = $this->structureTable->EventInserts()->List();
     } else
     if(AttributeType::Update === $attributeType){
-      $defaultEvents = $this->structureTable->EventUpdates()->List(); 
+      $defaultEvents = $this->structureTable->EventUpdates()->List();
     } else
     if(AttributeType::Delete === $attributeType){
       $defaultEvents = $this->structureTable->EventDeletes()->List();
     } 
-    
+
     if($defaultEvents->Exist() === false){
       return DataList::Create();
     }
@@ -141,7 +141,6 @@ class Repository
     AttributeType $attributeType
   ): array {
     return array_merge(
-      $this->ListKeysNames()->All(), 
       $this->DefaultEvents($attributeType)->All(), $row
     );
   }
@@ -210,6 +209,15 @@ class Repository
     } else return true;
   }
 
+  private function Generations(
+  ): DataList {
+    return (
+      $this->structureTable
+        ->PrimaryKeys()
+        ->List()
+    );
+  }
+
   private function GetLastId(
     int $lastId
   ): object {
@@ -227,7 +235,77 @@ class Repository
         StdClassToEntity::Parse($object, $this->table)
       ))->First()
     );
-  }   
+  }
+
+  public function UpdateValues(
+    DataList $data
+  ): DataList {
+    return (
+      $data->Mapper(
+        fn(array $row) => (
+          Util::Mapper($row, (
+            fn(mixed $val, string $key) => "{$key}={$val}"
+          ))
+        )
+      )
+      ->Mapper(
+        fn(array $row) => (
+          [ Util::WhereByKey($row, fn(string $key) => in_array($key, $this->Generations()->All()) === false),
+            Util::WhereByKey($row, fn(string $key) => in_array($key, $this->Generations()->All()) === true) ]
+        )
+      )
+      ->Mapper(
+        function(array $row){
+          [ $updates, $wheres ] = $row;
+
+          return sprintf(
+            "Update {$this->structureTable->table} Set %s Where %s", ...[
+              Util::Join(", ", $updates),
+              Util::Join(" and ", $wheres),
+            ]
+          );
+        }
+      )->Mapper(
+        fn(string $script) => (
+          $this->Connect()->Exec($script)
+        )
+      )
+    );
+  }
+
+  public function Update(
+    array|callable $data = []
+  ): object|bool {
+    if(is_callable($data) === true){
+      $data = (
+        DataByFn::Create(
+          $data
+        )->getData()
+      );
+    }
+
+    [ $dataList, $columns ] = [
+      DataList::Create($data), $this->Columns()
+    ];
+
+    $updateArr = (
+      $this->UpdateValues(
+        $dataList->Mapper(
+          fn(array $data) => (
+            $this->ParseEncode(
+              $this->ParseDefaults(
+                $data, AttributeType::Update
+              ), $columns
+            )
+          )
+        )
+      )
+    );
+
+    if($updateArr->Count() === 1){
+      return true;
+    } else return true;
+  }
 
   public function Count(
   ): int {
