@@ -15,7 +15,7 @@ enum ColumnType: string
   private function datetimeEncode(
     string $datetime
   ): string {
-    if($date === "NULL"){
+    if($datetime === "NULL"){
       return $date;
     }
 
