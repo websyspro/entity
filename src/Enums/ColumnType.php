@@ -16,7 +16,7 @@ enum ColumnType: string
     string $datetime
   ): string {
     if($datetime === "NULL"){
-      return $date;
+      return $datetime;
     }
 
     if( preg_match( "/(\d{2})\/(\d{2})\/(\d{4})/", $datetime )){
