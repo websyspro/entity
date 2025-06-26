@@ -15,6 +15,10 @@ enum ColumnType: string
   private function datetimeEncode(
     string $datetime
   ): string {
+    if($date === "NULL"){
+      return $date;
+    }
+
     if( preg_match( "/(\d{2})\/(\d{2})\/(\d{4})/", $datetime )){
       $datetime = preg_replace( "/(\d{2})\/(\d{2})\/(\d{4})/", "$3-$2-$1", $datetime );
     }
@@ -35,6 +39,10 @@ enum ColumnType: string
   public static function dateEncode(
     string $date
   ): string {
+    if($date === "NULL"){
+      return $date;
+    }
+
     if( preg_match( "/(\d{2})\/(\d{2})\/(\d{4})/", $date )){
       $date = preg_replace( "/(\d{2})\/(\d{2})\/(\d{4})/", "$3-$2-$1", $date );
     }
