@@ -141,7 +141,9 @@ class Repository
     AttributeType $attributeType
   ): array {
     return array_merge(
-      $this->DefaultEvents($attributeType)->All(), $row
+      $this->DefaultEvents(
+        $attributeType
+      )->All(), $row
     );
   }
 
@@ -173,38 +175,52 @@ class Repository
       );
   }
 
-  public function Insert(
-    array|callable $data = []
-  ): object|bool {
-    if(is_callable($data) === true){
-      $data = (
-        DataByFn::Create(
-          $data
-        )->getData()
-      );
-    }
-
+  public function InsertFromImport(
+    array $data = []
+  ): bool {
     [ $dataList, $columns ] = [
       DataList::Create($data), $this->Columns()
     ];
 
-    $insertArr = (
+    $this->InsertValues(
+      $dataList->Mapper(
+        fn(array $data) => (
+          $this->ParseEncode(
+            $this->ParseDefaults(
+              $data, AttributeType::Insert
+            ), $columns
+          )
+        )
+      )
+    );
+
+    return true;
+  }  
+
+  public function Insert(
+    array|callable $data = []
+  ): object|bool {
+    $dataList = DataList::Create(
+      is_callable($data) === true
+        ? DataByFn::Create($data)->arrayFromFn()
+        : $data
+    );
+
+    $insertData = (
       $this->InsertValues(
         $dataList->Mapper(
           fn(array $data) => (
-            $this->ParseEncode(
-              $this->ParseDefaults(
-                $data, AttributeType::Insert
-              ), $columns
+            $this->ParseDefaults(
+              $data, AttributeType::Insert
             )
           )
         )
       )
     );
 
-    if($insertArr->Count() === 1){
+    if($insertData->Count() === 1){
       return $this->GetLastId(
-        $insertArr->First()
+        $insertData->First()
       );
     } else return true;
   }
@@ -276,33 +292,25 @@ class Repository
   public function Update(
     array|callable $data = []
   ): object|bool {
-    if(is_callable($data) === true){
-      $data = (
-        DataByFn::Create(
-          $data
-        )->getData()
-      );
-    }
+    $dataList = DataList::Create(
+      is_callable($data) === true
+        ? DataByFn::Create($data)->arrayFromFn()
+        : $data
+    );
 
-    [ $dataList, $columns ] = [
-      DataList::Create($data), $this->Columns()
-    ];
-
-    $updateArr = (
+    $updateData = (
       $this->UpdateValues(
         $dataList->Mapper(
           fn(array $data) => (
-            $this->ParseEncode(
-              $this->ParseDefaults(
-                $data, AttributeType::Update
-              ), $columns
+            $this->ParseDefaults(
+              $data, AttributeType::Update
             )
           )
         )
       )
     );
 
-    if($updateArr->Count() === 1){
+    if($updateData->Count() === 1){
       return true;
     } else return true;
   }
