@@ -51,11 +51,6 @@ class Repository
     return Connect::Set($module);
   }
 
-  private function ListKeysNames(
-  ): DataList {
-    return $this->structureTable->Requireds()->ListKeysNames();
-  }
-
   private function Columns(
   ): array {
     return (

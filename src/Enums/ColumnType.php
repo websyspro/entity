@@ -12,6 +12,16 @@ enum ColumnType: string
   case Datetime = "datetime";
   case Flag = "flag";
 
+  private function stringFilterQuotes(
+    string $string
+  ): string {
+    if(preg_match("/(^')|('$)/", $string) === 1){
+      return preg_replace("/(^')|('$)/", "", $string);
+    }
+
+    return $string;
+  }
+
   private function datetimeEncode(
     string $datetime
   ): string {
@@ -19,12 +29,12 @@ enum ColumnType: string
       return $datetime;
     }
 
-    if( preg_match( "/(\d{2})\/(\d{2})\/(\d{4})/", $datetime )){
-      $datetime = preg_replace( "/(\d{2})\/(\d{2})\/(\d{4})/", "$3-$2-$1", $datetime );
+    if(preg_match("/(\d{2})\/(\d{2})\/(\d{4})/", $this->stringFilterQuotes($datetime))){
+      $datetime = preg_replace("/(\d{2})\/(\d{2})\/(\d{4})/", "$3-$2-$1", $this->stringFilterQuotes($datetime));
     }
 
-    if( preg_match( "/(\d{2})\/(\d{2})\/(\d{4}) (\d{2}:\d{2}:\d{2})/", $datetime )){
-      $datetime = preg_replace( "/(\d{2})\/(\d{2})\/(\d{4}) (\d{2}:\d{2}:\d{2})/", "$3-$2-$1 $4", $datetime );
+    if(preg_match("/(\d{2})\/(\d{2})\/(\d{4}) (\d{2}:\d{2}:\d{2})/", $this->stringFilterQuotes($datetime))){
+      $datetime = preg_replace("/(\d{2})\/(\d{2})\/(\d{4}) (\d{2}:\d{2}:\d{2})/", "$3-$2-$1 $4", $this->stringFilterQuotes($datetime));
     }
 
     return sprintf( "'%s'", $datetime );   
@@ -36,15 +46,15 @@ enum ColumnType: string
     return date("d/m/Y H:i:s", strtotime( $datetime ));
   }
 
-  public static function dateEncode(
+  public function dateEncode(
     string $date
   ): string {
     if($date === "NULL"){
       return $date;
     }
 
-    if( preg_match( "/(\d{2})\/(\d{2})\/(\d{4})/", $date )){
-      $date = preg_replace( "/(\d{2})\/(\d{2})\/(\d{4})/", "$3-$2-$1", $date );
+    if(preg_match("/(\d{2})\/(\d{2})\/(\d{4})/", $this->stringFilterQuotes($date))){
+      $date = preg_replace("/(\d{2})\/(\d{2})\/(\d{4})/", "$3-$2-$1", $this->stringFilterQuotes($date));
     }
 
     return sprintf( "'%s'", $date );
@@ -60,7 +70,7 @@ enum ColumnType: string
     string | null $decimal
   ): string | null {
     return preg_replace(
-      [ "/\./", "/,/" ], [ "", "." ], $decimal
+      [ "/\./", "/,/" ], [ "", "." ], $this->stringFilterQuotes($decimal)
     );
   }
 
@@ -72,11 +82,11 @@ enum ColumnType: string
   } 
 
   public function textEncode(
-    string $text
+    string $string
   ): string {
     return sprintf(
       "'%s'", addslashes(
-        preg_replace("/(^\"')|(\"'$)/", "", $text)
+        $this->stringFilterQuotes($string)
       )
     );
   }
