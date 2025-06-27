@@ -200,18 +200,20 @@ class Repository
   public function Insert(
     array|callable $data = []
   ): object|bool {
-    $dataList = DataList::Create(
+    $dataList = DataList::Create([
       is_callable($data) === true
         ? DataByFn::Create($data)->arrayFromFn()
         : $data
-    );
+    ]);
 
     $insertData = (
       $this->InsertValues(
         $dataList->Mapper(
           fn(array $data) => (
-            $this->ParseDefaults(
-              $data, AttributeType::Insert
+            $this->ParseEncode(
+              $this->ParseDefaults(
+                $data, AttributeType::Insert
+              ), $this->Columns()
             )
           )
         )
@@ -292,18 +294,20 @@ class Repository
   public function Update(
     array|callable $data = []
   ): object|bool {
-    $dataList = DataList::Create(
+    $dataList = DataList::Create([
       is_callable($data) === true
         ? DataByFn::Create($data)->arrayFromFn()
         : $data
-    );
+    ]);
 
     $updateData = (
       $this->UpdateValues(
         $dataList->Mapper(
           fn(array $data) => (
-            $this->ParseDefaults(
-              $data, AttributeType::Update
+            $this->ParseEncode(
+              $this->ParseDefaults(
+                $data, AttributeType::Update
+              ), $this->Columns()
             )
           )
         )
