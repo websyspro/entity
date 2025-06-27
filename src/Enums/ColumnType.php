@@ -75,7 +75,9 @@ enum ColumnType: string
     string $text
   ): string {
     return sprintf(
-      "'%s'", addslashes($text)
+      "'%s'", addslashes(
+        preg_replace("/(^\"')|(\"'$)/", "", $text)
+      )
     );
   }
   
