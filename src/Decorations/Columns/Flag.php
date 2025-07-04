@@ -11,8 +11,8 @@ use Websyspro\Entity\Interfaces\IAbstractColumn;
 class Flag 
 extends IAbstractColumn
 {
-  public AttributeType $attributeType = AttributeType::Column;
-  public ColumnType $columnType = ColumnType::Flag;
+  public AttributeType $attributeType = AttributeType::column;
+  public ColumnType $columnType = ColumnType::flag;
 
   public function sql(
   ): string {

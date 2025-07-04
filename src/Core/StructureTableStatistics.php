@@ -11,43 +11,45 @@ use Websyspro\Entity\Interfaces\IStatisticsNamesItem;
 class StructureTableStatistics
 extends StructureTableAbstract
 {
-  public function List(
+  public function list(
   ): DataList {
-    return $this->Properties(
-      AttributeType::Indexes
+    return $this->properties(
+      AttributeType::indexes
     );
   }
 
-  public function ListNames(
+  public function listNames(
   ): DataList  {
     return (
-      $this->List()
-        ->Mapper(
+      $this
+        ->list()
+        ->mapper(
           fn(IProperties $property) => (
             new IStatisticsItem(
               $property->name, 
-              $property->items->First()->indexGroup
+              $property->items
+                ->first()->indexGroup
             )
           )
         )
-        ->Reduce([], function(mixed $curr, IStatisticsItem $statisticsItem){
+        ->reduce([], function(mixed $curr, IStatisticsItem $statisticsItem){
           $curr[$statisticsItem->indexGroup][] = $statisticsItem->name; 
           return $curr;
         })
-        ->Mapper(fn(array $indexGroups) => DataList::Create($indexGroups))
-        ->Mapper(fn(DataList $indexe) => new IStatisticsNamesItem("Index_{$indexe->Join("_")}", $indexe->JoinWithComma()))
+        ->mapper(fn(array $indexGroups) => DataList::create($indexGroups))
+        ->mapper(fn(DataList $indexe) => new IStatisticsNamesItem("Index_{$indexe->join("_")}", $indexe->joinWithComma()))
     );
   }
 
-  public function IsIndex(
+  public function isIndex(
     string $name
   ): bool {
     return (
-      $this->ListNames()->Where(
+      $this->listNames()->where(
         fn(IStatisticsNamesItem $statisticsItem) => (
           $statisticsItem->name === $name
         )
-      )->Exist()
+      )->exist()
     );
   }
 }

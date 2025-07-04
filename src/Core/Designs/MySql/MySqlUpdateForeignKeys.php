@@ -19,21 +19,21 @@ class MySqlUpdateForeignKeys
     public StructureTable $structureTable
   ){}
 
-  private function SetInicial(
+  private function setInicial(
   ): void {
     $this->updateScripts = DataList::Create();
   }
 
-  private function SetAdd(
+  private function setAdd(
   ): void {
-    if($this->persistedForeignKeysList->ListNames()->Exist() === false){
-      if($this->structureTable->ForeignKeys()->ListNames($this->structureTable->table)->Exist() === true){
-        $this->structureTable->ForeignKeys()->ListNames($this->structureTable->table)
-          ->Mapper(fn(ForeignKeyItem $foreignKeyItem) => (
-            $this->updateScripts->Add(
+    if($this->persistedForeignKeysList->listNames()->exist() === false){
+      if($this->structureTable->foreignKeys()->listNames($this->structureTable->table)->exist() === true){
+        $this->structureTable->foreignKeys()->listNames($this->structureTable->table)
+          ->mapper(fn(ForeignKeyItem $foreignKeyItem) => (
+            $this->updateScripts->add(
               new IUpdateScript(
                 "Alter Table {$this->structureTable->table} Add Constraint {$foreignKeyItem->name} Foreign Key ({$foreignKeyItem->key}) References {$foreignKeyItem->foreignKeyReferenceItem->table}({$foreignKeyItem->foreignKeyReferenceItem->key})",
-                "Foreign key constraint {$foreignKeyItem->name} added with successfully to {$this->structureTable->table}", ScriptType::Dependence
+                "Foreign key constraint {$foreignKeyItem->name} added with successfully to {$this->structureTable->table}", ScriptType::dependence
               )
             )
           ));
@@ -41,21 +41,21 @@ class MySqlUpdateForeignKeys
     }
   }  
 
-  private function SetModify(
+  private function setModify(
   ): void {
-    if($this->persistedForeignKeysList->ListNames()->Exist() === true){
-      if($this->structureTable->ForeignKeys()->ListNames($this->structureTable->table)->Exist() === true){
-        $this->structureTable->ForeignKeys()->ListNames($this->structureTable->table)
-          ->Where(fn(ForeignKeyItem $foreignKeyItem) => (
-            $this->persistedForeignKeysList->IsForeignKey(
+    if($this->persistedForeignKeysList->listNames()->exist() === true){
+      if($this->structureTable->foreignKeys()->listNames($this->structureTable->table)->exist() === true){
+        $this->structureTable->foreignKeys()->listNames($this->structureTable->table)
+          ->where(fn(ForeignKeyItem $foreignKeyItem) => (
+            $this->persistedForeignKeysList->isForeignKey(
               $foreignKeyItem->name
             ) === false
           ))
-          ->Mapper(fn(ForeignKeyItem $foreignKeyItem) => (
-            $this->updateScripts->Add(
+          ->mapper(fn(ForeignKeyItem $foreignKeyItem) => (
+            $this->updateScripts->add(
               new IUpdateScript(
                 "Alter Table {$this->structureTable->table} Add Constraint {$foreignKeyItem->name} Foreign Key ({$foreignKeyItem->key}) References {$foreignKeyItem->foreignKeyReferenceItem->table}({$foreignKeyItem->foreignKeyReferenceItem->key})",
-                "Foreign key constraint {$foreignKeyItem->name} added with successfully to {$this->structureTable->table}", ScriptType::Dependence
+                "Foreign key constraint {$foreignKeyItem->name} added with successfully to {$this->structureTable->table}", ScriptType::dependence
               )
             )            
           ));
@@ -63,20 +63,20 @@ class MySqlUpdateForeignKeys
     }
   }
 
-  private function SetDrops(
+  private function setDrops(
   ): void {
-    if($this->persistedForeignKeysList->ListNames()->Exist() === true){
-      $this->persistedForeignKeysList->ListNames()
-        ->Where(fn(IPersistedForeignKeys $persistedForeignKeys) => (
-          $this->structureTable->ForeignKeys()
-            ->IsForeignKey($this->structureTable->table, $persistedForeignKeys->name) === false
+    if($this->persistedForeignKeysList->listNames()->exist() === true){
+      $this->persistedForeignKeysList->listNames()
+        ->where(fn(IPersistedForeignKeys $persistedForeignKeys) => (
+          $this->structureTable->foreignKeys()
+            ->isForeignKey($this->structureTable->table, $persistedForeignKeys->name) === false
         ))
-        ->Mapper(
+        ->mapper(
           function(IPersistedForeignKeys $persistedForeignKeys){
-            $this->updateScripts->Add(
+            $this->updateScripts->add(
               new IUpdateScript(
                 "Alter Table {$this->structureTable->table} Drop Foreign Key {$persistedForeignKeys->name}",
-                "Foreign key constraint {$persistedForeignKeys->name} drop with successfully to {$this->structureTable->table}", ScriptType::Dependence
+                "Foreign key constraint {$persistedForeignKeys->name} drop with successfully to {$this->structureTable->table}", ScriptType::dependence
               )
             );
           }
@@ -84,16 +84,16 @@ class MySqlUpdateForeignKeys
     }
   }
 
-  public function StartUpdates(
+  public function startUpdates(
   ): MySqlUpdateForeignKeys {
-    $this->SetInicial();
-    $this->SetAdd();
-    $this->SetModify();
-    $this->SetDrops();  
+    $this->setInicial();
+    $this->setAdd();
+    $this->setModify();
+    $this->setDrops();  
     return $this;
   }
 
-  public function UpdateScripts(
+  public function updateScripts(
   ): DataList {
     return $this->updateScripts;
   }  

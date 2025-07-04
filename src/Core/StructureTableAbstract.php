@@ -15,16 +15,16 @@ class StructureTableAbstract
     public string $entity
   ){}
 
-  private function PropertiesBase(
+  private function propertiesBase(
   ): DataList {
     $properts = new DataList(
-      Reflect::PropertsFromClass(
+      Reflect::propertsFromClass(
         $this->entity
       )
     );
 
     return (
-      $properts->Mapper(
+      $properts->mapper(
         fn(ReflectionProperty $reflectionProperty) => (
           new IProperties($reflectionProperty->name, (
             new DataList($reflectionProperty->getAttributes())
@@ -34,13 +34,13 @@ class StructureTableAbstract
     );
   }
 
-  public function Properties(
+  public function properties(
     AttributeType $attributeType
   ): DataList {
     return (
-      $this->PropertiesBase()->ForEach(
+      $this->propertiesBase()->forEach(
         fn(IProperties $properties) => (
-          $properties->items->Where(
+          $properties->items->where(
             fn(IAbstractColumn $abstractColumn) => (
               $abstractColumn->attributeType === $attributeType
             )

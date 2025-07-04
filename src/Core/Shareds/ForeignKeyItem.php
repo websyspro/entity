@@ -11,10 +11,10 @@ class ForeignKeyItem
     public string $key,
     public ForeignKeyReferenceItem $foreignKeyReferenceItem
   ){
-    $this->SetName();
+    $this->setName();
   }
 
-  private function SetName(
+  private function setName(
   ): void {
     $this->name = "FOREIGNKEY_{$this->table}_{$this->key}_In_{$this->foreignKeyReferenceItem->table}_{$this->foreignKeyReferenceItem->key}";
   }

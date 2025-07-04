@@ -4,13 +4,13 @@ namespace Websyspro\Entity\Enums;
 
 enum ColumnType: string
 {
-  case Number = "number";
-  case Text = "text";
-  case Decimal = "decimal";
-  case Time = "time";
-  case Date = "date";
-  case Datetime = "datetime";
-  case Flag = "flag";
+  case number = "number";
+  case text = "text";
+  case decimal = "decimal";
+  case time = "time";
+  case date = "date";
+  case datetime = "datetime";
+  case flag = "flag";
 
   private function stringFilterQuotes(
     string $string
@@ -119,11 +119,11 @@ enum ColumnType: string
     }
 
     return match( $this ){
-      ColumnType::Date => $this->dateEncode($mixed),
-      ColumnType::Datetime => $this->datetimeEncode($mixed),
-      ColumnType::Decimal => $this->decimalEncode($mixed),
-      ColumnType::Text => $this->textEncode($mixed),
-      ColumnType::Flag => $this->flagEncode($mixed),
+      ColumnType::date => $this->dateEncode($mixed),
+      ColumnType::datetime => $this->datetimeEncode($mixed),
+      ColumnType::decimal => $this->decimalEncode($mixed),
+      ColumnType::text => $this->textEncode($mixed),
+      ColumnType::flag => $this->flagEncode($mixed),
         default => $mixed
     };
   }
@@ -136,10 +136,10 @@ enum ColumnType: string
     }
 
     return match( $this ){
-      ColumnType::Date => $this->dateDecode($mixed),
-      ColumnType::Datetime => $this->datetimeDecode($mixed),
-      ColumnType::Decimal => $this->decimalDecode($mixed),
-      ColumnType::Flag => $this->flagDecode($mixed),
+      ColumnType::date => $this->dateDecode($mixed),
+      ColumnType::datetime => $this->datetimeDecode($mixed),
+      ColumnType::decimal => $this->decimalDecode($mixed),
+      ColumnType::flag => $this->flagDecode($mixed),
         default => $mixed
     };
   }

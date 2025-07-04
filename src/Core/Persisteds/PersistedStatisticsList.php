@@ -11,29 +11,29 @@ class PersistedStatisticsList
     private DataList $indexes
   ){} 
   
-  public function List(
+  public function list(
   ): DataList {
-    return $this->indexes->Copy();
+    return $this->indexes->copy();
   }
 
-  public function ListNames(
+  public function listNames(
   ): DataList {
-    return $this->List()->Mapper(
+    return $this->List()->mapper(
       fn(IPersistedStatistics $persistedStatistics) => (
         $persistedStatistics->name
       )
     );
   }
 
-  public function IsIndex(
+  public function isIndex(
     string $name
   ): bool {
     return (
-      $this->List()->Where(
+      $this->list()->where(
         fn(IPersistedStatistics $persistedStatistics) => (
           $persistedStatistics->name === $name
         )
-      )->Exist()
+      )->exist()
     );
   }
 }

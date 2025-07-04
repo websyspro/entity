@@ -32,97 +32,97 @@ class Repository
     );
   }
   
-  public static function Entity(
+  public static function entity(
     string $entity
   ): Repository {
     return new static($entity);
   }
 
-  public function Connect(
+  public function connect(
   ): Connect {
     $module = (
       strtolower(
-        Util::ClassName(
+        Util::className(
           $this->structureTable->module
         )
       )
     );
 
-    return Connect::Set($module);
+    return Connect::set($module);
   }
 
-  private function Columns(
+  private function columns(
   ): array {
     return (
-      $this->structureTable->Columns()->List()->Reduce(
+      $this->structureTable->columns()->list()->reduce(
         [], function(array $curr, IProperties $event){
-          $curr[$event->name] = $event->items->First()->columnType;
+          $curr[$event->name] = $event->items->first()->columnType;
           return $curr;
         }
-      )->All()
+      )->all()
     );
   }
 
-  private function DefaultEvents(
+  private function defaultEvents(
     AttributeType $attributeType
   ): DataList {
-    if(AttributeType::Insert === $attributeType){
-      $defaultEvents = $this->structureTable->EventInserts()->List();
+    if(AttributeType::insert === $attributeType){
+      $defaultEvents = $this->structureTable->eventInserts()->list();
     } else
-    if(AttributeType::Update === $attributeType){
-      $defaultEvents = $this->structureTable->EventUpdates()->List();
+    if(AttributeType::update === $attributeType){
+      $defaultEvents = $this->structureTable->eventUpdates()->list();
     } else
-    if(AttributeType::Delete === $attributeType){
-      $defaultEvents = $this->structureTable->EventDeletes()->List();
+    if(AttributeType::delete === $attributeType){
+      $defaultEvents = $this->structureTable->eventDeletes()->list();
     } 
 
-    if($defaultEvents->Exist() === false){
-      return DataList::Create();
+    if($defaultEvents->exist() === false){
+      return DataList::create();
     }
 
-    $defaultEvents->Reduce([], function(array $curr, IProperties $event){
-      $curr[$event->name] = $event->items->First()->Get();
+    $defaultEvents->reduce([], function(array $curr, IProperties $event){
+      $curr[$event->name] = $event->items->first()->get();
       return $curr;
     });
 
     return $defaultEvents;
   }
 
-  private function ParseEncode(
+  private function parseEncode(
     array $row,
     array $columns
   ): array {
     return (
-      Util::Mapper(
+      Util::mapper(
         $row, fn(mixed $value, string $key) => (
-          $columns[$key]->Encode($value)
+          $columns[$key]->encode($value)
         )
       )
     );
   }
 
-  private function ParseDecode(
+  private function parseDecode(
     DataList $row,
     DataList $columns
   ): DataList {
-    $row->Mapper(
+    $row->mapper(
       fn(mixed $stdClass) => (
-        StdClassToEntity::Parse(
+        StdClassToEntity::parse(
           $stdClass, $this->table
         )
       )
     );
 
-    $row->Mapper(
+    $row->mapper(
       fn(mixed $stdClass) => (
-        Util::Mapper(
+        Util::mapper(
           $stdClass, function(
             mixed $value, 
             string $name
           ) use($columns) {
-            return $columns->Copy()->WhereByKey(
+            return $columns->copy()->whereByKey(
               fn(string $columnName) => $columnName === $name
-            )->First()->Decode($value);
+            )->first()->decode($value);
           }
         )
       )
@@ -131,58 +131,58 @@ class Repository
     return $row;
   }   
 
-  private function ParseDefaults(
+  private function parseDefaults(
     array $row,
     AttributeType $attributeType
   ): array {
     return array_merge(
-      $this->DefaultEvents(
+      $this->defaultEvents(
         $attributeType
-      )->All(), $row
+      )->all(), $row
     );
   }
 
-  private function InsertValues(
+  private function insertValues(
     DataList $data
   ): DataList {
     $headers = array_keys(
-      $data->Copy()->First()
+      $data->copy()->first()
     );
 
     return $data
-      ->Chunk(500)
-      ->Mapper(
-          fn(DataList $chunkRow) => $chunkRow->Mapper(
-            fn(array $row) => Util::JoinWithComma($row, "(%s)")
+      ->chunk(500)
+      ->mapper(
+          fn(DataList $chunkRow) => $chunkRow->mapper(
+            fn(array $row) => Util::joinWithComma($row, "(%s)")
           )
         )
-      ->Mapper(
+      ->mapper(
         fn(DataList $chunkRow) => sprintf(
           "Insert into {$this->structureTable->table} %s values %s", ...[
-            Util::JoinWithComma($headers, "(%s)"), $chunkRow->JoinWithComma()
+            Util::joinWithComma($headers, "(%s)"), $chunkRow->joinWithComma()
           ]
         )
       )
-      ->Mapper(
+      ->mapper(
         fn(string $script) => (
-          $this->Connect()->Exec($script)
+          $this->connect()->exec($script)
         )
       );
   }
 
-  public function InsertFromImport(
+  public function insertFromImport(
     array $data = []
   ): bool {
     [ $dataList, $columns ] = [
-      DataList::Create($data), $this->Columns()
+      DataList::create($data), $this->columns()
     ];
 
-    $this->InsertValues(
-      $dataList->Mapper(
+    $this->insertValues(
+      $dataList->mapper(
         fn(array $data) => (
-          $this->ParseEncode(
-            $this->ParseDefaults(
-              $data, AttributeType::Insert
+          $this->parseEncode(
+            $this->parseDefaults(
+              $data, AttributeType::insert
             ), $columns
           )
         )
@@ -192,158 +192,161 @@ class Repository
     return true;
   }  
 
-  public function Insert(
+  public function insert(
     array|callable $data = []
   ): object|bool {
-    $dataList = DataList::Create([
+    $dataList = DataList::create([
       is_callable($data) === true
-        ? DataByFn::Create($data)->arrayFromFn()
+        ? DataByFn::create($data)->arrayFromFn()
         : $data
     ]);
 
     $insertData = (
-      $this->InsertValues(
-        $dataList->Mapper(
+      $this->insertValues(
+        $dataList->mapper(
           fn(array $data) => (
-            $this->ParseEncode(
-              $this->ParseDefaults(
-                $data, AttributeType::Insert
-              ), $this->Columns()
+            $this->parseEncode(
+              $this->parseDefaults(
+                $data, AttributeType::insert
+              ), $this->columns()
             )
           )
         )
       )
     );
 
-    if($insertData->Count() === 1){
-      return $this->GetLastId(
-        $insertData->First()
+    if($insertData->count() === 1){
+      return $this->getLastId(
+        $insertData->first()
       );
     } else return true;
   }
 
-  private function Generations(
+  private function generations(
   ): DataList {
     return (
       $this->structureTable
-        ->PrimaryKeys()
-        ->List()
+        ->primaryKeys()
+        ->list()
     );
   }
 
-  private function GetLastId(
+  private function getLastId(
     int $lastId
   ): object {
-    [ $GenerationId ] = $this->structureTable
-      ->Generations()
-      ->ListNames()
-      ->All();
+    [ $GenerationId ] = (
+      $this->structureTable
+        ->generations()
+        ->listNames()
+        ->all()
+    );
 
     return (
-      $this->Connect()->Query(
+      $this->connect()->query(
         "Select * 
            From {$this->structureTable->table} 
           Where {$GenerationId}={$lastId}"
-      )->Mapper(fn(object $object) => (
-        StdClassToEntity::Parse($object, $this->table)
-      ))->First()
+      )->mapper(fn(object $object) => (
+        StdClassToEntity::parse($object, $this->table)
+      ))->first()
     );
   }
 
-  public function UpdateValues(
+  public function updateValues(
     DataList $data
   ): DataList {
     return (
-      $data->Mapper(
+      $data->mapper(
         fn(array $row) => (
-          Util::Mapper($row, (
+          Util::mapper($row, (
             fn(mixed $val, string $key) => "{$key}={$val}"
           ))
         )
       )
-      ->Mapper(
+      ->mapper(
         fn(array $row) => (
-          [ Util::WhereByKey($row, fn(string $key) => in_array($key, $this->Generations()->All()) === false),
-            Util::WhereByKey($row, fn(string $key) => in_array($key, $this->Generations()->All()) === true) ]
+          [ Util::whereByKey($row, fn(string $key) => in_array($key, $this->generations()->all()) === false),
+            Util::whereByKey($row, fn(string $key) => in_array($key, $this->generations()->all()) === true) ]
         )
       )
-      ->Mapper(
+      ->mapper(
         function(array $row){
           [ $updates, $wheres ] = $row;
 
           return sprintf(
             "Update {$this->structureTable->table} Set %s Where %s", ...[
-              Util::Join(", ", $updates),
-              Util::Join(" and ", $wheres),
+              Util::join(", ", $updates),
+              Util::join(" and ", $wheres),
             ]
           );
         }
-      )->Mapper(
+      )
+      ->mapper(
         fn(string $script) => (
-          $this->Connect()->Exec($script)
+          $this->connect()->exec($script)
         )
       )
     );
   }
 
-  public function Update(
+  public function update(
     array|callable $data = []
   ): object|bool {
-    $dataList = DataList::Create([
+    $dataList = DataList::create([
       is_callable($data) === true
-        ? DataByFn::Create($data)->arrayFromFn()
+        ? DataByFn::create($data)->arrayFromFn()
         : $data
     ]);
 
     $updateData = (
-      $this->UpdateValues(
-        $dataList->Mapper(
+      $this->updateValues(
+        $dataList->mapper(
           fn(array $data) => (
-            $this->ParseEncode(
-              $this->ParseDefaults(
-                $data, AttributeType::Update
-              ), $this->Columns()
+            $this->parseEncode(
+              $this->parseDefaults(
+                $data, AttributeType::update
+              ), $this->columns()
             )
           )
         )
       )
     );
 
-    if($updateData->Count() === 1){
+    if($updateData->count() === 1){
       return true;
     } else return true;
   }
 
-  public function Count(
+  public function count(
   ): int {
-    return $this->Connect()->Query(
+    return $this->connect()->query(
       "Select Count(*) as CountRows 
          From {$this->structureTable->table}"
-    )->First()->CountRows;
+    )->first()->CountRows;
   }
 
-  public function Exists(
+  public function exists(
   ): bool {
-    return $this->Connect()->Query(
+    return $this->connect()->query(
       "Select Count(*) as CountRows From {$this->structureTable->table}"
-    )->First()->CountRows !== 0;
+    )->first()->CountRows !== 0;
   }  
 
-  public function QueryBuild(
+  public function queryBuild(
     string $sql    
   ): DataList {
     return (
-      $this->Connect()
-        ->Query($sql)
-        ->Mapper(fn(object $row) => (
-          $this->ParseDecode(
-            DataList::Create([$row]), DataList::Create($this->Columns())
-          )->First()
+      $this->connect()
+        ->query($sql)
+        ->mapper(fn(object $row) => (
+          $this->parseDecode(
+            DataList::create([$row]), DataList::create($this->columns())
+          )->first()
         ))
     );
   }
 
-  public function SetProperty(
+  public function setProperty(
     string $key,
     mixed $value
   ): Repository {
@@ -351,26 +354,26 @@ class Repository
     return $this;
   }
 
-  public function Select(
+  public function select(
     callable $selectFn
   ): Repository {
-    return $this->SetProperty(
+    return $this->setProperty(
       "selectFn", $selectFn
     );    
   }
 
-  public function Where(
+  public function where(
     callable $whereFn
   ): Repository {
-    return $this->SetProperty(
+    return $this->setProperty(
       "whereFn", $whereFn
     );
   }
 
-  public function GroupBy(
+  public function groupBy(
     callable $groupByFn
   ): Repository {
-    return $this->SetProperty(
+    return $this->setProperty(
       "groupByFn", $groupByFn
     );
   }
@@ -378,7 +381,7 @@ class Repository
   public function orderByAsc(
     callable $orderByAscFn
   ): Repository {
-    return $this->SetProperty(
+    return $this->setProperty(
       "orderByAscFn", $orderByAscFn
     );
   }  
@@ -386,12 +389,12 @@ class Repository
   public function orderByDesc(
     callable $orderByDescFn
   ): Repository {
-    return $this->SetProperty(
+    return $this->setProperty(
       "orderByDescFn", $orderByDescFn
     );
   }
 
-  public function All(
+  public function all(
   ): DataList {
     $queryBuild = (
       new QueryBuild(
@@ -400,22 +403,22 @@ class Repository
     );
 
     if(isset($this->selectFn))
-      $queryBuild->Select($this->selectFn);
+      $queryBuild->select($this->selectFn);
     if(isset($this->whereFn))
-      $queryBuild->Where($this->whereFn);
+      $queryBuild->where($this->whereFn);
     if(isset($this->groupByFn))
-      $queryBuild->GroupBy($this->groupByFn);
+      $queryBuild->groupBy($this->groupByFn);
     if(isset($this->orderByAscFn))
-      $queryBuild->OrderByAsc($this->orderByAscFn);
+      $queryBuild->orderByAsc($this->orderByAscFn);
     if(isset($this->orderByDescFn))
-      $queryBuild->OrderByDesc($this->orderByDescFn);
+      $queryBuild->orderByDesc($this->orderByDescFn);
 
-    return $this->QueryBuild(
+    return $this->queryBuild(
       $queryBuild->Get()
     );
   }
 
-  public function One(
+  public function one(
   ): object {
     $queryBuild = (
       new QueryBuild(
@@ -424,19 +427,19 @@ class Repository
     );
 
     if(isset($this->selectFn))
-      $queryBuild->Select($this->selectFn);
+      $queryBuild->select($this->selectFn);
     if(isset($this->whereFn))
-      $queryBuild->Where($this->whereFn);
+      $queryBuild->where($this->whereFn);
     if(isset($this->groupByFn))
-      $queryBuild->GroupBy($this->groupByFn);
+      $queryBuild->groupBy($this->groupByFn);
     if(isset($this->orderByAscFn))
-      $queryBuild->OrderByAsc($this->orderByAscFn);
+      $queryBuild->orderByAsc($this->orderByAscFn);
     if(isset($this->orderByDescFn))
-      $queryBuild->OrderByDesc($this->orderByDescFn);
+      $queryBuild->orderByDesc($this->orderByDescFn);
 
-    $recordFirst = $this->QueryBuild(
-      $queryBuild->Get()
-    )->First();
+    $recordFirst = $this->queryBuild(
+      $queryBuild->get()
+    )->first();
 
     if($recordFirst === false){
       return new $this->table;

@@ -18,64 +18,64 @@ class MySqlUpdatePrimaryKeys
     public StructureTable $structureTable
   ){}
 
-  public function SetStarteds(
+  public function setStarteds(
   ): void {
     $this->updateScripts = (
-      DataList::Create()
+      DataList::create()
     );
   }
 
-  public function SetModify(
+  public function setModify(
   ): void {
-    if($this->structureTable->PrimaryKeys()->List()->Exist() === true){
-      $primaryKeysIsEquals = Util::ArrayEquais(
-        $this->structureTable->PrimaryKeys()->List()->All(),
-        $this->persistedPrimaryKeysList->List()->All()
+    if($this->structureTable->primaryKeys()->list()->exist() === true){
+      $primaryKeysIsEquals = Util::arrayEquais(
+        $this->structureTable->primaryKeys()->list()->all(),
+        $this->persistedPrimaryKeysList->list()->all()
       );
 
       if($primaryKeysIsEquals === false){
-        if($this->persistedPrimaryKeysList->List()->Exist()){
-          $this->updateScripts->Add(
+        if($this->persistedPrimaryKeysList->list()->exist()){
+          $this->updateScripts->add(
             new IUpdateScript(
               "Alter Table {$this->structureTable->table} Drop Primary Key",
-              "Primary key ({$this->persistedPrimaryKeysList->List()->JoinWithComma()}) create for {$this->structureTable->table} table successfully", ScriptType::NotDependence
+              "Primary key ({$this->persistedPrimaryKeysList->list()->joinWithComma()}) create for {$this->structureTable->table} table successfully", ScriptType::notDependence
             )
           );          
         }
 
-        $this->updateScripts->Add(
+        $this->updateScripts->add(
           new IUpdateScript(
-            "Alter Table {$this->structureTable->table} Add Primary Key ({$this->structureTable->PrimaryKeys()->List()->JoinWithComma()})",
-            "Primary key ({$this->structureTable->PrimaryKeys()->List()->JoinWithComma()}) create for {$this->structureTable->table} table successfully", ScriptType::NotDependence
+            "Alter Table {$this->structureTable->table} Add Primary Key ({$this->structureTable->primaryKeys()->list()->joinWithComma()})",
+            "Primary key ({$this->structureTable->primaryKeys()->list()->joinWithComma()}) create for {$this->structureTable->table} table successfully", ScriptType::notDependence
           )
         );         
       }
     }
   }
 
-  public function SetDrops(
+  public function setDrops(
   ): void {
-    if($this->persistedPrimaryKeysList->List()->Exist() === true){
-      if($this->structureTable->PrimaryKeys()->List()->Exist() === false){
-        $this->updateScripts->Add(
+    if($this->persistedPrimaryKeysList->list()->exist() === true){
+      if($this->structureTable->primaryKeys()->list()->exist() === false){
+        $this->updateScripts->add(
           new IUpdateScript(
             "Alter Table {$this->structureTable->table} Drop Primary Key",
-            "Primary key ({$this->persistedPrimaryKeysList->List()->JoinWithComma()}) create for {$this->structureTable->table} table successfully", ScriptType::NotDependence
+            "Primary key ({$this->persistedPrimaryKeysList->list()->joinWithComma()}) create for {$this->structureTable->table} table successfully", ScriptType::notDependence
           )
         );        
       }
     }
   }  
 
-  public function StartUpdates(
+  public function startUpdates(
   ): MySqlUpdatePrimaryKeys {
-    $this->SetStarteds();
-    $this->SetModify();
-    $this->SetDrops(); 
+    $this->setStarteds();
+    $this->setModify();
+    $this->setDrops(); 
     return $this;
   }
 
-  public function UpdateScripts(
+  public function updateScripts(
   ): DataList {
     return $this->updateScripts;
   }  

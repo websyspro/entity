@@ -11,8 +11,8 @@ use Websyspro\Entity\Interfaces\IAbstractColumn;
 class Date
 extends IAbstractColumn
 {
-  public AttributeType $attributeType = AttributeType::Column;
-  public ColumnType $columnType = ColumnType::Date;
+  public AttributeType $attributeType = AttributeType::column;
+  public ColumnType $columnType = ColumnType::date;
 
   public function sql(
   ): string {

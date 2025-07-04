@@ -20,21 +20,21 @@ class MySqlUpdateGenerations
     public StructureTable $structureTable
   ){}
 
-  public function SetInicial(
+  public function setInicial(
   ): void {
-    $this->updateScripts = DataList::Create();
+    $this->updateScripts = DataList::create();
   }
 
-  public function SetAdd(
+  public function setAdd(
   ): void {
-    if($this->persistedGenerationsList->List()->Exist() === false){
-      if($this->structureTable->Generations()->List()->Exist() === true){
-        $this->structureTable->Generations()->List()->Where(
+    if($this->persistedGenerationsList->list()->exist() === false){
+      if($this->structureTable->generations()->list()->exist() === true){
+        $this->structureTable->generations()->list()->where(
           fn(IProperties $property) => (
-            $this->updateScripts->Add(
+            $this->updateScripts->add(
               new IUpdateScript(
-                "Alter Table {$this->structureTable->table} Modify Column {$property->name} {$this->structureTable->Columns()->Type($property->name)} {$this->structureTable->Requireds()->Sql($property->name)} Auto_Increment",
-                "Column {$property->name} added AutoIncrement with successfully to {$this->structureTable->table}", ScriptType::NotDependence
+                "Alter Table {$this->structureTable->table} Modify Column {$property->name} {$this->structureTable->columns()->type($property->name)} {$this->structureTable->requireds()->sql($property->name)} Auto_Increment",
+                "Column {$property->name} added AutoIncrement with successfully to {$this->structureTable->table}", ScriptType::notDependence
               )
             )
           )
@@ -43,33 +43,33 @@ class MySqlUpdateGenerations
     }
   }
 
-  public function SetModify(
+  public function setModify(
   ): void {
-    if($this->persistedGenerationsList->ListNames()->Exist() === true){
-      if($this->structureTable->Generations()->ListNames()->Exist() === true){
-        $generationsIsEquals = Util::ArrayEquais(
-          $this->persistedGenerationsList->ListNames()->All(),
-          $this->structureTable->Generations()->ListNames()->All()
+    if($this->persistedGenerationsList->listNames()->exist() === true){
+      if($this->structureTable->generations()->listNames()->exist() === true){
+        $generationsIsEquals = Util::arrayEquais(
+          $this->persistedGenerationsList->listNames()->all(),
+          $this->structureTable->generations()->listNames()->all()
         );
 
         if($generationsIsEquals === false){
-          $this->persistedGenerationsList->List()->Mapper(
+          $this->persistedGenerationsList->list()->mapper(
             fn(IPersistedGeneration $pg) => (
-              $this->updateScripts->Add(
+              $this->updateScripts->add(
                 new IUpdateScript(
-                  "Alter Table {$this->structureTable->table} Modify Column {$pg->name} {$this->structureTable->Columns()->Type($pg->name)} {$this->structureTable->Requireds()->Sql($pg->name)}",
-                  "Column {$pg->name} modify with successfully to {$this->structureTable->table}", ScriptType::NotDependence
+                  "Alter Table {$this->structureTable->table} Modify Column {$pg->name} {$this->structureTable->columns()->type($pg->name)} {$this->structureTable->requireds()->sql($pg->name)}",
+                  "Column {$pg->name} modify with successfully to {$this->structureTable->table}", ScriptType::notDependence
                 )
               )
             )
           );
 
-          $this->structureTable->Generations()->List()->Mapper(
+          $this->structureTable->generations()->list()->mapper(
             fn(IProperties $property) => (
-              $this->updateScripts->Add(
+              $this->updateScripts->add(
                 new IUpdateScript(
-                  "Alter Table {$this->structureTable->table} Modify Column {$property->name} {$this->structureTable->Columns()->Type($property->name)} {$this->structureTable->Requireds()->Sql($property->name)} Auto_Increment",
-                  "Column {$property->name} added AutoIncrement with successfully to {$this->structureTable->table}", ScriptType::NotDependence
+                  "Alter Table {$this->structureTable->table} Modify Column {$property->name} {$this->structureTable->columns()->type($property->name)} {$this->structureTable->requireds()->sql($property->name)} Auto_Increment",
+                  "Column {$property->name} added AutoIncrement with successfully to {$this->structureTable->table}", ScriptType::notDependence
                 )
               )              
             )
@@ -79,16 +79,16 @@ class MySqlUpdateGenerations
     }
   }
 
-  public function SetDrops(
+  public function setDrops(
   ): void {
-    if($this->persistedGenerationsList->ListNames()->Exist() === true){
-      if($this->structureTable->Generations()->ListNames()->Exist() === false){
-        $this->persistedGenerationsList->List()->Mapper(
+    if($this->persistedGenerationsList->listNames()->exist() === true){
+      if($this->structureTable->generations()->listNames()->exist() === false){
+        $this->persistedGenerationsList->list()->mapper(
           fn(IPersistedGeneration $pg) => (
-            $this->updateScripts->Add(
+            $this->updateScripts->add(
               new IUpdateScript(
-                "Alter Table {$this->structureTable->table} Modify Column {$pg->name} {$this->structureTable->Columns()->Type($pg->name)} {$this->structureTable->Requireds()->Sql($pg->name)}",
-                "Column {$pg->name} modify with successfully to {$this->structureTable->table}", ScriptType::NotDependence
+                "Alter Table {$this->structureTable->table} Modify Column {$pg->name} {$this->structureTable->columns()->type($pg->name)} {$this->structureTable->requireds()->sql($pg->name)}",
+                "Column {$pg->name} modify with successfully to {$this->structureTable->table}", ScriptType::notDependence
               )
             )            
           )
@@ -97,16 +97,16 @@ class MySqlUpdateGenerations
     } 
   }
 
-  public function StartUpdates(
+  public function startUpdates(
   ): MySqlUpdateGenerations {
-    $this->SetInicial();
-    $this->SetAdd();
-    $this->SetModify();
-    $this->SetDrops();  
+    $this->setInicial();
+    $this->setAdd();
+    $this->setModify();
+    $this->setDrops();  
     return $this;
   }
 
-  public function UpdateScripts(
+  public function updateScripts(
   ): DataList {
     return $this->updateScripts;
   }  

@@ -10,7 +10,7 @@ use Websyspro\Entity\Interfaces\IAbstractColumn;
 class ForeignKey
 extends IAbstractColumn
 {
-  public AttributeType $attributeType = AttributeType::Foreigns;
+  public AttributeType $attributeType = AttributeType::foreigns;
 
   public function __construct(
     public readonly string $referenceClass

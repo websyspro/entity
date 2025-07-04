@@ -4,7 +4,7 @@ namespace Websyspro\Entity\Core\Persisteds;
 
 class MySqlScript
 {
-  public static function Columns(
+  public static function columns(
     string $database
   ): string {
     return (
@@ -18,7 +18,7 @@ class MySqlScript
     ); 
   }
 
-  public static function PrimaryKeys(
+  public static function primaryKeys(
     string $database
   ): string {
     return (
@@ -32,7 +32,7 @@ class MySqlScript
     );
   }
 
-  public static function Generations(
+  public static function generations(
     string $database
   ): string {
     return (
@@ -46,7 +46,7 @@ class MySqlScript
     );
   }
 
-  public static function Requireds(
+  public static function requireds(
     string $database
   ): string {
     return (
@@ -60,7 +60,7 @@ class MySqlScript
     );
   }
 
-  public static function Uniques(
+  public static function uniques(
     string $database
   ): string {
     return (
@@ -72,7 +72,7 @@ class MySqlScript
     );
   }
 
-  public static function Statistics(
+  public static function statistics(
     string $database
   ): string {
     return (
@@ -87,7 +87,7 @@ class MySqlScript
     );
   }
 
-  public static function ForeignKeys(
+  public static function foreignKeys(
     string $database
   ): string {
     return (

@@ -9,7 +9,7 @@ use Websyspro\Entity\Interfaces\IAbstractColumn;
 #[Attribute( Attribute::TARGET_PROPERTY )]
 class Update extends IAbstractColumn
 {
-  public AttributeType $attributeType = AttributeType::Update;
+  public AttributeType $attributeType = AttributeType::update;
   
   public function __construct(
     public readonly mixed $value

@@ -11,25 +11,25 @@ class PersistedForeignKeysList
     private DataList $foreignKeys
   ){}
 
-  public function List(
+  public function list(
   ): DataList {
-    return $this->foreignKeys->Copy();
+    return $this->foreignKeys->copy();
   }
 
-  public function ListNames(
+  public function listNames(
   ): DataList {
-    return $this->List();
+    return $this->list();
   }
 
-  public function IsForeignKey(
+  public function isForeignKey(
     string $name
   ): bool {
     return (
-      $this->List()->Where(
+      $this->list()->where(
         fn(IPersistedForeignKeys $persistedForeignKeys) => (
           $persistedForeignKeys->name === $name
         )
-      )->Exist()
+      )->exist()
     );    
   }
 }

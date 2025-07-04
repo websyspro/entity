@@ -10,7 +10,7 @@ use Websyspro\Entity\Interfaces\IAbstractColumn;
 class Insert
 extends IAbstractColumn
 {
-  public AttributeType $attributeType = AttributeType::Insert;
+  public AttributeType $attributeType = AttributeType::insert;
   
   public function __construct(
     public readonly mixed $value

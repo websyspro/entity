@@ -11,8 +11,8 @@ use Websyspro\Entity\Interfaces\IAbstractColumn;
 class Number
 extends IAbstractColumn
 {
-  public AttributeType $attributeType = AttributeType::Column;
-  public ColumnType $columnType = ColumnType::Number;
+  public AttributeType $attributeType = AttributeType::column;
+  public ColumnType $columnType = ColumnType::number;
 
   public function sql(
   ): string {

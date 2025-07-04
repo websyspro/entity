@@ -3,6 +3,6 @@
 namespace Websyspro\Entity\Enums;
 
 enum ScriptType {
-  case NotDependence;
-  case Dependence;
+  case notDependence;
+  case dependence;
 }

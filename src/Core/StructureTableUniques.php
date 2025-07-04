@@ -11,43 +11,45 @@ use Websyspro\Entity\Interfaces\IUniqueNameItems;
 class StructureTableUniques
 extends StructureTableAbstract
 {
-  public function List(
+  public function list(
   ): DataList {
-    return $this->Properties(
-      AttributeType::Uniques
+    return $this->properties(
+      AttributeType::uniques
     );
   }
 
-  public function ListNames(
+  public function listNames(
   ): DataList  {
     return (
-      $this->List()
+      $this
+        ->list()
         ->Mapper(
           fn(IProperties $property) => (
             new IUniqueItem(
               $property->name, 
-              $property->items->First()->uniqueGroup
+              $property->items
+                ->first()->uniqueGroup
             )
           )
         )
-        ->Reduce([], function(mixed $curr, IUniqueItem $uniqueItem){
+        ->reduce([], function(mixed $curr, IUniqueItem $uniqueItem){
           $curr[$uniqueItem->uniqueGroup][] = $uniqueItem->name; 
           return $curr;
         })
-        ->Mapper(fn(array $uniqueGroups) => DataList::Create($uniqueGroups))
-        ->Mapper(fn(DataList $uniques) => new IUniqueNameItems("Unique_{$uniques->Join("_")}", $uniques->JoinWithComma()))
+        ->mapper(fn(array $uniqueGroups) => DataList::create($uniqueGroups))
+        ->mapper(fn(DataList $uniques) => new IUniqueNameItems("Unique_{$uniques->join("_")}", $uniques->joinWithComma()))
     );
   }
 
-  public function IsUnique(
+  public function isUnique(
     string $name
   ): bool {
     return (
-      $this->ListNames()->Where(
+      $this->listNames()->where(
         fn(IUniqueNameItems $uniqueNameItems) => (
           $uniqueNameItems->name === $name
         )
-      )->Exist()
+      )->exist()
     );
   }
 }

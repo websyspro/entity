@@ -11,8 +11,8 @@ use Websyspro\Entity\Interfaces\IAbstractColumn;
 class Decimal
 extends IAbstractColumn
 {
-  public AttributeType $attributeType = AttributeType::Column;
-  public ColumnType $columnType = ColumnType::Decimal;
+  public AttributeType $attributeType = AttributeType::column;
+  public ColumnType $columnType = ColumnType::decimal;
 
   public function __construct(
     public readonly int $numberOfDigits = 10,

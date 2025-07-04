@@ -23,42 +23,42 @@ class MySqlUpdateColumns
     public Connect $connect
   ){}
 
-  public function SetStarteds(
+  public function setStarteds(
   ): void {
     $this->updateScripts = (
-      DataList::Create()
+      DataList::create()
     );
   }
 
-  private function SetCreateds(
+  private function setCreateds(
   ): void {
-    if($this->persistedColumnsList->Exist() === false){
-      $columnsTypes = $this->structureTable->Columns()->ListType()->Mapper(
-        fn(IColumnType $columnType) => "{$columnType->name} {$columnType->type} {$this->structureTable->Requireds()->Sql($columnType->name)}"
+    if($this->persistedColumnsList->exist() === false){
+      $columnsTypes = $this->structureTable->columns()->listType()->mapper(
+        fn(IColumnType $columnType) => "{$columnType->name} {$columnType->type} {$this->structureTable->requireds()->sql($columnType->name)}"
       );
 
-      $this->updateScripts->Add(
+      $this->updateScripts->add(
         new IUpdateScript(
-          "Create Table {$this->structureTable->table} ({$columnsTypes->JoinWithComma()}) engine=innodb",
-          "Table {$this->structureTable->table} created with successfully", ScriptType::NotDependence
+          "Create Table {$this->structureTable->table} ({$columnsTypes->joinWithComma()}) engine=innodb",
+          "Table {$this->structureTable->table} created with successfully", ScriptType::notDependence
         )
       );
     }
   }
 
-  private function SetAdd(
+  private function setAdd(
   ): void {
-    if($this->persistedColumnsList->Exist() === true){
-      $columnsAdd = $this->structureTable->Columns()->ListType()->Where(
-        fn(IColumnType $columnType) => $this->persistedColumnsList->ColumnExist($columnType->name) === false
+    if($this->persistedColumnsList->exist() === true){
+      $columnsAdd = $this->structureTable->columns()->listType()->where(
+        fn(IColumnType $columnType) => $this->persistedColumnsList->columnExist($columnType->name) === false
       );
 
-      if($columnsAdd->Exist() === true){
-        $columnsAdd->ForEach(fn(IColumnType $columnType) => (
-          $this->updateScripts->Add(
+      if($columnsAdd->exist() === true){
+        $columnsAdd->forEach(fn(IColumnType $columnType) => (
+          $this->updateScripts->add(
             new IUpdateScript(
-              "Alter Table {$this->structureTable->table} Add Column {$columnType->name} {$columnType->type} {$this->structureTable->Requireds()->Sql($columnType->name)} {$this->structureTable->Columns()->Before($columnType->name)}",
-              "Column {$columnType->name} added with successfully to {$this->structureTable->table}", ScriptType::NotDependence
+              "Alter Table {$this->structureTable->table} Add Column {$columnType->name} {$columnType->type} {$this->structureTable->requireds()->sql($columnType->name)} {$this->structureTable->columns()->before($columnType->name)}",
+              "Column {$columnType->name} added with successfully to {$this->structureTable->table}", ScriptType::notDependence
             )
           )
         ));
@@ -66,24 +66,24 @@ class MySqlUpdateColumns
     }
   }  
 
-  private function SetModify(
+  private function setModify(
   ): void {
-    if($this->persistedColumnsList->Exist() === true){
-      $columnsModify = $this->structureTable->Columns()->ListType()->Where(
+    if($this->persistedColumnsList->exist() === true){
+      $columnsModify = $this->structureTable->columns()->listType()->where(
         fn(IColumnType $columnType) => (
-          $this->persistedColumnsList->ColumnExist($columnType->name) === true && (
-            $this->structureTable->Columns()->Type($columnType->name) !== $this->persistedColumnsList->Type($columnType->name) || 
-            $this->structureTable->Requireds()->IsRequired($columnType->name) !== $this->persistedRequiredsList->IsRequired($columnType->name)
+          $this->persistedColumnsList->columnExist($columnType->name) === true && (
+            $this->structureTable->columns()->type($columnType->name) !== $this->persistedColumnsList->type($columnType->name) || 
+            $this->structureTable->requireds()->isRequired($columnType->name) !== $this->persistedRequiredsList->isRequired($columnType->name)
           )
         )
       );
 
-      if($columnsModify->Exist()){
-        $columnsModify->ForEach(fn(IColumnType $columnType) => (
-          $this->updateScripts->Add(
+      if($columnsModify->exist()){
+        $columnsModify->forEach(fn(IColumnType $columnType) => (
+          $this->updateScripts->add(
             new IUpdateScript(
-              "Alter Table {$this->structureTable->table} Modify Column {$columnType->name} {$columnType->type} {$this->structureTable->Requireds()->Sql($columnType->name)}",
-              "Column {$columnType->name} modify with successfully to {$this->structureTable->table}", ScriptType::NotDependence
+              "Alter Table {$this->structureTable->table} Modify Column {$columnType->name} {$columnType->type} {$this->structureTable->requireds()->sql($columnType->name)}",
+              "Column {$columnType->name} modify with successfully to {$this->structureTable->table}", ScriptType::notDependence
             )
           )
         ));
@@ -91,28 +91,28 @@ class MySqlUpdateColumns
     }
   }
   
-  private function SetDrops(
+  private function setDrops(
   ): void {
-    if($this->persistedColumnsList->Exist() === true){
-      $persistedColumns = $this->persistedColumnsList->Columns()->Where(
+    if($this->persistedColumnsList->exist() === true){
+      $persistedColumns = $this->persistedColumnsList->columns()->where(
         fn(IPersistedColumn $persistedColumn) => (
-          $this->structureTable->Columns()->ColumnExist($persistedColumn->name) 
+          $this->structureTable->columns()->columnExist($persistedColumn->name) 
         ) === false
       );
 
-      if($persistedColumns->Exist() === true){
-        $persistedColumns->ForEach(fn(IPersistedColumn $persistedColumn) => (
-          $this->connect->Query(
+      if($persistedColumns->exist() === true){
+        $persistedColumns->forEach(fn(IPersistedColumn $persistedColumn) => (
+          $this->connect->query(
             "Select Count(*) as IsNotNull 
                From {$this->structureTable->table} 
               Where {$persistedColumn->name} Is Not Null"
-          )->ForEach(
+          )->forEach(
             function(object $row) use($persistedColumn) {
               if((int)$row->IsNotNull === 0){
-                $this->updateScripts->Add(
+                $this->updateScripts->add(
                   new IUpdateScript(
                     "Alter Table {$this->structureTable->table} Drop {$persistedColumn->name}",
-                    "Column {$persistedColumn->name} drop with successfully to {$this->structureTable->table}", ScriptType::NotDependence
+                    "Column {$persistedColumn->name} drop with successfully to {$this->structureTable->table}", ScriptType::notDependence
                   )
                 );
               }
@@ -125,15 +125,15 @@ class MySqlUpdateColumns
   
   public function StartUpdates(
   ): MySqlUpdateColumns {
-    $this->SetStarteds();
-    $this->SetCreateds();
-    $this->SetAdd();
-    $this->SetModify();
-    $this->SetDrops();
+    $this->setStarteds();
+    $this->setCreateds();
+    $this->setAdd();
+    $this->setModify();
+    $this->setDrops();
     return $this;
   }
 
-  public function UpdateScripts(
+  public function updateScripts(
   ): DataList {
     return $this->updateScripts;
   }

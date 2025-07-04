@@ -11,20 +11,20 @@ class PersistedRequiredsList
     private DataList $requireds
   ){}
 
-  public function List(
+  public function list(
   ): DataList {
-    return $this->requireds->Copy();
+    return $this->requireds->copy();
   }
 
-  public function IsRequired(
+  public function isRequired(
     string $name
   ): bool {
     return (
-      $this->List()->Where(
+      $this->list()->where(
         fn(IPersistedRequireds $persistedRequireds) => (
           $persistedRequireds->name === $name
         )
-      )->Exist()
+      )->exist()
     );
   }
 }

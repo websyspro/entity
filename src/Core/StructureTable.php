@@ -13,72 +13,72 @@ class StructureTable
   public function __construct(
     public string $entity
   ){
-    $this->EntityModule();
-    $this->EntityParse();
+    $this->entityModule();
+    $this->entityParse();
   }
 
-  private function EntityModule(
+  private function entityModule(
   ): void {
     if(isset(Statics::$modules)){
-      $this->module = Statics::$modules->Copy()->Where(
+      $this->module = Statics::$modules->copy()->where(
         fn(mixed $itemModule) => $itemModule->entity === $this->entity
-      )->First()->module;
+      )->first()->module;
     }
   } 
 
-  private function EntityParse(
+  private function entityParse(
   ): void {
     $this->table = (
       new DataList(explode( "\\", $this->entity))
-    )->Slice(-1)->Mapper(fn(string $str) => preg_replace("/Entity$/", "", $str))->First();
+    )->slice(-1)->mapper(fn(string $str) => preg_replace("/Entity$/", "", $str))->first();
   }
 
-  public function Columns(
+  public function columns(
   ): StructureTableColumns {
     return new StructureTableColumns($this->entity);
   }
 
-  public function Requireds(
+  public function requireds(
   ): StructureTableRequireds {
     return new StructureTableRequireds($this->entity);
   }  
 
-  public function PrimaryKeys(
+  public function primaryKeys(
   ): StructureTablePrimaryKeys {
     return new StructureTablePrimaryKeys($this->entity);
   }
 
-  public function Generations(
+  public function generations(
   ): StructureTableGenerations {
     return new StructureTableGenerations($this->entity);
   }
 
-  public function Uniques(
+  public function uniques(
   ): StructureTableUniques {
     return new StructureTableUniques($this->entity);
   }
   
-  public function Statistics(
+  public function statistics(
   ): StructureTableStatistics {
     return new StructureTableStatistics($this->entity);
   }
 
-  public function ForeignKeys(
+  public function foreignKeys(
   ): StructureTableForeignKeys {
     return new StructureTableForeignKeys($this->entity);
   }
 
-  public function EventInserts(
+  public function eventInserts(
   ): StructureTableEventInserts {
     return new StructureTableEventInserts($this->entity);
   }
 
-  public function EventUpdates(
+  public function eventUpdates(
   ): StructureTableEventUpdates {
     return new StructureTableEventUpdates($this->entity);
   }
 
-  public function EventDeletes(
+  public function eventDeletes(
   ): StructureTableEventDeletes {
     return new StructureTableEventDeletes($this->entity);
   }  

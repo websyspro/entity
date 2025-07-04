@@ -11,29 +11,29 @@ class PersistedGenerationsList
     private DataList $generations
   ){}
 
-  public function List(
+  public function list(
   ): DataList {
-    return $this->generations->Copy();
+    return $this->generations->copy();
   }
 
-  public function ListNames(
+  public function listNames(
   ): DataList {
-    return $this->List()->Mapper(
+    return $this->list()->mapper(
       fn(IPersistedGeneration $persistedGeneration) => (
         $persistedGeneration->name
       )
     );
   }
 
-  public function IsGeneration(
+  public function isGeneration(
     string $name
   ): bool {
     return (
-      $this->List()->Where(
+      $this->list()->where(
         fn(IPersistedGeneration $persistedGeneration) => (
           $persistedGeneration->name === $name
         )
-      )->Exist()
+      )->exist()
     );    
   }
 }

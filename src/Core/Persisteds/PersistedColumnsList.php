@@ -11,37 +11,37 @@ class PersistedColumnsList
     private DataList $columns
   ){}
 
-  public function Columns(
+  public function columns(
   ): DataList {
-    return $this->columns->Copy();
+    return $this->columns->copy();
   }
 
-  public function Exist(
+  public function exist(
   ): bool {
-    return $this->Columns()->Exist();
+    return $this->columns()->exist();
   }  
 
-  public function ColumnExist(
+  public function columnExist(
     string $name
   ): bool {
     return (
-      $this->Columns()->Where(
+      $this->columns()->where(
         fn(IPersistedColumn $column) => (
           $column->name === $name
         )
-      )->Exist()
+      )->exist()
     );
   }
   
-  public function Type(
+  public function type(
     string $name
   ): string {
     return (
-      $this->Columns()->Where(
+      $this->columns()->where(
         fn(IPersistedColumn $column) => (
           $column->name === $name
         )
-      )->First()->type
+      )->first()->type
     );
   }
 }

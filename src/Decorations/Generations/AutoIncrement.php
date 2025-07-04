@@ -10,5 +10,5 @@ use Websyspro\Entity\Interfaces\IAbstractColumn;
 class AutoIncrement
 extends IAbstractColumn
 {
-  public AttributeType $attributeType = AttributeType::Generations;
+  public AttributeType $attributeType = AttributeType::generations;
 }

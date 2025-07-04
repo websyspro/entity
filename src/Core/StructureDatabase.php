@@ -50,12 +50,12 @@ class StructureDatabase
     public string $module
   ){}
 
-  public function GetDatabase(
+  public function getDatabase(
   ): void {
     $this->connect = (
-      Connect::Set(
+      Connect::set(
         strtolower(
-          Util::ClassName(
+          Util::className(
             $this->module
           )
         )
@@ -63,135 +63,137 @@ class StructureDatabase
     );
   }
 
-  private function GetDecorationEntitys(
+  private function getDecorationEntitys(
   ): void {
-    if($this->entitys->Count() !== 0){
+    if($this->entitys->count() !== 0){
       $this->structureTable = $this->entitys;
-      $this->structureTable->Mapper(
+      $this->structureTable->mapper(
         fn(string $entity) => new StructureTable($entity)
       );
     }
   }
 
-  private function Get(
+  private function get(
     string $query
   ): DataList {
-    return $this->connect->Query($query);
+    return $this->connect->query($query);
   }
 
-  private function SetPersistedsColumns(
+  private function setPersistedsColumns(
   ): DataList {
-    return $this->Get(
-      MySqlScript::Columns(
-        $this->connect->Database()
-      )
-    )->Mapper(fn(object $obj) => (
-      new IPersistedColumn(
-        ...(array)$obj
-      )
-    ));
+    return (
+      $this->get(
+        MySqlScript::columns(
+          $this->connect->database()
+        )
+      )->mapper(fn(object $obj) => (
+        new IPersistedColumn(
+          ...(array)$obj
+        )
+      ))
+    );
   }
 
-  private function SetPersistedsRequireds(
+  private function setPersistedsRequireds(
   ): DataList {
-    return $this->Get(
-      MySqlScript::Requireds(
-        $this->connect->Database()
+    return $this->get(
+      MySqlScript::requireds(
+        $this->connect->database()
       )
-    )->Mapper(fn(object $obj) => (
+    )->mapper(fn(object $obj) => (
       new IPersistedRequireds(
         ...(array)$obj
       )
     ));
   }  
 
-  private function SetPersistedsPrimaryKeys(
+  private function setPersistedsPrimaryKeys(
   ): DataList {
-    return $this->Get(
-      MySqlScript::PrimaryKeys(
-        $this->connect->Database()
+    return $this->get(
+      MySqlScript::primaryKeys(
+        $this->connect->database()
       )
-    )->Mapper(fn(object $obj) => (
+    )->mapper(fn(object $obj) => (
       new IPersistedPrimaryKey(
         ...(array)$obj
       )
     ));
   }
   
-  private function SetPersistedsGenerations(
+  private function setPersistedsGenerations(
   ): DataList {
-    return $this->Get(
-      MySqlScript::Generations(
-        $this->connect->Database()
+    return $this->get(
+      MySqlScript::generations(
+        $this->connect->database()
       )
-    )->Mapper(fn(object $obj) => (
+    )->mapper(fn(object $obj) => (
       new IPersistedGeneration(
         ...(array)$obj
       )
     ));
   }
   
-  private function SetPersistedsUniques(
+  private function setPersistedsUniques(
   ): DataList {
-    return $this->Get(
-      MySqlScript::Uniques(
-        $this->connect->Database()
+    return $this->get(
+      MySqlScript::uniques(
+        $this->connect->database()
       )
-    )->Mapper(fn(object $obj) => (
+    )->mapper(fn(object $obj) => (
       new IPersistedUnique(
         ...(array)$obj
       )
     ));
   }
   
-  private function SetPersistedsStatistics(
+  private function setPersistedsStatistics(
   ): DataList {
-    return $this->Get(
-      MySqlScript::Statistics(
-        $this->connect->Database()
+    return $this->get(
+      MySqlScript::statistics(
+        $this->connect->database()
       )
-    )->Mapper(fn(object $obj) => (
+    )->mapper(fn(object $obj) => (
       new IPersistedStatistics(
         ...(array)$obj
       )
     ));
   }
 
-  private function SetPersistedsForeignKeys(
+  private function setPersistedsForeignKeys(
   ): DataList {
-    return $this->Get(
-      MySqlScript::ForeignKeys(
-        $this->connect->Database()
+    return $this->get(
+      MySqlScript::foreignKeys(
+        $this->connect->database()
       )
-    )->Mapper(fn(object $obj) => (
+    )->mapper(fn(object $obj) => (
       new IPersistedForeignKeys(
         ...(array)$obj
       )
     ));
   }  
 
-  private function GetPersistedsEntitys(
+  private function getPersistedsEntitys(
   ): void {
-    $this->persistedColumn = $this->SetPersistedsColumns();
-    $this->persistedRequireds = $this->SetPersistedsRequireds();
-    $this->persistedPrimaryKeys = $this->SetPersistedsPrimaryKeys();
-    $this->persistedGenerations = $this->SetPersistedsGenerations();
-    $this->persistedUniques = $this->SetPersistedsUniques();
-    $this->persistedStatistics = $this->SetPersistedsStatistics();
-    $this->persistedForeignKeys = $this->SetPersistedsForeignKeys();
+    $this->persistedColumn = $this->setPersistedsColumns();
+    $this->persistedRequireds = $this->setPersistedsRequireds();
+    $this->persistedPrimaryKeys = $this->setPersistedsPrimaryKeys();
+    $this->persistedGenerations = $this->setPersistedsGenerations();
+    $this->persistedUniques = $this->setPersistedsUniques();
+    $this->persistedStatistics = $this->setPersistedsStatistics();
+    $this->persistedForeignKeys = $this->setPersistedsForeignKeys();
   }
 
-  private function GetPersistedColumns(
+  private function getPersistedColumns(
     StructureTable $structureTable
   ): PersistedColumnsList {
     if(isset($this->persistedColumn) === false){
       return new PersistedColumnsList(
-        DataList::Create()
+        DataList::create()
       );
     }
 
     return new PersistedColumnsList(
-      $this->persistedColumn->Copy()->Where(
+      $this->persistedColumn->copy()->where(
         fn(IPersistedColumn $persistedColumn) => (
           $persistedColumn->table === $structureTable->table
         )
@@ -199,11 +201,11 @@ class StructureDatabase
     );
   }
 
-  private function GetPersistedRequireds(
+  private function getPersistedRequireds(
     StructureTable $structureTable
   ): PersistedRequiredsList {
     return new PersistedRequiredsList( 
-      $this->persistedRequireds->Copy()->Where(
+      $this->persistedRequireds->copy()->where(
         fn(IPersistedRequireds $persistedRequireds) => (
           $persistedRequireds->table === $structureTable->table
         )
@@ -211,17 +213,17 @@ class StructureDatabase
     );
   }
   
-  private function GetPersistedPrimaryKeys(
+  private function getPersistedPrimaryKeys(
     StructureTable $structureTable
   ): PersistedPrimaryKeysList {
     if(isset($this->persistedPrimaryKeys) === false){
       return new PersistedPrimaryKeysList(
-        DataList::Create()
+        DataList::create()
       );
     }
 
     return new PersistedPrimaryKeysList(
-      $this->persistedPrimaryKeys->Copy()->Where(
+      $this->persistedPrimaryKeys->copy()->where(
         fn(IPersistedPrimaryKey $persistedPrimaryKey) => (
           $persistedPrimaryKey->table === $structureTable->table
         )
@@ -229,17 +231,17 @@ class StructureDatabase
     );
   }
 
-  private function GetPersistedGenerations(
+  private function getPersistedGenerations(
     StructureTable $structureTable
   ): PersistedGenerationsList {
     if(isset($this->persistedGenerations) === false){
       return new PersistedGenerationsList(
-        DataList::Create()
+        DataList::create()
       );
     }
 
     return new PersistedGenerationsList(
-      $this->persistedGenerations->Copy()->Where(
+      $this->persistedGenerations->copy()->where(
         fn(IPersistedGeneration $persistedGeneration) => (
           $persistedGeneration->table === $structureTable->table
         )
@@ -247,17 +249,17 @@ class StructureDatabase
     );
   }
 
-  private function GetPersistedUniques(
+  private function getPersistedUniques(
     StructureTable $structureTable
   ): PersistedUniquesList {
     if(isset($this->persistedUniques) === false){
       return new PersistedUniquesList(
-        DataList::Create()
+        DataList::create()
       );
     }
 
     return new PersistedUniquesList(
-      $this->persistedUniques->Copy()->Where(
+      $this->persistedUniques->copy()->where(
         fn(IPersistedUnique $persistedUnique) => (
           $persistedUnique->table === $structureTable->table
         )
@@ -265,17 +267,17 @@ class StructureDatabase
     );
   }
 
-  private function GetPersistedStatistics(
+  private function getPersistedStatistics(
     StructureTable $structureTable
   ): PersistedStatisticsList {
     if(isset($this->persistedStatistics) === false){
       return new PersistedStatisticsList(
-        DataList::Create()
+        DataList::create()
       );
     }
 
     return new PersistedStatisticsList(
-      $this->persistedStatistics->Copy()->Where(
+      $this->persistedStatistics->copy()->where(
         fn(IPersistedStatistics $persistedStatistic) => (
           $persistedStatistic->table === $structureTable->table
         )
@@ -283,17 +285,17 @@ class StructureDatabase
     );
   }
 
-  private function GetPersistedForeignKeys(
+  private function getPersistedForeignKeys(
     StructureTable $structureTable
   ): PersistedForeignKeysList {
     if(isset($this->persistedForeignKeys) === false){
       return new PersistedForeignKeysList(
-        DataList::Create()
+        DataList::create()
       );
     }
 
     return new PersistedForeignKeysList(
-      $this->persistedForeignKeys->Copy()->Where(
+      $this->persistedForeignKeys->copy()->where(
         fn(IPersistedForeignKeys $persistedForeignKey) => (
           $persistedForeignKey->table === $structureTable->table
         )
@@ -301,134 +303,134 @@ class StructureDatabase
     );
   }  
 
-  private function AddUpdateScripts(
+  private function addUpdateScripts(
     DataList $updateScripts
   ): void {
     if(isset($this->updateScripts) === false){
       $this->updateScripts = (
-        DataList::Create()
+        DataList::create()
       );
     }
     
-    $updateScripts->ForEach(
+    $updateScripts->forEach(
       fn(IUpdateScript $updateScripts) => (
-        $this->updateScripts->Add(
+        $this->updateScripts->add(
           $updateScripts
         )
       )
     );
   }
 
-  private function GetUpdateStructureColumns(
+  private function getUpdateStructureColumns(
     StructureTable $structureTable
   ): void {
-    $this->AddUpdateScripts(
+    $this->addUpdateScripts(
       (new MySqlUpdateColumns(
-        $this->GetPersistedColumns($structureTable),
-        $this->GetPersistedRequireds($structureTable), $structureTable, $this->connect
-      ))->StartUpdates()->UpdateScripts()
+        $this->getPersistedColumns($structureTable),
+        $this->getPersistedRequireds($structureTable), $structureTable, $this->connect
+      ))->startUpdates()->updateScripts()
     );
   }
 
-  private function GetUpdateStructurePrimaryKeys(
+  private function getUpdateStructurePrimaryKeys(
     StructureTable $structureTable
   ): void {
-    $this->AddUpdateScripts(
+    $this->addUpdateScripts(
       (new MySqlUpdatePrimaryKeys(
-        $this->GetPersistedPrimaryKeys($structureTable), $structureTable
-      ))->StartUpdates()->UpdateScripts()
+        $this->getPersistedPrimaryKeys($structureTable), $structureTable
+      ))->startUpdates()->updateScripts()
     );
   }
 
-  private function GetUpdateStructureGenerations(
+  private function getUpdateStructureGenerations(
     StructureTable $structureTable
   ): void {
-    $this->AddUpdateScripts(
+    $this->addUpdateScripts(
       (new MySqlUpdateGenerations(
-        $this->GetPersistedGenerations($structureTable), $structureTable
-      ))->StartUpdates()->UpdateScripts()
+        $this->getPersistedGenerations($structureTable), $structureTable
+      ))->startUpdates()->updateScripts()
     );
   }
 
-  private function GetUpdateStructureUniques(
+  private function getUpdateStructureUniques(
     StructureTable $structureTable
   ): void {
-    $this->AddUpdateScripts(
+    $this->addUpdateScripts(
       (new MySqlUpdateUniques(
-        $this->GetPersistedUniques($structureTable), $structureTable
-      ))->StartUpdates()->UpdateScripts()
+        $this->getPersistedUniques($structureTable), $structureTable
+      ))->startUpdates()->updateScripts()
     );
   }
 
-  private function GetUpdateStructureStatistics(
+  private function getUpdateStructureStatistics(
     StructureTable $structureTable
   ): void {
-    $this->AddUpdateScripts(
+    $this->addUpdateScripts(
       (new MySqlUpdateStatistics(
-        $this->GetPersistedStatistics($structureTable), $structureTable
-      ))->StartUpdates()->UpdateScripts()
+        $this->getPersistedStatistics($structureTable), $structureTable
+      ))->startUpdates()->updateScripts()
     );
   }
 
-  private function GetUpdateStructureForeignKeys(
+  private function getUpdateStructureForeignKeys(
     StructureTable $structureTable
   ): void {
-    $this->AddUpdateScripts(
+    $this->addUpdateScripts(
       (new MySqlUpdateForeignKeys(
-        $this->GetPersistedForeignKeys($structureTable), $structureTable
-      ))->StartUpdates()->UpdateScripts()
+        $this->getPersistedForeignKeys($structureTable), $structureTable
+      ))->startUpdates()->updateScripts()
     );
   }  
 
-  private function GetUpdateEntitys(
+  private function getUpdateEntitys(
   ): void {
-    $this->structureTable->ForEach(
+    $this->structureTable->forEach(
       function(StructureTable $structureTable){
-        $this->GetUpdateStructureColumns($structureTable);
-        $this->GetUpdateStructurePrimaryKeys($structureTable);
-        $this->GetUpdateStructureGenerations($structureTable);
-        $this->GetUpdateStructureUniques($structureTable);
-        $this->GetUpdateStructureStatistics($structureTable);
-        $this->GetUpdateStructureForeignKeys($structureTable);
+        $this->getUpdateStructureColumns($structureTable);
+        $this->getUpdateStructurePrimaryKeys($structureTable);
+        $this->getUpdateStructureGenerations($structureTable);
+        $this->getUpdateStructureUniques($structureTable);
+        $this->getUpdateStructureStatistics($structureTable);
+        $this->getUpdateStructureForeignKeys($structureTable);
       }
     );
   }
 
-  private function ExecuteDatabase(
+  private function executeDatabase(
     IUpdateScript $updateScript
   ): void {
-    if($this->connect->Exec($updateScript->sql) === true){
-      Message::Infors(LogType::Database, $updateScript->message);
+    if($this->connect->exec($updateScript->sql) === true){
+      Message::infors(LogType::Database, $updateScript->message);
     }
   }
 
   private function SetUpdateDatabase(
   ): void {
-    $updateScriptsNotDependence = $this->updateScripts->Copy()->Where(
+    $updateScriptsNotDependence = $this->updateScripts->copy()->where(
       fn(IUpdateScript $updateScript) => (
-        $updateScript->scriptType === ScriptType::NotDependence
+        $updateScript->scriptType === ScriptType::notDependence
       )
     );
 
-    $updateScriptsDependence = $this->updateScripts->Copy()->Where(
+    $updateScriptsDependence = $this->updateScripts->copy()->where(
       fn(IUpdateScript $updateScript) => (
-        $updateScript->scriptType === ScriptType::Dependence
+        $updateScript->scriptType === ScriptType::dependence
       )
     );    
 
-    $updateScriptsNotDependence->ForEach(fn(IUpdateScript $updateScript) => $this->ExecuteDatabase($updateScript));
-    $updateScriptsDependence->ForEach(fn(IUpdateScript $updateScript) => $this->ExecuteDatabase($updateScript));
+    $updateScriptsNotDependence->forEach(fn(IUpdateScript $updateScript) => $this->executeDatabase($updateScript));
+    $updateScriptsDependence->forEach(fn(IUpdateScript $updateScript) => $this->executeDatabase($updateScript));
   }
   
-  public function Update(
+  public function update(
   ): void {
-    $this->GetDatabase();
-    $this->GetDecorationEntitys();
-    $this->GetPersistedsEntitys();
+    $this->getDatabase();
+    $this->getDecorationEntitys();
+    $this->getPersistedsEntitys();
 
     if(isset($this->structureTable)){
-      $this->GetUpdateEntitys();
-      $this->SetUpdateDatabase();
+      $this->getUpdateEntitys();
+      $this->setUpdateDatabase();
     }
   }
 }

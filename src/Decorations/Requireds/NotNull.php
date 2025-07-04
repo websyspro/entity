@@ -10,5 +10,5 @@ use Websyspro\Entity\Interfaces\IAbstractColumn;
 class NotNull
 extends IAbstractColumn
 {
-  public AttributeType $attributeType = AttributeType::Requireds;
+  public AttributeType $attributeType = AttributeType::requireds;
 }

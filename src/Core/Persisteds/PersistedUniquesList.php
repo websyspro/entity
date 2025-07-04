@@ -11,29 +11,29 @@ class PersistedUniquesList
     private DataList $uniques
   ){} 
   
-  public function List(
+  public function list(
   ): DataList {
-    return $this->uniques->Copy();
+    return $this->uniques->copy();
   }
 
-  public function ListNames(
+  public function listNames(
   ): DataList {
-    return $this->List()->Mapper(
+    return $this->list()->mapper(
       fn(IPersistedUnique $persistedUnique) => (
         $persistedUnique->name
       )
     );
   }
 
-  public function IsUnique(
+  public function isUnique(
     string $name
   ): bool {
     return (
-      $this->List()->Where(
+      $this->list()->where(
         fn(IPersistedUnique $persistedUnique) => (
           $persistedUnique->name === $name
         )
-      )->Exist()
+      )->exist()
     );
   }
 }

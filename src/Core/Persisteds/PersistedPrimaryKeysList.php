@@ -12,24 +12,24 @@ class PersistedPrimaryKeysList
     private DataList $primaryKeys
   ){}
 
-  public function List(
+  public function list(
   ): DataList {
-    return $this->primaryKeys->Copy()->Mapper(
+    return $this->primaryKeys->copy()->mapper(
       fn(IPersistedPrimaryKey $persistedPrimaryKey) => (
         $persistedPrimaryKey->name
       )
     );
   }
 
-  public function IsRequired(
+  public function isRequired(
     string $name
   ): bool {
     return (
-      $this->List()->Where(
+      $this->list()->where(
         fn(IPersistedPrimaryKey $persistedPrimaryKey) => (
           $persistedPrimaryKey->name === $name
         )
-      )->Exist()
+      )->exist()
     );
   }
 }

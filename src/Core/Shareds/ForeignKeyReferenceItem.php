@@ -13,13 +13,13 @@ class ForeignKeyReferenceItem
   public function __construct(
     public string $reference
   ){
-    $this->SetStarteds();
-    $this->SetTable();
-    $this->SetKey();
-    $this->SetClear();
+    $this->setStarteds();
+    $this->setTable();
+    $this->setKey();
+    $this->setClear();
   }
 
-  private function SetStarteds(
+  private function setStarteds(
   ): void {
     $this->structureTable = (
       new StructureTable(
@@ -28,29 +28,34 @@ class ForeignKeyReferenceItem
     );
   }
 
-  private function SetTable(
+  private function setTable(
   ): void {
     $this->table = $this->structureTable->table;
   }
 
-  private function SetKey(
+  private function setKey(
   ): void {
-    $this->structureTable->PrimaryKeys()->List()
-      ->Where(
+    $this->structureTable
+      ->primaryKeys()
+      ->list()
+      ->where(
         fn(string $primaryKeyName) => (
-          $this->structureTable->Generations()->ListNames()->Where(
-            fn(string $generationKey) => $generationKey === $primaryKeyName
-          )
+          $this->structureTable
+            ->generations()
+            ->listNames()
+            ->where(
+              fn(string $generationKey) => $generationKey === $primaryKeyName
+            )
         )
       )
-      ->ForEach(
+      ->forEach(
         fn(string $primaryKeyName) => (
           $this->key = $primaryKeyName
         )
       );
   }
 
-  private function SetClear(
+  private function setClear(
   ): void {
     unset($this->structureTable);
     unset($this->reference);

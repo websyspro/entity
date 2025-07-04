@@ -18,21 +18,21 @@ class MySqlUpdateStatistics
     public StructureTable $structureTable
   ){}
 
-  public function SetInicial(
+  public function setInicial(
   ): void {
-    $this->updateScripts = DataList::Create();
+    $this->updateScripts = DataList::create();
   }
 
-  public function SetAdd(
+  public function setAdd(
   ): void {
-    if($this->persistedStatisticsList->ListNames()->Exist() === false){
-      if($this->structureTable->Statistics()->ListNames()->Exist() === true){
-        $this->structureTable->Statistics()->ListNames()->Mapper(
+    if($this->persistedStatisticsList->listNames()->exist() === false){
+      if($this->structureTable->statistics()->listNames()->exist() === true){
+        $this->structureTable->statistics()->listNames()->mapper(
           fn(IStatisticsNamesItem $statisticsNamesItem) => (
-            $this->updateScripts->Add(
+            $this->updateScripts->add(
               new IUpdateScript(
                 "Create index {$statisticsNamesItem->name} on {$this->structureTable->table} ({$statisticsNamesItem->columns})",
-                "Index {$statisticsNamesItem->name} added with successfully to {$this->structureTable->table}", ScriptType::NotDependence
+                "Index {$statisticsNamesItem->name} added with successfully to {$this->structureTable->table}", ScriptType::notDependence
               )
             )
           )
@@ -41,23 +41,23 @@ class MySqlUpdateStatistics
     }
   }
 
-  public function SetModify(
+  public function setModify(
   ): void {
-    if($this->persistedStatisticsList->ListNames()->Exist() === true){
-      if($this->structureTable->Statistics()->ListNames()->Exist() === true){
-        $this->structureTable->Statistics()->ListNames()
-          ->Where(
+    if($this->persistedStatisticsList->listNames()->exist() === true){
+      if($this->structureTable->statistics()->listNames()->exist() === true){
+        $this->structureTable->statistics()->listNames()
+          ->where(
             fn(IStatisticsNamesItem $statisticsNamesItem) => (
-              $this->persistedStatisticsList->IsIndex(
+              $this->persistedStatisticsList->isIndex(
                 $statisticsNamesItem->name
               ) === false
             )
           )
-          ->Mapper(fn(IStatisticsNamesItem $statisticsNamesItem) => (
-            $this->updateScripts->Add(
+          ->mapper(fn(IStatisticsNamesItem $statisticsNamesItem) => (
+            $this->updateScripts->add(
               new IUpdateScript(
                 "Create Index {$statisticsNamesItem->name} On {$this->structureTable->table} ({$statisticsNamesItem->columns})",
-                "Index {$statisticsNamesItem->name} added with successfully to {$this->structureTable->table}", ScriptType::NotDependence
+                "Index {$statisticsNamesItem->name} added with successfully to {$this->structureTable->table}", ScriptType::notDependence
               )
             )            
           ));
@@ -65,21 +65,21 @@ class MySqlUpdateStatistics
     }
   }
 
-  public function SetDrops(
+  public function setDrops(
   ): void {
-    if($this->persistedStatisticsList->ListNames()->Exist() === true){
-      $this->persistedStatisticsList->ListNames()
-        ->Where(
+    if($this->persistedStatisticsList->listNames()->exist() === true){
+      $this->persistedStatisticsList->listNames()
+        ->where(
           fn(string $indexName) => (
-            $this->structureTable->Statistics()->IsIndex($indexName) === false
+            $this->structureTable->statistics()->isIndex($indexName) === false
           )
         )
-        ->Mapper(
+        ->mapper(
           fn(string $indexName) => (
-            $this->updateScripts->Add(
+            $this->updateScripts->add(
               new IUpdateScript(
                 "Alter Table {$this->structureTable->table} Drop Index {$indexName}",
-                "Index {$indexName} drop with successfully to {$this->structureTable->table}", ScriptType::NotDependence
+                "Index {$indexName} drop with successfully to {$this->structureTable->table}", ScriptType::notDependence
               )
             )
           )
@@ -87,16 +87,16 @@ class MySqlUpdateStatistics
     }
   }
 
-  public function StartUpdates(
+  public function startUpdates(
   ): MySqlUpdateStatistics {
-    $this->SetInicial();
-    $this->SetAdd();
-    $this->SetModify();
-    $this->SetDrops();  
+    $this->setInicial();
+    $this->setAdd();
+    $this->setModify();
+    $this->setDrops();  
     return $this;
   }
 
-  public function UpdateScripts(
+  public function updateScripts(
   ): DataList {
     return $this->updateScripts;
   }  

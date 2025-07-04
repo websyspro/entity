@@ -10,7 +10,7 @@ use Websyspro\Entity\Interfaces\IAbstractColumn;
 class Delete
 extends IAbstractColumn
 {
-  public AttributeType $attributeType = AttributeType::Delete;
+  public AttributeType $attributeType = AttributeType::delete;
   
   public function __construct(
     public readonly mixed $value

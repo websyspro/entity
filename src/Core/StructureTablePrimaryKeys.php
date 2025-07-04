@@ -9,10 +9,10 @@ use Websyspro\Entity\Interfaces\IProperties;
 class StructureTablePrimaryKeys
 extends StructureTableAbstract
 {
-  public function List(
+  public function list(
   ): DataList {
-    return $this->Properties(
-      AttributeType::PrimaryKey
-    )->Mapper(fn(IProperties $properties) => $properties->name);
+    return $this->properties(
+      AttributeType::primaryKey
+    )->mapper(fn(IProperties $properties) => $properties->name);
   }
 }

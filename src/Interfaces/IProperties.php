@@ -11,7 +11,7 @@ class IProperties
     public string $name,
     public DataList $items
   ){
-    $this->items->Mapper(
+    $this->items->mapper(
       fn(ReflectionAttribute $ra ) => $ra->newInstance()
     );
   }

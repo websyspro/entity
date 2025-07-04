@@ -18,21 +18,21 @@ class MySqlUpdateUniques
     public StructureTable $structureTable
   ){}
 
-  public function SetInicial(
+  public function setInicial(
   ): void {
-    $this->updateScripts = DataList::Create();
+    $this->updateScripts = DataList::create();
   }
 
-  public function SetAdd(
+  public function setAdd(
   ): void {
-    if($this->persistedUniquesList->ListNames()->Exist() === false){
-      if($this->structureTable->Uniques()->ListNames()->Exist() === true){
-        $this->structureTable->Uniques()->ListNames()->Mapper(
+    if($this->persistedUniquesList->listNames()->exist() === false){
+      if($this->structureTable->uniques()->listNames()->exist() === true){
+        $this->structureTable->uniques()->listNames()->mapper(
           fn(IUniqueNameItems $uniqueNameItems) => (
-            $this->updateScripts->Add(
+            $this->updateScripts->add(
               new IUpdateScript(
                 "Alter Table {$this->structureTable->table} Add Constraint {$uniqueNameItems->name} Unique ({$uniqueNameItems->columns})",
-                "Constraint unique {$uniqueNameItems->name} added with successfully to {$this->structureTable->table}", ScriptType::NotDependence
+                "Constraint unique {$uniqueNameItems->name} added with successfully to {$this->structureTable->table}", ScriptType::notDependence
               )
             )
           )
@@ -41,21 +41,21 @@ class MySqlUpdateUniques
     }
   }
 
-  public function SetModify(
+  public function setModify(
   ): void {
-    if($this->persistedUniquesList->ListNames()->Exist() === true){
-      if($this->structureTable->Uniques()->ListNames()->Exist() === true){
-        $this->structureTable->Uniques()->ListNames()
-          ->Where(fn(IUniqueNameItems $uniqueNameItems) => (
-            $this->persistedUniquesList->IsUnique(
+    if($this->persistedUniquesList->listNames()->exist() === true){
+      if($this->structureTable->uniques()->listNames()->exist() === true){
+        $this->structureTable->uniques()->listNames()
+          ->where(fn(IUniqueNameItems $uniqueNameItems) => (
+            $this->persistedUniquesList->isUnique(
               $uniqueNameItems->name
             ) === false
           ))
-          ->Mapper(fn(IUniqueNameItems $uniqueNameItems) => (
-            $this->updateScripts->Add(
+          ->mapper(fn(IUniqueNameItems $uniqueNameItems) => (
+            $this->updateScripts->add(
               new IUpdateScript(
                 "Alter Table {$this->structureTable->table} Add Constraint {$uniqueNameItems->name} Unique ({$uniqueNameItems->columns})",
-                "Constraint unique {$uniqueNameItems->name} added with successfully to {$this->structureTable->table}", ScriptType::NotDependence
+                "Constraint unique {$uniqueNameItems->name} added with successfully to {$this->structureTable->table}", ScriptType::notDependence
               )
             )            
           ));
@@ -63,21 +63,21 @@ class MySqlUpdateUniques
     }    
   }
 
-  public function SetDrops(
+  public function setDrops(
   ): void {
-    if($this->persistedUniquesList->ListNames()->Exist() === true){
-      $this->persistedUniquesList->ListNames()
-        ->Where(
+    if($this->persistedUniquesList->listNames()->exist() === true){
+      $this->persistedUniquesList->listNames()
+        ->where(
           fn(string $uniqueName) => (
-            $this->structureTable->Uniques()->IsUnique($uniqueName) === false
+            $this->structureTable->uniques()->isUnique($uniqueName) === false
           )
         )
-        ->Mapper(
+        ->mapper(
           fn(string $uniqueName) => (
-            $this->updateScripts->Add(
+            $this->updateScripts->add(
               new IUpdateScript(
                 "Alter Table {$this->structureTable->table} Drop Constraint {$uniqueName}",
-                "Constraint unique {$uniqueName} drop with successfully to {$this->structureTable->table}", ScriptType::NotDependence
+                "Constraint unique {$uniqueName} drop with successfully to {$this->structureTable->table}", ScriptType::notDependence
               )
             )
           )
@@ -85,16 +85,16 @@ class MySqlUpdateUniques
     }
   }
 
-  public function StartUpdates(
+  public function startUpdates(
   ): MySqlUpdateUniques {
-    $this->SetInicial();
-    $this->SetAdd();
-    $this->SetModify();
-    $this->SetDrops();  
+    $this->setInicial();
+    $this->setAdd();
+    $this->setModify();
+    $this->setDrops();  
     return $this;
   }
 
-  public function UpdateScripts(
+  public function updateScripts(
   ): DataList {
     return $this->updateScripts;
   }  

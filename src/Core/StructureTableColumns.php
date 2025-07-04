@@ -12,88 +12,88 @@ use Websyspro\Entity\Interfaces\IProperties;
 class StructureTableColumns
 extends StructureTableAbstract
 {
-  public function List(
+  public function list(
   ): DataList  {
-    $propertiesInitial = $this->Properties(
-      AttributeType::Column
-    )->Where(fn(IProperties $property) => (
+    $propertiesInitial = $this->properties(
+      AttributeType::column
+    )->where(fn(IProperties $property) => (
       in_array( $property->name, explode(
-        "|", ColumnOrder::Initial->value
+        "|", ColumnOrder::initial->value
       )) === true
     ));
 
-    $propertiesBase = $this->Properties(
-      AttributeType::Column
-    )->Where(fn(IProperties $property) => (
+    $propertiesBase = $this->properties(
+      AttributeType::column
+    )->where(fn(IProperties $property) => (
       in_array( $property->name, explode(
-        "|", ColumnOrder::Base->value
+        "|", ColumnOrder::base->value
       )) === false
     ));
     
-    $propertiesEnd = $this->Properties(
-      AttributeType::Column
-    )->Where(fn(IProperties $property) => (
+    $propertiesEnd = $this->properties(
+      AttributeType::column
+    )->where(fn(IProperties $property) => (
       in_array( $property->name, explode(
-        "|", ColumnOrder::End->value
+        "|", ColumnOrder::end->value
       )) === true
     ));    
 
-    return DataList::Create(
+    return DataList::create(
       array_merge(
-        $propertiesInitial->All(),
-        $propertiesBase->All(),
-        $propertiesEnd->All()
+        $propertiesInitial->all(),
+        $propertiesBase->all(),
+        $propertiesEnd->all()
       )
     );
   }
 
-  public function ListType(
+  public function listType(
   ): DataList {
     return (
-      $this->List()->Mapper(
+      $this->list()->mapper(
         fn(IProperties $properties) => (
           new IColumnType(
             $properties->name,
-            $properties->items->Mapper(
+            $properties->items->mapper(
               fn(IAbstractColumn $abstractColumn) => (
                 $abstractColumn->sql()
               )
-            )->First()
+            )->first()
           )
         )
       )
     );
   }
 
-  public function ColumnExist(
+  public function columnExist(
     string $name
   ): bool {
     return (
-      $this->ListType()->Where(
+      $this->listType()->where(
         fn(IColumnType $properties) => (
           $properties->name === $name
         )
-      )->Exist()
+      )->exist()
     );
   }
 
-  public function Type(
+  public function type(
     string $name
   ): string {
     return (
-      $this->ListType()->Where(
+      $this->listType()->where(
         fn(IColumnType $properties) => (
           $properties->name === $name
         )
-      )->First()->type
+      )->first()->type
     );
   }  
 
-  public function Before(
+  public function before(
     string $name
   ): string {
-    $columnBefore = $this->ListType()->Eq(
-      $this->ListType()->IndexOf(
+    $columnBefore = $this->listType()->eq(
+      $this->listType()->indexOf(
         fn(IColumnType $columnType) => (
           $columnType->name === $name
         )

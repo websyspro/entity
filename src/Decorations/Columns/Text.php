@@ -11,8 +11,8 @@ use Websyspro\Entity\Interfaces\IAbstractColumn;
 class Text
 extends IAbstractColumn
 {
-  public AttributeType $attributeType = AttributeType::Column;
-  public ColumnType $columnType = ColumnType::Text;
+  public AttributeType $attributeType = AttributeType::column;
+  public ColumnType $columnType = ColumnType::text;
 
   public function __construct(
     public readonly int $size = 255

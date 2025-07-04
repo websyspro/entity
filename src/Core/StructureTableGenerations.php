@@ -9,16 +9,16 @@ use Websyspro\Entity\Interfaces\IProperties;
 class StructureTableGenerations
 extends StructureTableAbstract
 {
-  public function List(
+  public function list(
   ): DataList {
-    return $this->Properties(
-      AttributeType::Generations
+    return $this->properties(
+      AttributeType::generations
     );
   }
 
-  public function ListNames(
+  public function listNames(
   ): DataList  {
-    return $this->List()->Mapper(
+    return $this->list()->mapper(
       fn(IProperties $property) => (
         $property->name
       )

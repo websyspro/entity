@@ -11,8 +11,8 @@ use Websyspro\Entity\Interfaces\IAbstractColumn;
 class Datetime 
 extends IAbstractColumn
 {
-  public AttributeType $attributeType = AttributeType::Column;
-  public ColumnType $columnType = ColumnType::Datetime;
+  public AttributeType $attributeType = AttributeType::column;
+  public ColumnType $columnType = ColumnType::datetime;
 
   public function sql(
   ): string {

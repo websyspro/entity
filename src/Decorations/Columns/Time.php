@@ -10,8 +10,8 @@ use Websyspro\Entity\Interfaces\IAbstractColumn;
 #[Attribute( Attribute::TARGET_PROPERTY )]
 class Time extends IAbstractColumn
 {
-  public AttributeType $attributeType = AttributeType::Column;
-  public ColumnType $columnType = ColumnType::Time;
+  public AttributeType $attributeType = AttributeType::column;
+  public ColumnType $columnType = ColumnType::time;
 
   public function sql(
   ): string {

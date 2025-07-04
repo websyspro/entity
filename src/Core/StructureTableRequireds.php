@@ -9,42 +9,42 @@ use Websyspro\Entity\Interfaces\IProperties;
 class StructureTableRequireds
 extends StructureTableAbstract
 {
-  public function List(
+  public function list(
   ): DataList {
-    return $this->Properties(
-      AttributeType::Requireds
+    return $this->properties(
+      AttributeType::requireds
     );
   }
 
-  public function ListKeysNames(
+  public function listKeysNames(
   ): DataList {
     return (
-      DataList::Create(
+      DataList::create(
         array_flip(
-          $this->List()->Mapper(
+          $this->list()->mapper(
             fn(IProperties $properties) => (
               $properties->name
             )
-          )->All()
+          )->all()
         )
-      )->Mapper(fn() => null)
+      )->mapper(fn() => null)
     );
   }  
 
-  public function IsRequired(
+  public function isRequired(
     string $name
   ): bool {
-    return $this->List()->Where(
+    return $this->list()->where(
       fn(IProperties $properties) => (
         $properties->name === $name
       )
-    )->Exist();
+    )->exist();
   } 
   
-  public function Sql(
+  public function sql(
     string $name
   ): string {
-    return $this->IsRequired($name)
+    return $this->isRequired($name)
       ? "Not Null" : "Null";
   }
 }

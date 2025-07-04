@@ -11,22 +11,22 @@ use Websyspro\Entity\Interfaces\IProperties;
 class StructureTableForeignKeys
 extends StructureTableAbstract
 {
-  public function List(
+  public function list(
   ): DataList {
-    return $this->Properties(
-      AttributeType::Foreigns
+    return $this->properties(
+      AttributeType::foreigns
     );
   }
 
-  public function ListNames(
+  public function listNames(
     string $table
   ): DataList {
     return (
-      $this->List()->Mapper(
+      $this->list()->mapper(
         fn(IProperties $property) => (
           new ForeignKeyItem(
             $table, $property->name, new ForeignKeyReferenceItem(
-              $property->items->First()->referenceClass
+              $property->items->first()->referenceClass
             )
           )
         )
@@ -34,14 +34,14 @@ extends StructureTableAbstract
     );
   }
 
-  public function IsForeignKey(
+  public function isForeignKey(
     string $table,
     string $name
   ): bool {
-    return $this->ListNames($table)->Where(
+    return $this->listNames($table)->where(
       fn(ForeignKeyItem $foreignKeyItem) => (
         $foreignKeyItem->name === $name
       )
-    )->Exist();
+    )->exist();
   } 
 }

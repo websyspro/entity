@@ -9,19 +9,19 @@ use Websyspro\Entity\Interfaces\IProperties;
 class StructureTableEventUpdates
 extends StructureTableAbstract
 {
-  public function List(
+  public function list(
   ): DataList {
-    return $this->Properties(
-      AttributeType::Update
+    return $this->properties(
+      AttributeType::update
     );
   }
 
-  public function ListNames(
+  public function listNames(
   ): array {
-    return $this->List()->Mapper(
+    return $this->list()->mapper(
       fn(IProperties $properties) => (
         $properties->name
       )
-    )->All();
+    )->all();
   }  
 }

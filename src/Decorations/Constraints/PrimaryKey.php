@@ -10,5 +10,5 @@ use Websyspro\Entity\Interfaces\IAbstractColumn;
 class PrimaryKey
 extends IAbstractColumn
 {
-  public AttributeType $attributeType = AttributeType::PrimaryKey;
+  public AttributeType $attributeType = AttributeType::primaryKey;
 }

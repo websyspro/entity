@@ -4,14 +4,14 @@ namespace Websyspro\Entity\Enums;
 
 enum AttributeType: int
 {
-  case Column = 1;
-  case Requireds = 2;
-  case Uniques = 3;
-  case Indexes = 4;
-  case Foreigns = 5;
-  case PrimaryKey = 6;
-  case Generations = 7;
-  case Insert = 8;
-  case Update = 9;
-  case Delete = 10;
+  case column = 1;
+  case requireds = 2;
+  case uniques = 3;
+  case indexes = 4;
+  case foreigns = 5;
+  case primaryKey = 6;
+  case generations = 7;
+  case insert = 8;
+  case update = 9;
+  case delete = 10;
 }
