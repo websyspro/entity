@@ -46,8 +46,8 @@ class StructureTableAbstract
             )
           )
         )
-      )->Where(fn(IProperties $properties) => (
-        $properties->items->Count() !== 0
+      )->where(fn(IProperties $properties) => (
+        $properties->items->count() !== 0
       ))
     );
   }
