@@ -2,7 +2,6 @@
 
 use Websyspro\Commons\DataList;
 use Websyspro\Entity\Core\StructureDatabase;
-use Websyspro\Entity\Repository;
 use Websyspro\Entity\Test\Shops\Entitys\BoxEntity;
 use Websyspro\Entity\Test\Shops\Entitys\CashMovementEntity;
 use Websyspro\Entity\Test\Shops\Entitys\ConfigEntity;
@@ -12,15 +11,6 @@ use Websyspro\Entity\Test\Shops\Entitys\DocumentItemEntity;
 use Websyspro\Entity\Test\Shops\Entitys\OperatorEntity;
 use Websyspro\Entity\Test\Shops\Entitys\ProductEntity;
 use Websyspro\Entity\Test\Shops\Entitys\ProductGroupEntity;
-use Websyspro\Entity\Test\Shops\Imports\BoxImport;
-use Websyspro\Entity\Test\Shops\Imports\CashMovementImport;
-use Websyspro\Entity\Test\Shops\Imports\ConfigImport;
-use Websyspro\Entity\Test\Shops\Imports\CustumerImport;
-use Websyspro\Entity\Test\Shops\Imports\DocumentImport;
-use Websyspro\Entity\Test\Shops\Imports\DocumentItemImport;
-use Websyspro\Entity\Test\Shops\Imports\OperatorImport;
-use Websyspro\Entity\Test\Shops\Imports\ProductGroupImport;
-use Websyspro\Entity\Test\Shops\Imports\ProductImport;
 use Websyspro\Entity\Test\Shops\ShopDatabase;
 
 $structureDatabase = (
