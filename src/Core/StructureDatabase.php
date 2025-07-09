@@ -400,7 +400,7 @@ class StructureDatabase
     IUpdateScript $updateScript
   ): void {
     if($this->connect->exec($updateScript->sql) === true){
-      Message::infors(LogType::Database, $updateScript->message);
+      Message::infors(LogType::database, $updateScript->message);
     }
   }
 

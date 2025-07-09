@@ -40,15 +40,16 @@ class Repository
 
   public function connect(
   ): Connect {
-    $module = (
-      strtolower(
-        Util::className(
-          $this->structureTable->module
-        )
-      )
-    );
+    // $module = (
+    //   strtolower(
+    //     Util::className(
+    //       $this->structureTable->module
+    //     )
+    //   )
+    // );
 
-    return Connect::set($module);
+    // return Connect::set($module);
+    return Connect::set("shops");
   }
 
   private function columns(
