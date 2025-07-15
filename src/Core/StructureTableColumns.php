@@ -87,6 +87,15 @@ extends StructureTableAbstract
         )
       )->first()->type
     );
+  } 
+  
+  public function listNames(
+  ): DataList  {
+    return $this->list()->mapper(
+      fn(IProperties $property) => (
+        $property->name
+      )
+    );
   }  
 
   public function before(
