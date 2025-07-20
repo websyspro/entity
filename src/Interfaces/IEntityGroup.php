@@ -28,7 +28,9 @@ class IEntityGroup
   private function defineOneToOne(
   ): void {
     $this->oneToOne = (
-      $this->structure->foreignKeys()->listNames($this->structure->table)
+      $this->structure
+        ->foreignKeys()
+        ->listNames($this->structure->table)
         ->mapper(
           fn(ForeignKeyItem $fk) => (
             new IOneToOne(

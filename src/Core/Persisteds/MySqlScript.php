@@ -97,5 +97,17 @@ class MySqlScript
         where information_schema.key_column_usage.table_schema = '{$database}'
           and information_schema.key_column_usage.referenced_table_name is not null"
     );
-  }   
+  }
+  
+  public static function oneToOnes(
+    string $database
+  ): string {
+    return (
+      "select information_schema.key_column_usage.table_name as 'table'
+             ,information_schema.key_column_usage.constraint_name as 'name'
+         from information_schema.key_column_usage 
+        where information_schema.key_column_usage.table_schema = '{$database}'
+          and information_schema.key_column_usage.referenced_table_name is not null"
+    );
+  }
 }

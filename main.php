@@ -9,13 +9,19 @@ use Websyspro\Entity\Test\Shops\Entitys\OperatorEntity;
 use Websyspro\Entity\Test\Shops\Entitys\ProductEntity;
 use Websyspro\Entity\Test\Shops\Entitys\ProductGroupEntity;
 
-$documentRepo = new Repository(
+$repo = new Repository(
   DocumentEntity::class
 );
 
-$documentRepo
+$repo
   ->where(
-    fn(DocumentEntity $d, DocumentItemEntity $i, ProductEntity $p, CustomerEntity $c, OperatorEntity $o, BoxEntity $b, ProductGroupEntity $g) => (
-      $d->Id == [12] && $i->DocumentId == $d->Id && $i->ProductId == $p->Id && $d->CustomerId == $c->Id && $d->OperatorId == $o->Id && $d->BoxId == $b->Id && $p->ProductGroupId == $g->Id
+    fn(DocumentEntity $d, DocumentItemEntity $i, CustomerEntity $c, BoxEntity $b, OperatorEntity $o, ProductEntity $p, ProductGroupEntity $g) => (
+      $d->Id == [12, 14, 15, 17] && $i->DocumentId == $d->Id && $c->Id == $d->CustomerId && $b->Id == $d->BoxId && $o->Id == $d->OperatorId && $p->Id == $i->ProductId && $g->Id == $p->ProductGroupId
     ))
+  ->orderByAsc(
+    fn(DocumentEntity $d) => [
+      $d->Id
+    ]
+  )
+  ->paged(1, 1)  
   ->one();

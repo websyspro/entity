@@ -68,6 +68,11 @@ class StructureTable
     return new StructureTableForeignKeys($this->entity);
   }
 
+  public function oneToOnes(
+  ): StructureTableOneToOnes {
+    return new StructureTableOneToOnes($this->entity);
+  }  
+
   public function eventInserts(
   ): StructureTableEventInserts {
     return new StructureTableEventInserts($this->entity);

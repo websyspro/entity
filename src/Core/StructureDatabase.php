@@ -3,12 +3,12 @@
 namespace Websyspro\Entity\Core;
 
 use Websyspro\Commons\DataList;
-use Websyspro\Commons\Reflect;
 use Websyspro\Commons\Util;
 use Websyspro\Database\Connect;
 use Websyspro\Entity\Core\Designs\MySql\MySqlUpdateColumns;
 use Websyspro\Entity\Core\Designs\MySql\MySqlUpdateForeignKeys;
 use Websyspro\Entity\Core\Designs\MySql\MySqlUpdateGenerations;
+use Websyspro\Entity\Core\Designs\MySql\MySqlUpdateOneToOne;
 use Websyspro\Entity\Core\Designs\MySql\MySqlUpdatePrimaryKeys;
 use Websyspro\Entity\Core\Designs\MySql\MySqlUpdateStatistics;
 use Websyspro\Entity\Core\Designs\MySql\MySqlUpdateUniques;
@@ -16,6 +16,7 @@ use Websyspro\Entity\Core\Persisteds\MySqlScript;
 use Websyspro\Entity\Core\Persisteds\PersistedColumnsList;
 use Websyspro\Entity\Core\Persisteds\PersistedForeignKeysList;
 use Websyspro\Entity\Core\Persisteds\PersistedGenerationsList;
+use Websyspro\Entity\Core\Persisteds\PersistedOneToOnesList;
 use Websyspro\Entity\Core\Persisteds\PersistedPrimaryKeysList;
 use Websyspro\Entity\Core\Persisteds\PersistedRequiredsList;
 use Websyspro\Entity\Core\Persisteds\PersistedStatisticsList;
@@ -24,6 +25,7 @@ use Websyspro\Entity\Enums\ScriptType;
 use Websyspro\Entity\Interfaces\IPersistedColumn;
 use Websyspro\Entity\Interfaces\IPersistedForeignKeys;
 use Websyspro\Entity\Interfaces\IPersistedGeneration;
+use Websyspro\Entity\Interfaces\IPersistedOneToOnes;
 use Websyspro\Entity\Interfaces\IPersistedPrimaryKey;
 use Websyspro\Entity\Interfaces\IPersistedRequireds;
 use Websyspro\Entity\Interfaces\IPersistedStatistics;
@@ -44,6 +46,7 @@ class StructureDatabase
   public DataList $persistedUniques;
   public DataList $persistedStatistics;
   public DataList $persistedForeignKeys;
+  public DataList $persistedOneToOnes;
 
   public function __construct(
     public DataList $entitys,
@@ -170,6 +173,19 @@ class StructureDatabase
         ...(array)$obj
       )
     ));
+  }
+  
+  private function setPersistedsOneToOnes(
+  ): DataList {
+    return $this->get(
+      MySqlScript::oneToOnes(
+        $this->connect->database()
+      )
+    )->mapper(fn(object $obj) => (
+      new IPersistedOneToOnes(
+        ...(array)$obj
+      )
+    ));
   }  
 
   private function getPersistedsEntitys(
@@ -181,6 +197,7 @@ class StructureDatabase
     $this->persistedUniques = $this->setPersistedsUniques();
     $this->persistedStatistics = $this->setPersistedsStatistics();
     $this->persistedForeignKeys = $this->setPersistedsForeignKeys();
+    $this->persistedOneToOnes = $this->setPersistedsOneToOnes();
   }
 
   private function getPersistedColumns(
@@ -301,6 +318,24 @@ class StructureDatabase
         )
       )
     );
+  }
+  
+  private function getPersistedOneToOnes(
+    StructureTable $structureTable
+  ): PersistedOneToOnesList {
+    if(isset($this->persistedForeignKeys) === false){
+      return new PersistedOneToOnesList(
+        DataList::create()
+      );
+    }
+
+    return new PersistedOneToOnesList(
+      $this->persistedForeignKeys->copy()->where(
+        fn(IPersistedOneToOnes $persistedForeignKey) => (
+          $persistedForeignKey->table === $structureTable->table
+        )
+      )
+    );
   }  
 
   private function addUpdateScripts(
@@ -380,6 +415,16 @@ class StructureDatabase
         $this->getPersistedForeignKeys($structureTable), $structureTable
       ))->startUpdates()->updateScripts()
     );
+  }
+  
+  private function getUpdateStructureOneToOnes(
+    StructureTable $structureTable
+  ): void {
+    $this->addUpdateScripts(
+      (new MySqlUpdateOneToOne(
+        $this->getPersistedOneToOnes($structureTable), $structureTable
+      ))->startUpdates()->updateScripts()
+    );
   }  
 
   private function getUpdateEntitys(
@@ -392,6 +437,7 @@ class StructureDatabase
         $this->getUpdateStructureUniques($structureTable);
         $this->getUpdateStructureStatistics($structureTable);
         $this->getUpdateStructureForeignKeys($structureTable);
+        $this->getUpdateStructureOneToOnes($structureTable);
       }
     );
   }

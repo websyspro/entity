@@ -4,7 +4,6 @@ namespace Websyspro\Entity\Core\Persisteds;
 
 use Websyspro\Commons\DataList;
 use Websyspro\Entity\Interfaces\IPersistedPrimaryKey;
-use Websyspro\Entity\Interfaces\IPersistedRequireds;
 
 class PersistedPrimaryKeysList
 {

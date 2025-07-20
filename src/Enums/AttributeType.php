@@ -9,9 +9,11 @@ enum AttributeType: int
   case uniques = 3;
   case indexes = 4;
   case foreigns = 5;
-  case primaryKey = 6;
-  case generations = 7;
-  case insert = 8;
-  case update = 9;
-  case delete = 10;
+  case oneToOne = 6;
+  case oneToMany = 7;
+  case primaryKey = 8;
+  case generations = 9;
+  case insert = 10;
+  case update = 11;
+  case delete = 12;
 }

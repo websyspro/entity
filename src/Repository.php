@@ -6,6 +6,7 @@ use Websyspro\Commons\DataList;
 use Websyspro\Commons\Util;
 use Websyspro\Database\Connect;
 use Websyspro\DynamicSql\Core\DataByFn;
+use Websyspro\DynamicSql\Enums\EDriverType;
 use Websyspro\DynamicSql\QueryBuild;
 use Websyspro\DynamicSql\Shareds\ItemParameter;
 use Websyspro\Entity\Core\Shareds\StdClassToEntity;
@@ -16,6 +17,7 @@ use Websyspro\Entity\Interfaces\IEntityGroup;
 use Websyspro\Entity\Interfaces\IForeignQueryItem;
 use Websyspro\Entity\Interfaces\IOneToMany;
 use Websyspro\Entity\Interfaces\IOneToOne;
+use Websyspro\Entity\Interfaces\IOneToOneRelationship;
 use Websyspro\Entity\Interfaces\IProperties;
 
 class Repository
@@ -27,6 +29,8 @@ class Repository
   public mixed $groupByFn;
   public mixed $orderByAscFn;
   public mixed $orderByDescFn;
+  public int $limit;
+  public int $offSet;
 
   public function __construct(
     public string $table
@@ -346,8 +350,8 @@ class Repository
   if($queryBuild->hasSelect()){
       if($queryBuild->select->getParameters()->exist() === true){
         $groupRows = $queryBuild->select->getParameters()->copy()->mapper(
-          fn(ItemParameter $i) => new IEntityGroup(
-            $i->structureTable, $queryRows, $i->name
+          fn(ItemParameter $entityGroup) => new IEntityGroup(
+            $entityGroup->structureTable, $queryRows, $entityGroup->name
           ) 
         );
       }
@@ -355,8 +359,8 @@ class Repository
     if($queryBuild->hasWhere()){
       if($queryBuild->where->getParameters()->exist() === true){
         $groupRows = $queryBuild->where->getParameters()->copy()->mapper(
-          fn(ItemParameter $i) => new IEntityGroup(
-            $i->structureTable, $queryRows, $i->name
+          fn(ItemParameter $entityGroup) => new IEntityGroup(
+            $entityGroup->structureTable, $queryRows, $entityGroup->name
           ) 
         );
       }
@@ -379,220 +383,33 @@ class Repository
     return $entityGroupList;
   }
 
-  public function toEntityTree(
-    DataList $entityGroupRows
-  ): mixed {
-        // Mapeia todas as entidades por tabela e por ID
-    $entityMap = [];
-    $childrenMap = [];
-
-    foreach ($entityGroupRows->all() as $group) {
-        $table = $group->structure->table;
-        $entityClass = $group->structure->entity;
-
-        foreach ($group->getQueryRowsFilters()->all() as $row) {
-            $id = $row['Id'] ?? null;
-            if ($id === null) continue;
-
-            if (!isset($entityMap[$table][$id])) {
-                $entity = new $entityClass();
-                foreach ($row as $prop => $val) {
-                    $entity->$prop = $val;
-                }
-                $entityMap[$table][$id] = $entity;
-            }
-        }
-
-        // Constrói o mapeamento de filhos para cada relação (join)
-        foreach ($group->getForeignKeys()->all() as $fk) {
-            $fromTable = $fk->table;
-            $fromKey = $fk->tableKey;
-            $toTable = $fk->reference;
-            $toKey = $fk->referenceKey;
-
-            foreach ($group->getQueryRowsFilters()->all() as $row) {
-                $fromId = $row['Id'];
-                $refId = $row[$fromKey];
-
-                if (!isset($entityMap[$fromTable][$fromId])) continue;
-                if (!isset($entityMap[$toTable][$refId])) continue;
-
-                $fromEntity = $entityMap[$fromTable][$fromId];
-                $toEntity = $entityMap[$toTable][$refId];
-
-                $propName = $toTable; // Ex: $document->Customer = ...
-
-                if (!property_exists($fromEntity, $propName)) {
-                    continue;
-                }
-
-                $fromEntity->$propName = $toEntity;
-
-                // Mapeia inversamente para estruturas de 1:N
-                $childrenMap[$toTable][$refId][$fromTable][] = $fromEntity;
-            }
-        }
-    }
-
-    // Verifica se há relações 1:N como Document->Items
-    foreach ($entityMap as $table => $entities) {
-        foreach ($entities as $id => $entity) {
-            if (isset($childrenMap[$table][$id])) {
-                foreach ($childrenMap[$table][$id] as $childTable => $list) {
-                    $pluralProp = $childTable . 's'; // Ex: Items
-                    if (!property_exists($entity, $pluralProp)) {
-                        continue;
-                    }
-                    $entity->$pluralProp = $list;
-                }
-            }
-        }
-    }
-
-    // Retorna o primeiro Document (entidade principal)
-    return $entityMap['Document'][array_key_first($entityMap['Document'])] ?? null;
-  }
-
-  public function entityByTreeOneToOne(
-    array $row,
-    DataList $foreignKeys,
-    DataList $entityGroupOuters,
-    DataList $entityGroupList
-  ): array {
-    $rowList = [];
-
-    $hasOneEntityGroupOuters = $entityGroupOuters->copy()->where(
-      fn(IEntityGroup $entityGroup) => $foreignKeys->copy()->where(
-        fn(IForeignQueryItem $foreignQueryItem) => $foreignQueryItem->reference === $entityGroup->structure->table
-      )->exist()
-    );
-
-    if($hasOneEntityGroupOuters->exist() === false){
-      return $row;
-    }
-
-    foreach($foreignKeys->all() as $foreingKey){
-      foreach($hasOneEntityGroupOuters->all() as $entityGroup){
-        $oneRow = null;
-
-        if($entityGroup->structure->table === $foreingKey->reference){
-          foreach($entityGroup->rowList->all() as $rowOne){
-            if($rowOne[$foreingKey->referenceKey] === $row[$foreingKey->tableKey]){
-              $entityGroupOuters = $entityGroupList->copy()->where(
-                fn(IEntityGroup $entityGroup) => $entityGroup->structure->table !== $foreingKey->table
-              );
-
-            
-              $oneRow = array_merge($rowOne, $this->entityByTreeOneToOne(
-                $rowOne, $entityGroup->foreignKeys, $entityGroupOuters, $entityGroupList
-              ));
-            }
-          }
-
-          if($oneRow !== null){
-            $rowList = array_merge($rowList, [$entityGroup->structure->table => $oneRow]);
-          } else $rowList = array_merge($rowList, [$entityGroup->structure->table => []]); 
-        }
-      }
-    }
-
-    return $rowList;
-  }
-
-  public function entityByTreeOneToMany(
-    array $row,
-    DataList $foreignKeys,
-    DataList $entityGroupOuters,
-    DataList $entityGroupList
-  ): array {
-    $rowList = [];
-
-    $hasOneEntityGroupOuters = $entityGroupOuters->copy()->where(
-      fn(IEntityGroup $entityGroup) => $entityGroup->foreignKeys->copy()->where(
-        fn(IForeignQueryItem $foreignQueryItem) => $foreignQueryItem->reference === $foreignKeys->first()->table
-      )->exist()
-    );
-
-    if($hasOneEntityGroupOuters->exist() === false){
-      return $row;
-    }
-
-    foreach($hasOneEntityGroupOuters->all() as $entityGroup){
-      $entityGroupForeignKeys = $entityGroup->foreignKeys->copy()->where(
-        fn(IForeignQueryItem $foreignQueryItem) => $foreignQueryItem->reference === $foreignKeys->first()->table
-      );
-
-      foreach($entityGroupForeignKeys->all() as $entityGroupForeignKey){
-        $manyRow = [];
-
-        foreach($entityGroup->rowList->all() as $rowMany){
-          if($rowMany[$entityGroupForeignKey->tableKey] === $row[$entityGroupForeignKey->referenceKey]){
-            // $entityGroupOuters = $entityGroupList->copy()->where(
-            //   fn(IEntityGroup $entityGroupInner) => $entityGroupInner->structure->table !== $entityGroupForeignKey->table
-            // );
-            $entityGroupOuters = $entityGroupList->copy()->where(
-              fn(IEntityGroup $entityGroup) => $entityGroup->structure->table !== $entityGroupForeignKey->table
-            );
-
-            $test = array_merge($rowMany, $this->entityByTreeOneToOne(
-              $rowMany, $entityGroupForeignKeys, $entityGroupOuters, $entityGroupList
-            ));
-
-            $manyRow[] = $rowMany;
-          }
-        }
-      }
-
-      if(sizeof($manyRow) !== 0){
-        $rowList = array_merge($rowList, [$entityGroup->structure->table . "s" => $manyRow]);
-      } else $rowList = array_merge($rowList, [$entityGroup->structure->table => []]); 
-    }
-    
-    return $rowList;
-  }
-
-  public function entityByTree_(
-    string $table,
-    string $entity,
+  private function oneToManys(
     DataList $entityGroupList
   ): DataList {
-    $entityGroupBase = $entityGroupList->copy()->where(
-      fn(IEntityGroup $entityGroup) => (
-        $entityGroup->structure->table === $table
-      )
-    );
-
-    $entityGroupOuters = $entityGroupList->copy()->where(
-      fn(IEntityGroup $entityGroup) => (
-        $entityGroup->structure->table !== $table
-      )
-    );
-
-    if($entityGroupBase->first() instanceof IEntityGroup){
-      $rowList = $entityGroupBase->first()->rowList;
-      $foreignKeys = $entityGroupBase->first()->foreignKeys;
-
-      $rowList->mapper(
-        fn(array $row) => (
-          array_merge(
-            $row, 
-            $this->entityByTreeOneToOne($row, $foreignKeys, $entityGroupOuters, $entityGroupList),
-            $this->entityByTreeOneToMany($row, $foreignKeys, $entityGroupOuters, $entityGroupList)
-          )
+    $entityGroupList = (
+      $entityGroupList->copy()->mapper(
+        fn(IEntityGroup $entityGroup) => (
+          $entityGroup->oneToOne->copy()->mapper(
+            fn(IOneToOne $oneToOne) => new IOneToOneRelationship(
+              $oneToOne->reference, $entityGroup->structure->table
+            )
+          )->all()
         )
-      );
-    }
+      )
+    );
 
-    print_r($rowList);
+    $entityGroupList = $entityGroupList->where(
+      fn(array $entitys) => sizeof($entitys) !== 0
+    );
 
-    //$newList = $this->entityByTreeOneToOne($table, $entityGroupOuters);
+    $entityGroupList = $entityGroupList->reduce(
+      [], fn(array $curr, array $item) => array_merge($curr, $item)
+    );
 
-    //print_r($entityGroupBase);
-
-    return DataList::create();
+    return $entityGroupList;
   }
 
-  public function entityGroupRelationship(
+  private function entityGroupRelationship(
     array $row,
     IEntityGroup $entityGroupBase,
     DataList $entityGroupList,
@@ -631,10 +448,22 @@ class Repository
         
         foreach($entityGroupRelatonship->first()->rowList->all() as $rowList){
           if($row[$entityGroupBaseOneToOne->key] === $rowList[$entityGroupBaseOneToOne->referenceKey]){
-            $rowList = array_merge( $rowList,
-              $this->entityGroupRelationship($rowList, $entityGroupRelatonship->first(), $entityGroupList, RelationshipType::oneToOne),
-              $this->entityGroupRelationship($rowList, $entityGroupRelatonship->first(), $entityGroupList, RelationshipType::oneToMany)
+            $rowList = array_merge($rowList,
+              $this->entityGroupRelationship($rowList, $entityGroupRelatonship->first(), $entityGroupList, RelationshipType::oneToOne)
             );
+
+            // $hasOoneToMany = $this->oneToManys($entityGroupList)->where(
+            //   fn(IOneToOneRelationship $oneToOneRelationship) => (
+            //     $oneToOneRelationship->table === $entityGroupBase->structure->table &&
+            //     $oneToOneRelationship->referece ===  $entityGroupRelatonship->first()->structure->table
+            //   )
+            // );
+
+            // if($hasOoneToMany->exist()){
+            //   $rowList = array_merge($rowList,
+            //     $this->entityGroupRelationship($rowList, $entityGroupRelatonship->first(), $entityGroupList, RelationshipType::oneToMany)
+            //   );              
+            // }
 
             $rowOneToOneList = array_merge(
               $rowOneToOneList, [$entityGroupBaseOneToOne->reference => $rowList]
@@ -657,7 +486,7 @@ class Repository
 
         foreach($entityGroupRelatonship->first()->rowList->all() as $rowList){
           if($row[$entityGroupBaseOneToMany->key] === $rowList[$entityGroupBaseOneToMany->referenceKey]){
-            array_merge( $rowList,
+            array_merge($rowList,
               $this->entityGroupRelationship($rowList, $entityGroupRelatonship->first(), $entityGroupList, RelationshipType::oneToMany)
             );
 
@@ -700,12 +529,19 @@ class Repository
   public function queryBuild(
     QueryBuild $queryBuild    
   ): DataList {
-    echo $queryBuild->get();
     $queryRows = (
       $this->connect()->query(
-        $queryBuild->get()
+        $queryBuild->get(
+          EDriverType::mysql
+        )
       )
     );
+
+    // print_r($this->entityGroupManyList(
+    //       $this->entityGroupList(
+    //         $queryBuild, $queryRows
+    //       )
+    //     ));
 
     $entityGroupList = (
       $this->entityGroupListToTree(
@@ -788,6 +624,16 @@ class Repository
     );
   }
 
+  public function paged(
+    int $limit,
+    int $offSet
+  ): Repository {
+    $this->setProperty("limit", $limit);
+    $this->setProperty("offSet", $offSet);
+
+    return $this;
+  }
+
   public function all(
   ): DataList {
     $queryBuild = (
@@ -806,6 +652,8 @@ class Repository
       $queryBuild->orderByAsc($this->orderByAscFn);
     if(isset($this->orderByDescFn))
       $queryBuild->orderByDesc($this->orderByDescFn);
+    if(isset($this->limit) && isset($this->offSet))
+      $queryBuild->paged($this->limit, $this->offSet);
 
     return $this->queryBuild($queryBuild);
   }
@@ -828,6 +676,8 @@ class Repository
       $queryBuild->orderByAsc($this->orderByAscFn);
     if(isset($this->orderByDescFn))
       $queryBuild->orderByDesc($this->orderByDescFn);
+    if(isset($this->limit) && isset($this->offSet))
+      $queryBuild->paged($this->limit, $this->offSet);    
 
     $recordFirst = $this->queryBuild(
       $queryBuild

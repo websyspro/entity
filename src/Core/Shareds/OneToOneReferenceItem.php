@@ -4,7 +4,7 @@ namespace Websyspro\Entity\Core\Shareds;
 
 use Websyspro\Entity\Core\StructureTable;
 
-class ForeignKeyReferenceItem
+class OneToOneReferenceItem
 {
   public StructureTable $structureTable;
   public string $table;

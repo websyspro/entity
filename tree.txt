@@ -1,0 +1,23 @@
+DocumentEntity
+   	|-->OneToOne
+		|-->BoxEntity
+			|-->OneToOne
+				|-->OperatorEntity
+			|-->OneToMany
+		|-->OperatorEntity
+			|-->OneToOne
+			|-->OneToMany
+		|-->CustomerEntity
+			|-->OneToOne
+			|-->OneToMany
+   	|-->OneToMany
+		|-->DocumentItemEntity
+			|-->OneToOne
+				|-->DocumentEntity
+				|-->ProductEntity
+					|-->OneToOne
+						|-->ProductGroupEntity
+					|-->OneToMany
+			|-->OneToMany
+		
+	
