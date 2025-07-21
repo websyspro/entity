@@ -3,8 +3,8 @@
 namespace Websyspro\Entity\Core;
 
 use Websyspro\Commons\DataList;
-use Websyspro\Entity\Core\Shareds\ForeignKeyItem;
-use Websyspro\Entity\Core\Shareds\ForeignKeyReferenceItem;
+use Websyspro\Entity\Core\Shareds\OneToOneItem;
+use Websyspro\Entity\Core\Shareds\OneToOneReferenceItem;
 use Websyspro\Entity\Enums\AttributeType;
 use Websyspro\Entity\Interfaces\IProperties;
 
@@ -14,7 +14,7 @@ extends StructureTableAbstract
   public function list(
   ): DataList {
     return $this->properties(
-      AttributeType::foreigns
+      AttributeType::oneToOne
     );
   }
 
@@ -24,8 +24,8 @@ extends StructureTableAbstract
     return (
       $this->list()->mapper(
         fn(IProperties $property) => (
-          new ForeignKeyItem(
-            $table, $property->name, new ForeignKeyReferenceItem(
+          new OneToOneItem(
+            $table, $property->name, new OneToOneReferenceItem(
               $property->items->first()->referenceClass
             )
           )
@@ -39,8 +39,8 @@ extends StructureTableAbstract
     string $name
   ): bool {
     return $this->listNames($table)->where(
-      fn(ForeignKeyItem $foreignKeyItem) => (
-        $foreignKeyItem->name === $name
+      fn(OneToOneItem $oneToOneItem) => (
+        $oneToOneItem->name === $name
       )
     )->exist();
   } 
