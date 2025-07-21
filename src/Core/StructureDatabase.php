@@ -436,7 +436,7 @@ class StructureDatabase
         $this->getUpdateStructureGenerations($structureTable);
         $this->getUpdateStructureUniques($structureTable);
         $this->getUpdateStructureStatistics($structureTable);
-        $this->getUpdateStructureForeignKeys($structureTable);
+        // $this->getUpdateStructureForeignKeys($structureTable);
         $this->getUpdateStructureOneToOnes($structureTable);
       }
     );
