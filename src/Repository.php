@@ -516,27 +516,7 @@ class Repository
       )
     );
 
-    print_r($entityGroupList);
-
-    //print_r($entityGroupRows);
-    // $this->entityByTree(
-    //   $this->structureTable->table, 
-    //   $this->structureTable->entity, $entityGroupRows
-    // );
-
-    
-    //print_r();
-    return $queryRows;
-
-    // return (
-    //   $this->connect()
-    //     ->query($queryBuild->get())
-    //     ->mapper(fn(object $row) => (
-    //       $this->parseDecode(
-    //         DataList::create([$row]), DataList::create($this->columns())
-    //       )->first()
-    //     ))
-    // );
+    return $entityGroupList;
   }
 
   public function setProperty(
