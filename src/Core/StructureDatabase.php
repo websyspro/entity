@@ -323,16 +323,16 @@ class StructureDatabase
   private function getPersistedOneToOnes(
     StructureTable $structureTable
   ): PersistedOneToOnesList {
-    if(isset($this->persistedForeignKeys) === false){
+    if(isset($this->persistedOneToOnes) === false){
       return new PersistedOneToOnesList(
         DataList::create()
       );
     }
 
     return new PersistedOneToOnesList(
-      $this->persistedForeignKeys->copy()->where(
-        fn(IPersistedOneToOnes $persistedForeignKey) => (
-          $persistedForeignKey->table === $structureTable->table
+      $this->persistedOneToOnes->copy()->where(
+        fn(IPersistedOneToOnes $persistedOneToOnes) => (
+          $persistedOneToOnes->table === $structureTable->table
         )
       )
     );
