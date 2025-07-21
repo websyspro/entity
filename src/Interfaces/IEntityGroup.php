@@ -3,7 +3,8 @@
 namespace Websyspro\Entity\Interfaces;
 
 use Websyspro\Commons\DataList;
-use Websyspro\Entity\Core\Shareds\ForeignKeyItem;
+use Websyspro\Entity\Core\Shareds\OneToManyItem;
+use Websyspro\Entity\Core\Shareds\OneToOneItem;
 use Websyspro\Entity\Core\StructureTable;
 
 class IEntityGroup
@@ -29,14 +30,14 @@ class IEntityGroup
   ): void {
     $this->oneToOne = (
       $this->structure
-        ->foreignKeys()
+        ->oneToOnes()
         ->listNames($this->structure->table)
         ->mapper(
-          fn(ForeignKeyItem $fk) => (
+          fn(OneToOneItem $fk) => (
             new IOneToOne(
               $fk->key,
-              $fk->foreignKeyReferenceItem->table,
-              $fk->foreignKeyReferenceItem->key
+              $fk->oneToOneReferenceItem->table,
+              $fk->oneToOneReferenceItem->key
             )
           )
         )
@@ -44,36 +45,18 @@ class IEntityGroup
   }
 
   public function defineOneToMany(
-    DataList $entityGroupList
   ): void {
-    $oneToMany = [];
-
-    foreach($entityGroupList->all() as $entityGroup){
-      if($entityGroup instanceof IEntityGroup){
-        $foreingsKeysList = $entityGroup->structure
-          ->foreignKeys()->listNames(
-            $entityGroup->structure->table
-          );
-
-        foreach($foreingsKeysList->all() as $foreingsKeys){
-          if($foreingsKeys instanceof ForeignKeyItem){
-            if($foreingsKeys->foreignKeyReferenceItem->table === $this->structure->table){
-              $oneToMany[] = new IOneToMany(
-                $foreingsKeys->foreignKeyReferenceItem->key,
-                $foreingsKeys->table,
-                $foreingsKeys->key
-              );
-            }
-          }
-        }
-      }
-    }
-
-    $this->oneToMany = (
-      DataList::create(
-        $oneToMany
-      )
-    );
+    $this->oneToMany = $this->structure
+      ->oneToManys()
+      ->listNames($this->structure->table)
+      ->mapper(fn(OneToManyItem $oneToManyItem) => (
+        new IOneToMany(
+          $oneToManyItem->name,
+          $oneToManyItem->table,
+          $oneToManyItem->oneToManyReferenceItem->table,
+          $oneToManyItem->oneToManyReferenceItem->key
+        )
+      ));
   } 
 
   private function definePrimaryKey(

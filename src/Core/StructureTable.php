@@ -71,6 +71,11 @@ class StructureTable
   public function oneToOnes(
   ): StructureTableOneToOnes {
     return new StructureTableOneToOnes($this->entity);
+  }
+
+  public function oneToManys(
+  ): StructureTableOneToManys {
+    return new StructureTableOneToManys($this->entity);
   }  
 
   public function eventInserts(

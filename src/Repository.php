@@ -416,6 +416,63 @@ class Repository
     RelationshipType $relationshipType
   ): array {
     if($relationshipType === RelationshipType::oneToOne){
+      foreach($entityGroupBase->oneToOne->all() as $oneToOne){
+        $entityList = $entityGroupList->copy()->where(
+          fn(IEntityGroup $entityGroup) => (
+            $entityGroup->structure->table === $oneToOne->reference
+          )
+        );
+
+        if($entityList->exist() === false){
+          return [];
+        }
+
+        foreach($entityList->first()->rowList->all() as $rowList){
+          if($row[$oneToOne->key] === $rowList[$oneToOne->referenceKey]){ 
+            $row = array_merge($row, [$oneToOne->reference => $rowList]);
+          }
+        }
+      }
+
+      return $row;
+    } else
+    if($relationshipType === RelationshipType::oneToMany){
+      print_r($entityGroupBase);
+      foreach($entityGroupBase->oneToMany->all() as $oneToMany){
+        $entityList = $entityGroupList->copy()->where(
+          fn(IEntityGroup $entityGroup) => (
+            $entityGroup->structure->table === $oneToMany->reference
+          )
+        );
+
+        if($entityList->exist() === false){
+          return [];
+        }
+
+        $rowLists = [];
+
+        foreach($entityList->first()->rowList->all() as $rowList){
+          if($row[$oneToMany->key] === $rowList[$oneToMany->referenceKey]){ 
+            $rowLists[] = $rowList;
+          }
+        }
+
+        $row = array_merge($row, [$oneToMany->name => $rowLists]);
+      }
+
+      return $row;
+    }
+
+    return [];
+  }  
+
+  private function entityGroupRelationship_(
+    array $row,
+    IEntityGroup $entityGroupBase,
+    DataList $entityGroupList,
+    RelationshipType $relationshipType
+  ): array {
+    if($relationshipType === RelationshipType::oneToOne){
       $entityGroupRelatonshipList = $entityGroupList->copy()->where(
         fn(IEntityGroup $entityGroup) => in_array(
           $entityGroup->structure->table, $entityGroupBase->oneToOne->copy()->mapper(
@@ -515,7 +572,7 @@ class Repository
 
     if($entityBase->first() instanceof IEntityGroup){
       $entityBase->first()->rowList->mapper(
-        fn(array $row) => array_merge( $row, 
+        fn(array $row) => array_merge($row, 
           $this->entityGroupRelationship($row, $entityBase->first(), $entityGroupList, RelationshipType::oneToOne),
           $this->entityGroupRelationship($row, $entityBase->first(), $entityGroupList, RelationshipType::oneToMany)
         )
@@ -536,12 +593,6 @@ class Repository
         )
       )
     );
-
-    // print_r($this->entityGroupManyList(
-    //       $this->entityGroupList(
-    //         $queryBuild, $queryRows
-    //       )
-    //     ));
 
     $entityGroupList = (
       $this->entityGroupListToTree(
