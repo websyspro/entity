@@ -16,7 +16,7 @@ $repo = new Repository(
 $repo
   ->where(
     fn(DocumentEntity $d, DocumentItemEntity $i, CustomerEntity $c, BoxEntity $b, OperatorEntity $o, ProductEntity $p, ProductGroupEntity $g) => (
-      $d->Id == [12, 14, 15, 17] && $i->DocumentId == $d->Id && $c->Id == $d->CustomerId && $b->Id == $d->BoxId && $o->Id == $d->OperatorId && $p->Id == $i->ProductId && $g->Id == $p->ProductGroupId
+      $d->Id == [12, 14, 15, 17, 110, 456, 1012, 787, 898, 654] && $i->DocumentId == $d->Id && $c->Id == $d->CustomerId && $b->Id == $d->BoxId && $o->Id == $d->OperatorId && $p->Id == $i->ProductId && $g->Id == $p->ProductGroupId
     ))
   ->orderByAsc(
     fn(DocumentEntity $d) => [

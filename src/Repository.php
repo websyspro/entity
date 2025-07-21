@@ -14,10 +14,6 @@ use Websyspro\Entity\Core\StructureTable;
 use Websyspro\Entity\Enums\AttributeType;
 use Websyspro\Entity\Enums\RelationshipType;
 use Websyspro\Entity\Interfaces\IEntityGroup;
-use Websyspro\Entity\Interfaces\IForeignQueryItem;
-use Websyspro\Entity\Interfaces\IOneToMany;
-use Websyspro\Entity\Interfaces\IOneToOne;
-use Websyspro\Entity\Interfaces\IOneToOneRelationship;
 use Websyspro\Entity\Interfaces\IProperties;
 
 class Repository
@@ -383,32 +379,6 @@ class Repository
     return $entityGroupList;
   }
 
-  private function oneToManys(
-    DataList $entityGroupList
-  ): DataList {
-    $entityGroupList = (
-      $entityGroupList->copy()->mapper(
-        fn(IEntityGroup $entityGroup) => (
-          $entityGroup->oneToOne->copy()->mapper(
-            fn(IOneToOne $oneToOne) => new IOneToOneRelationship(
-              $oneToOne->reference, $entityGroup->structure->table
-            )
-          )->all()
-        )
-      )
-    );
-
-    $entityGroupList = $entityGroupList->where(
-      fn(array $entitys) => sizeof($entitys) !== 0
-    );
-
-    $entityGroupList = $entityGroupList->reduce(
-      [], fn(array $curr, array $item) => array_merge($curr, $item)
-    );
-
-    return $entityGroupList;
-  }
-
   private function entityGroupRelationship(
     array $row,
     IEntityGroup $entityGroupBase,
@@ -423,13 +393,30 @@ class Repository
           )
         );
 
-        if($entityList->exist() === false){
-          return [];
-        }
+        $oneToOneNames = $entityGroupBase->structure->oneToOnes()->list()->where(
+          fn(IProperties $properties) => $entityList->first()->structure->table === (
+            new StructureTable($properties->items->first()->referenceClass)
+          )->table
+        ); 
 
-        foreach($entityList->first()->rowList->all() as $rowList){
-          if($row[$oneToOne->key] === $rowList[$oneToOne->referenceKey]){ 
-            $row = array_merge($row, [$oneToOne->reference => $rowList]);
+        if($entityList->exist() === true && $oneToOneNames->exist() === true){
+          foreach($entityList->first()->rowList->all() as $rowList){
+            if($row[$oneToOne->key] === $rowList[$oneToOne->referenceKey]){
+              $rowList = (
+                StdClassToEntity::parse(
+                  array_merge($rowList,
+                    $this->entityGroupRelationship(
+                      $rowList, $entityList->first(), $entityGroupList, RelationshipType::oneToOne
+                    ),
+                    $this->entityGroupRelationship(
+                      $rowList, $entityList->first(), $entityGroupList, RelationshipType::oneToMany
+                    )
+                  ), $entityList->first()->structure->entity
+                )
+              );
+
+              $row = array_merge($row, [$oneToOneNames->first()->name => $rowList]);
+            }
           }
         }
       }
@@ -437,7 +424,6 @@ class Repository
       return $row;
     } else
     if($relationshipType === RelationshipType::oneToMany){
-      print_r($entityGroupBase);
       foreach($entityGroupBase->oneToMany->all() as $oneToMany){
         $entityList = $entityGroupList->copy()->where(
           fn(IEntityGroup $entityGroup) => (
@@ -445,19 +431,37 @@ class Repository
           )
         );
 
-        if($entityList->exist() === false){
-          return [];
-        }
+        $oneToManyNames = $entityGroupBase->structure->oneToManys()->list()->where(
+          fn(IProperties $properties) => $entityList->first()->structure->table === (
+            new StructureTable($properties->items->first()->referenceClass)
+          )->table
+        ); 
 
-        $rowLists = [];
+        if($entityList->exist() === true && $oneToManyNames->exist() === true){
+          $rowLists = [];
+          foreach($entityList->first()->rowList->all() as $rowList){
+            if($row[$oneToMany->key] === $rowList[$oneToMany->referenceKey]){
+              $rowList = StdClassToEntity::parse(
+                array_merge( $rowList, 
+                  $this->entityGroupRelationship(
+                    $rowList, $entityList->first(), $entityGroupList, RelationshipType::oneToOne
+                  ),
+                  $this->entityGroupRelationship(
+                    $rowList, $entityList->first(), $entityGroupList, RelationshipType::oneToMany
+                  )
+                ), $entityList->first()->structure->entity
+              );
 
-        foreach($entityList->first()->rowList->all() as $rowList){
-          if($row[$oneToMany->key] === $rowList[$oneToMany->referenceKey]){ 
-            $rowLists[] = $rowList;
+              $rowLists[] = $rowList;
+            }
           }
-        }
 
-        $row = array_merge($row, [$oneToMany->name => $rowLists]);
+          $row = array_merge($row, [
+            $oneToManyNames->first()->name => DataList::create(
+              $rowLists
+            )
+          ]);
+        }
       }
 
       return $row;
@@ -465,102 +469,6 @@ class Repository
 
     return [];
   }  
-
-  private function entityGroupRelationship_(
-    array $row,
-    IEntityGroup $entityGroupBase,
-    DataList $entityGroupList,
-    RelationshipType $relationshipType
-  ): array {
-    if($relationshipType === RelationshipType::oneToOne){
-      $entityGroupRelatonshipList = $entityGroupList->copy()->where(
-        fn(IEntityGroup $entityGroup) => in_array(
-          $entityGroup->structure->table, $entityGroupBase->oneToOne->copy()->mapper(
-            fn(IOneToOne $oneToOne) => $oneToOne->reference
-          )->all()
-        )
-      );
-    } else
-    if($relationshipType === RelationshipType::oneToMany){
-      $entityGroupRelatonshipList = $entityGroupList->copy()->where(
-        fn(IEntityGroup $entityGroup) => in_array(
-          $entityGroup->structure->table, $entityGroupBase->oneToMany->copy()->mapper(
-            fn(IOneToMany $oneToOne) => $oneToOne->reference
-          )->all()
-        )
-      );
-    }
-
-    if($entityGroupRelatonshipList->exist() === false){
-      return $row;
-    }
-
-    if($relationshipType === RelationshipType::oneToOne){
-      $rowOneToOneList = [];
-
-      foreach($entityGroupBase->oneToOne->all() as $entityGroupBaseOneToOne){
-        $entityGroupRelatonship = $entityGroupRelatonshipList->copy()->where(
-          fn(IEntityGroup $entityGroup) => $entityGroup->structure->table === $entityGroupBaseOneToOne->reference
-        );
-        
-        foreach($entityGroupRelatonship->first()->rowList->all() as $rowList){
-          if($row[$entityGroupBaseOneToOne->key] === $rowList[$entityGroupBaseOneToOne->referenceKey]){
-            $rowList = array_merge($rowList,
-              $this->entityGroupRelationship($rowList, $entityGroupRelatonship->first(), $entityGroupList, RelationshipType::oneToOne)
-            );
-
-            // $hasOoneToMany = $this->oneToManys($entityGroupList)->where(
-            //   fn(IOneToOneRelationship $oneToOneRelationship) => (
-            //     $oneToOneRelationship->table === $entityGroupBase->structure->table &&
-            //     $oneToOneRelationship->referece ===  $entityGroupRelatonship->first()->structure->table
-            //   )
-            // );
-
-            // if($hasOoneToMany->exist()){
-            //   $rowList = array_merge($rowList,
-            //     $this->entityGroupRelationship($rowList, $entityGroupRelatonship->first(), $entityGroupList, RelationshipType::oneToMany)
-            //   );              
-            // }
-
-            $rowOneToOneList = array_merge(
-              $rowOneToOneList, [$entityGroupBaseOneToOne->reference => $rowList]
-            );
-          }
-        }
-      }
-
-      return $rowOneToOneList;
-    } else
-    if($relationshipType === RelationshipType::oneToMany){
-      $rowOneToManyList = [];
-
-      foreach($entityGroupBase->oneToMany->all() as $entityGroupBaseOneToMany){
-        $rowOneToMany = [];
-
-        $entityGroupRelatonship = $entityGroupRelatonshipList->copy()->where(
-          fn(IEntityGroup $entityGroup) => $entityGroup->structure->table === $entityGroupBaseOneToMany->reference
-        );
-
-        foreach($entityGroupRelatonship->first()->rowList->all() as $rowList){
-          if($row[$entityGroupBaseOneToMany->key] === $rowList[$entityGroupBaseOneToMany->referenceKey]){
-            array_merge($rowList,
-              $this->entityGroupRelationship($rowList, $entityGroupRelatonship->first(), $entityGroupList, RelationshipType::oneToMany)
-            );
-
-            $rowOneToMany[] = $rowList;
-          }
-        }
-
-        $rowOneToManyList = array_merge(
-          $rowOneToManyList, ["{$entityGroupBaseOneToMany->reference}s" => $rowOneToMany]
-        );
-      }
-
-      return $rowOneToManyList;
-    }
-
-    return [];
-  }
 
   public function entityGroupListToTree(
     DataList $entityGroupList
@@ -572,9 +480,13 @@ class Repository
 
     if($entityBase->first() instanceof IEntityGroup){
       $entityBase->first()->rowList->mapper(
-        fn(array $row) => array_merge($row, 
-          $this->entityGroupRelationship($row, $entityBase->first(), $entityGroupList, RelationshipType::oneToOne),
-          $this->entityGroupRelationship($row, $entityBase->first(), $entityGroupList, RelationshipType::oneToMany)
+        fn(array $row) => (
+          StdClassToEntity::parse(
+            array_merge($row, 
+              $this->entityGroupRelationship($row, $entityBase->first(), $entityGroupList, RelationshipType::oneToOne),
+              $this->entityGroupRelationship($row, $entityBase->first(), $entityGroupList, RelationshipType::oneToMany)
+            ), $entityBase->first()->structure->entity
+          )
         )
       );
     }
