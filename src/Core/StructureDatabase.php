@@ -175,19 +175,6 @@ class StructureDatabase
     ));
   }
   
-  private function setPersistedsOneToOnes(
-  ): DataList {
-    return $this->get(
-      MySqlScript::oneToOnes(
-        $this->connect->database()
-      )
-    )->mapper(fn(object $obj) => (
-      new IPersistedOneToOnes(
-        ...(array)$obj
-      )
-    ));
-  }  
-
   private function getPersistedsEntitys(
   ): void {
     $this->persistedColumn = $this->setPersistedsColumns();
@@ -197,7 +184,6 @@ class StructureDatabase
     $this->persistedUniques = $this->setPersistedsUniques();
     $this->persistedStatistics = $this->setPersistedsStatistics();
     $this->persistedForeignKeys = $this->setPersistedsForeignKeys();
-    $this->persistedOneToOnes = $this->setPersistedsOneToOnes();
   }
 
   private function getPersistedColumns(
@@ -417,16 +403,6 @@ class StructureDatabase
     );
   }
   
-  private function getUpdateStructureOneToOnes(
-    StructureTable $structureTable
-  ): void {
-    $this->addUpdateScripts(
-      (new MySqlUpdateOneToOne(
-        $this->getPersistedOneToOnes($structureTable), $structureTable
-      ))->startUpdates()->updateScripts()
-    );
-  }  
-
   private function getUpdateEntitys(
   ): void {
     $this->structureTable->forEach(
@@ -436,8 +412,7 @@ class StructureDatabase
         $this->getUpdateStructureGenerations($structureTable);
         $this->getUpdateStructureUniques($structureTable);
         $this->getUpdateStructureStatistics($structureTable);
-        // $this->getUpdateStructureForeignKeys($structureTable);
-        $this->getUpdateStructureOneToOnes($structureTable);
+        $this->getUpdateStructureForeignKeys($structureTable);
       }
     );
   }
