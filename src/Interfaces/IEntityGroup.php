@@ -4,8 +4,6 @@ namespace Websyspro\Entity\Interfaces;
 
 use Websyspro\Commons\DataList;
 use Websyspro\Entity\Core\Shareds\ForeignKeyItem;
-use Websyspro\Entity\Core\Shareds\OneToManyItem;
-use Websyspro\Entity\Core\Shareds\OneToOneItem;
 use Websyspro\Entity\Core\StructureTable;
 
 class IEntityGroup

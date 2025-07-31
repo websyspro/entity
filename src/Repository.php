@@ -482,6 +482,10 @@ class Repository
         ->copy()->slice(0, 1)
     );
 
+    if(isset($entityBase->first()->rowList) === false){
+      return DataList::create([]);
+    }    
+
     if($entityBase->first() instanceof IEntityGroup){
       $entityBase->first()->rowList->mapper(
         fn(array $row) => (
