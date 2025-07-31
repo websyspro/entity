@@ -393,29 +393,31 @@ class Repository
           )
         );
 
-        $oneToOneNames = $entityGroupBase->structure->oneToOnes()->list()->where(
-          fn(IProperties $properties) => $entityList->first()->structure->table === (
-            new StructureTable($properties->items->first()->referenceClass)
-          )->table
-        ); 
+        if($entityList->exist() === true){
+          $oneToOneNames = $entityGroupBase->structure->oneToOnes()->list()->where(
+            fn(IProperties $properties) => $entityList->first()->structure->table === (
+              new StructureTable($properties->items->first()->referenceClass)
+            )->table
+          );
 
-        if($entityList->exist() === true && $oneToOneNames->exist() === true){
-          foreach($entityList->first()->rowList->all() as $rowList){
-            if($row[$oneToOne->key] === $rowList[$oneToOne->referenceKey]){
-              $rowList = (
-                StdClassToEntity::parse(
-                  array_merge($rowList,
-                    $this->entityGroupRelationship(
-                      $rowList, $entityList->first(), $entityGroupList, RelationshipType::oneToOne
-                    ),
-                    $this->entityGroupRelationship(
-                      $rowList, $entityList->first(), $entityGroupList, RelationshipType::oneToMany
-                    )
-                  ), $entityList->first()->structure->entity
-                )
-              );
+          if($entityList->exist() === true && $oneToOneNames->exist() === true){
+            foreach($entityList->first()->rowList->all() as $rowList){
+              if($row[$oneToOne->key] === $rowList[$oneToOne->referenceKey]){
+                $rowList = (
+                  StdClassToEntity::parse(
+                    array_merge($rowList,
+                      $this->entityGroupRelationship(
+                        $rowList, $entityList->first(), $entityGroupList, RelationshipType::oneToOne
+                      ),
+                      $this->entityGroupRelationship(
+                        $rowList, $entityList->first(), $entityGroupList, RelationshipType::oneToMany
+                      )
+                    ), $entityList->first()->structure->entity
+                  )
+                );
 
-              $row = array_merge($row, [$oneToOneNames->first()->name => $rowList]);
+                $row = array_merge($row, [$oneToOneNames->first()->name => $rowList]);
+              }
             }
           }
         }
@@ -431,36 +433,38 @@ class Repository
           )
         );
 
-        $oneToManyNames = $entityGroupBase->structure->oneToManys()->list()->where(
-          fn(IProperties $properties) => $entityList->first()->structure->table === (
-            new StructureTable($properties->items->first()->referenceClass)
-          )->table
-        ); 
+        if($entityList->exist() === true){
+          $oneToManyNames = $entityGroupBase->structure->oneToManys()->list()->where(
+            fn(IProperties $properties) => $entityList->first()->structure->table === (
+              new StructureTable($properties->items->first()->referenceClass)
+            )->table
+          ); 
 
-        if($entityList->exist() === true && $oneToManyNames->exist() === true){
-          $rowLists = [];
-          foreach($entityList->first()->rowList->all() as $rowList){
-            if($row[$oneToMany->key] === $rowList[$oneToMany->referenceKey]){
-              $rowList = StdClassToEntity::parse(
-                array_merge( $rowList, 
-                  $this->entityGroupRelationship(
-                    $rowList, $entityList->first(), $entityGroupList, RelationshipType::oneToOne
-                  ),
-                  $this->entityGroupRelationship(
-                    $rowList, $entityList->first(), $entityGroupList, RelationshipType::oneToMany
-                  )
-                ), $entityList->first()->structure->entity
-              );
+          if($entityList->exist() === true && $oneToManyNames->exist() === true){
+            $rowLists = [];
+            foreach($entityList->first()->rowList->all() as $rowList){
+              if($row[$oneToMany->key] === $rowList[$oneToMany->referenceKey]){
+                $rowList = StdClassToEntity::parse(
+                  array_merge( $rowList, 
+                    $this->entityGroupRelationship(
+                      $rowList, $entityList->first(), $entityGroupList, RelationshipType::oneToOne
+                    ),
+                    $this->entityGroupRelationship(
+                      $rowList, $entityList->first(), $entityGroupList, RelationshipType::oneToMany
+                    )
+                  ), $entityList->first()->structure->entity
+                );
 
-              $rowLists[] = $rowList;
+                $rowLists[] = $rowList;
+              }
             }
-          }
 
-          $row = array_merge($row, [
-            $oneToManyNames->first()->name => DataList::create(
-              $rowLists
-            )
-          ]);
+            $row = array_merge($row, [
+              $oneToManyNames->first()->name => DataList::create(
+                $rowLists
+              )
+            ]);
+          }
         }
       }
 
