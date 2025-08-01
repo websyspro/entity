@@ -57,7 +57,7 @@ class StructureDatabase
   ): void {
     $this->connect = (
       Connect::set(
-        strtolower(
+        lcfirst(
           Util::className(
             $this->module
           )
