@@ -445,13 +445,16 @@ class StructureDatabase
   
   public function update(
   ): void {
-    $this->getDatabase();
-    $this->getDecorationEntitys();
-    $this->getPersistedsEntitys();
+    $module = new $this->module;
+    if($module->isUpdate === true){
+      $this->getDatabase();
+      $this->getDecorationEntitys();
+      $this->getPersistedsEntitys();
 
-    if(isset($this->structureTable)){
-      $this->getUpdateEntitys();
-      $this->setUpdateDatabase();
+      if(isset($this->structureTable)){
+        $this->getUpdateEntitys();
+        $this->setUpdateDatabase();
+      }
     }
   }
 }
