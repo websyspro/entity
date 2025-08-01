@@ -508,7 +508,7 @@ class Repository
     $queryRows = (
       $this->connect()->query(
         $queryBuild->get(
-          EDriverType::mysql
+          $this->connect()->driverType()
         )
       )
     );
