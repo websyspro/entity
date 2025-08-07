@@ -6,11 +6,11 @@
   "editor.lineHeight": 22,
   "editor.fontLigatures": false,
 
-  "intelephense.completion.insertUseDeclaration": true,
-  "intelephense.completion.fullyQualifyGlobalConstantsAndFunctions": true,
-  "intelephense.codeLens.implementations.enable": true,
-  "intelephense.codeLens.overrides.enable": true,
-  "intelephense.codeLens.parent.enable": true,
-  "intelephense.codeLens.references.enable": true,
-  "intelephense.codeLens.usages.enable": true
+  // "intelephense.completion.insertUseDeclaration": true,
+  // "intelephense.completion.fullyQualifyGlobalConstantsAndFunctions": true,
+  // "intelephense.codeLens.implementations.enable": true,
+  // "intelephense.codeLens.overrides.enable": true,
+  // "intelephense.codeLens.parent.enable": true,
+  // "intelephense.codeLens.references.enable": true,
+  // "intelephense.codeLens.usages.enable": true
 }

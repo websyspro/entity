@@ -69,9 +69,13 @@ enum ColumnType: string
   public function decimalEncode(
     string | null $decimal
   ): string | null {
-    return preg_replace(
-      [ "/\./", "/,/" ], [ "", "." ], $this->stringFilterQuotes($decimal)
-    );
+    if(preg_match("#,#", $decimal) === 1){
+      return preg_replace(
+        [ "/\./", "/,/" ], [ "", "." ], $this->stringFilterQuotes($decimal)
+      );
+    } else {
+      return $decimal;
+    };
   }
 
   
