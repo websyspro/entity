@@ -78,10 +78,23 @@ enum ColumnType: string
     };
   }
 
-  
   public static function decimalDecode(
     string | null $decimal,
-  ): float {
+    bool|null $isResult = null
+  ): float|string {
+    if($isResult === true){
+      [ $_, $floatingPoints ] = (
+        explode(".", (string)$decimal)
+      );
+
+      $precision = strlen($floatingPoints) < 2 
+        ? 2 : strlen($floatingPoints);
+
+      return number_format(
+        $decimal, $precision, ",", "."
+      );
+    }
+
     return (float)$decimal;
   } 
 
@@ -133,7 +146,8 @@ enum ColumnType: string
   }
 
   public function Decode(
-    mixed $mixed
+    mixed $mixed,
+    bool|null $isResult = null
   ): mixed {
     if(is_null($mixed)){
       return null;
@@ -142,7 +156,7 @@ enum ColumnType: string
     return match( $this ){
       ColumnType::date => $this->dateDecode($mixed),
       ColumnType::datetime => $this->datetimeDecode($mixed),
-      ColumnType::decimal => $this->decimalDecode($mixed),
+      ColumnType::decimal => $this->decimalDecode($mixed, $isResult),
       ColumnType::flag => $this->flagDecode($mixed),
         default => $mixed
     };
