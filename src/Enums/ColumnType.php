@@ -87,8 +87,12 @@ enum ColumnType: string
         explode(".", (string)$decimal)
       );
 
-      $precision = strlen($floatingPoints) < 2 
-        ? 2 : strlen($floatingPoints);
+      if(is_null($floatingPoints) === false){
+        $precision = strlen($floatingPoints) < 2 
+          ? 2 : strlen($floatingPoints);
+      } else {
+        $precision = 2;
+      }
 
       return number_format(
         $decimal, $precision, ",", "."
