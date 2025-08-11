@@ -80,7 +80,8 @@ enum ColumnType: string
 
   public static function decimalDecode(
     string | null $decimal,
-    bool|null $isResult = null
+    bool|null $isResult = null,
+    int|null $numberDigitsAfterTheComma = null
   ): float|string {
     if($isResult === true){
       [ $_, $floatingPoints ] = (
@@ -95,7 +96,11 @@ enum ColumnType: string
       }
 
       return number_format(
-        $decimal, $precision, ",", "."
+        $decimal, (
+          $numberDigitsAfterTheComma !== null
+            ? $numberDigitsAfterTheComma 
+            : $precision
+        ), ",", "."
       );
     }
 
@@ -151,7 +156,8 @@ enum ColumnType: string
 
   public function Decode(
     mixed $mixed,
-    bool|null $isResult = null
+    bool|null $isResult = null,
+    int|null $numberDigitsAfterTheComma = null
   ): mixed {
     if(is_null($mixed)){
       return null;
@@ -160,7 +166,7 @@ enum ColumnType: string
     return match( $this ){
       ColumnType::date => $this->dateDecode($mixed),
       ColumnType::datetime => $this->datetimeDecode($mixed),
-      ColumnType::decimal => $this->decimalDecode($mixed, $isResult),
+      ColumnType::decimal => $this->decimalDecode($mixed, $isResult, $numberDigitsAfterTheComma ),
       ColumnType::flag => $this->flagDecode($mixed),
         default => $mixed
     };
