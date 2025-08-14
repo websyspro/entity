@@ -2,7 +2,9 @@
 
 namespace Websyspro\Entity;
 
+use ReflectionProperty;
 use Websyspro\Commons\DataList;
+use Websyspro\Commons\Reflect;
 use Websyspro\Commons\Util;
 use Websyspro\Database\Connect;
 use Websyspro\DynamicSql\Core\DataByFn;
@@ -196,11 +198,31 @@ class Repository
     );
 
     return true;
-  }  
+  }
+
+  public function objectToArray(
+    object $object,
+    array $arrayValues = []
+  ): array {
+    $objectRefs = Reflect::class($object);
+    $objectRefsProperts = $objectRefs->getProperties(
+      ReflectionProperty::IS_PUBLIC
+    );
+
+    foreach($objectRefsProperts as $property){
+      $arrayValues[$property->getName()] = $property->getValue($object);
+    }
+
+    return $arrayValues;
+  }
 
   public function insert(
-    array|callable $data = []
+    array|object|callable $data = []
   ): object|bool {
+    if(is_object($data) === true){
+      $data = $this->objectToArray($data);
+    }
+
     $dataList = DataList::create([
       is_callable($data) === true
         ? DataByFn::create($data)->arrayFromFn()
@@ -296,8 +318,12 @@ class Repository
   }
 
   public function update(
-    array|callable $data = []
+    array|object|callable $data = []
   ): object|bool {
+    if(is_object($data) === true){
+      $data = $this->objectToArray($data);
+    }
+
     $dataList = DataList::create([
       is_callable($data) === true
         ? DataByFn::create($data)->arrayFromFn()
