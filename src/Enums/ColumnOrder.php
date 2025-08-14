@@ -3,7 +3,7 @@
 namespace Websyspro\Entity\Enums;
 
 enum ColumnOrder: string {
-  case initial = "Id";
-  case base = "Id|Actived|ActivedBy|ActivedAt|CreatedBy|CreatedAt|UpdatedBy|UpdatedAt|Deleted|DeletedBy|DeletedAt";
-  case end = "Actived|ActivedBy|ActivedAt|CreatedBy|CreatedAt|UpdatedBy|UpdatedAt|Deleted|DeletedBy|DeletedAt";
+  case initial = "id";
+  case base = "id|actived|activedBy|activedAt|createdBy|createdAt|updatedBy|updatedAt|deleted|deletedBy|deletedAt";
+  case end = "actived|activedBy|activedAt|createdBy|createdAt|updatedBy|updatedAt|deleted|deletedBy|deletedAt";
 }

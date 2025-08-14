@@ -19,53 +19,53 @@ class BaseEntity
   #[Number()]
   #[PrimaryKey()]
   #[AutoIncrement()]    
-  public int $Id;
+  public int $id;
 
   #[Flag()]
   #[NotNull()]
   #[Insert(1)]
-  public bool $Actived;
+  public bool $actived;
 
   #[NotNull()]
   #[Number()]
   #[Insert(1)]
-  public int $ActivedBy;
+  public int $activedBy;
 
   #[NotNull()]
   #[Datetime()]
   #[Insert(Now::class)]
-  public string $ActivedAt;
+  public string $activedAt;
 
   #[NotNull()]
   #[Number()]
   #[Insert(1)] 
-  public int $CreatedBy;
+  public int $createdBy;
 
   #[NotNull()]
   #[Datetime()]
   #[Insert(Now::class)]
-  public string $CreatedAt;
+  public string $createdAt;
 
   #[Number()]
   #[Update(1)]
-  public ?int $UpdatedBy;
+  public ?int $updatedBy;
 
   #[Datetime()]
   #[Update(Now::class)]
-  public ?string $UpdatedAt;
+  public ?string $updatedAt;
 
   #[Flag()]
   #[Insert(0)]
   #[Delete(1)]
-  public ?bool $Deleted;
+  public ?bool $deleted;
 
   #[Number()]
   #[Delete(1)]
-  public ?int $DeletedBy;
+  public ?int $deletedBy;
 
   #[Datetime()]
   #[Delete(Now::class)]
-  public ?string $DeletedAt;
+  public ?string $deletedAt;
 
   public function exist(
   ): bool {
