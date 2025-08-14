@@ -653,16 +653,15 @@ class Repository
     if(isset($this->orderByDescFn))
       $queryBuild->orderByDesc($this->orderByDescFn);
     if(isset($this->limit) && isset($this->offSet))
-      $queryBuild->paged($this->limit, $this->offSet);    
-
-    $recordFirst = $this->queryBuild(
+      $queryBuild->paged($this->limit, $this->offSet);
+    
+    
+    $record = $this->queryBuild(
       $queryBuild
-    )->first();
+    );
 
-    if($recordFirst === false){
+    if($record->count() === 0){
       return new $this->table;
-    }
-
-    return $recordFirst;
+    } else return $record->first();
   }  
 }
