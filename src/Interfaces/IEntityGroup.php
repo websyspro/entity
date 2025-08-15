@@ -92,7 +92,7 @@ class IEntityGroup
         $rowNew = [];
 
         foreach($row as $column => $value){
-          if(preg_match("/^{$this->alias}_\.*/", $column) === 1){
+          if(preg_match("#^{$this->alias}_\.*#", $column) === 1){
             $rowNew[preg_replace("/^{$this->alias}_/", "", $column)] = $value;
           }
         }
