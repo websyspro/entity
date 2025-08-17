@@ -16,7 +16,9 @@ class PersistedColumnsList
     return $this->columns->copy()->mapper(
       function(IPersistedColumn $iPersistedColumn){
         if(preg_match("#^(decimal|varchar)#", $iPersistedColumn->type) === 0){
-          $iPersistedColumn->type = preg_replace("#\(\d*\)$#", "", $iPersistedColumn->type);
+          $iPersistedColumn->type = preg_replace(
+            "#\(\d*\)$#", "", $iPersistedColumn->type
+          );
         }
         
         return $iPersistedColumn;
