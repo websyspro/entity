@@ -13,7 +13,15 @@ class PersistedColumnsList
 
   public function columns(
   ): DataList {
-    return $this->columns->copy();
+    return $this->columns->copy()->mapper(
+      function(IPersistedColumn $iPersistedColumn){
+        if(preg_match("#^(decimal|varchar)#", $iPersistedColumn->type) === 0){
+          $iPersistedColumn->type = preg_replace("#\(\d*\)$#", "", $iPersistedColumn->type);
+        }
+        
+        return $iPersistedColumn;
+      }
+    );
   }
 
   public function exist(
