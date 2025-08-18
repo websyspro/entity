@@ -220,7 +220,9 @@ class Repository
     array|object|callable $data = []
   ): object|bool {
     if(is_object($data) === true){
-      $data = $this->objectToArray($data);
+      if(is_callable($data) === false){
+        $data = $this->objectToArray($data);
+      }
     }
 
     $dataList = DataList::create([
