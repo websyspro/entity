@@ -55,7 +55,7 @@ class StructureDatabase
 
   public function getDatabase(
   ): void {
-    $this->connect = (
+    $connect = (
       Connect::set(
         lcfirst(
           Util::className(
@@ -64,6 +64,10 @@ class StructureDatabase
         )
       )
     );
+
+    if(is_null($connect) === false){
+      $this->connect = $connect;
+    }
   }
 
   private function getDecorationEntitys(
@@ -448,12 +452,15 @@ class StructureDatabase
     $module = new $this->module;
     if($module->isUpdate === true){
       $this->getDatabase();
-      $this->getDecorationEntitys();
-      $this->getPersistedsEntitys();
 
-      if(isset($this->structureTable)){
-        $this->getUpdateEntitys();
-        $this->setUpdateDatabase();
+      if(isset($this->connect)){
+        $this->getDecorationEntitys();
+        $this->getPersistedsEntitys();
+  
+        if(isset($this->structureTable)){
+          $this->getUpdateEntitys();
+          $this->setUpdateDatabase();
+        }
       }
     }
   }
