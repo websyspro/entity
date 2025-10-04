@@ -6,6 +6,7 @@ enum ColumnType: string
 {
   case number = "number";
   case text = "text";
+  case longtext = "longtext";
   case decimal = "decimal";
   case time = "time";
   case date = "date";
