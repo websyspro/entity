@@ -7,6 +7,7 @@ enum ColumnType: string
   case number = "number";
   case text = "text";
   case longtext = "longtext";
+  case enum = "enum";
   case decimal = "decimal";
   case time = "time";
   case date = "date";
@@ -150,6 +151,8 @@ enum ColumnType: string
       ColumnType::datetime => $this->datetimeEncode($mixed),
       ColumnType::decimal => $this->decimalEncode($mixed),
       ColumnType::text => $this->textEncode($mixed),
+      ColumnType::enum => $this->textEncode($mixed),
+      ColumnType::longtext => $this->textEncode($mixed),
       ColumnType::flag => $this->flagEncode($mixed),
         default => $mixed
     };
