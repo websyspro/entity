@@ -594,7 +594,7 @@ class Repository
 
   public function paged(
     int|PagedDTO $limitOrPaged,
-    int $offSet
+    int|null $offSet = null
   ): Repository {
     if($limitOrPaged instanceof PagedDTO){
       $this->setProperty("limit", $limitOrPaged->page);
