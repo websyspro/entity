@@ -8,7 +8,6 @@ use Websyspro\Commons\Reflect;
 use Websyspro\Commons\Util;
 use Websyspro\Database\Connect;
 use Websyspro\DynamicSql\Core\DataByFn;
-use Websyspro\DynamicSql\Enums\EDriverType;
 use Websyspro\DynamicSql\QueryBuild;
 use Websyspro\DynamicSql\Shareds\ItemParameter;
 use Websyspro\Entity\Core\Shareds\StdClassToEntity;
@@ -238,9 +237,7 @@ class Repository
     );
 
     if($insertData->count() === 1){
-      return $this->getLastId(
-        $insertData->first()
-      );
+      return $this->getLastId($insertData->first());
     } else return true;
   }
 
@@ -629,7 +626,7 @@ class Repository
   }
 
   public function one(
-  ): object {
+  ): object|null {
     $queryBuild = (
       new QueryBuild(
         $this->table
@@ -649,13 +646,16 @@ class Repository
     if(isset($this->limit) && isset($this->offSet))
       $queryBuild->paged($this->limit, $this->offSet);
     
-    
-    $record = $this->queryBuild(
-      $queryBuild
+    $record = (
+      $this->queryBuild(
+        $queryBuild
+      )
     );
 
     if($record->count() === 0){
-      return new $this->table;
-    } else return $record->first();
+      return null;
+    }
+
+    return $record->first();
   }  
 }
