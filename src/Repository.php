@@ -12,6 +12,7 @@ use Websyspro\DynamicSql\QueryBuild;
 use Websyspro\DynamicSql\Shareds\ItemParameter;
 use Websyspro\Entity\Core\Shareds\StdClassToEntity;
 use Websyspro\Entity\Core\StructureTable;
+use Websyspro\Entity\Dtos\PagedDTO;
 use Websyspro\Entity\Enums\AttributeType;
 use Websyspro\Entity\Enums\RelationshipType;
 use Websyspro\Entity\Interfaces\IEntityGroup;
@@ -592,11 +593,16 @@ class Repository
   }
 
   public function paged(
-    int $limit,
+    int|PagedDTO $limitOrPaged,
     int $offSet
   ): Repository {
-    $this->setProperty("limit", $limit);
-    $this->setProperty("offSet", $offSet);
+    if($limitOrPaged instanceof PagedDTO){
+      $this->setProperty("limit", $limitOrPaged->page);
+      $this->setProperty("offSet", $limitOrPaged->rowsPerPage);
+    } else {
+      $this->setProperty("limit", $limitOrPaged);
+      $this->setProperty("offSet", $offSet);
+    }
 
     return $this;
   }
