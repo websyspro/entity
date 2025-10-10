@@ -16,4 +16,5 @@ enum AttributeType: int
   case insert = 10;
   case update = 11;
   case delete = 12;
+  case mapper = 13;
 }
