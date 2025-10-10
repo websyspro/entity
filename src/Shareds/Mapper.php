@@ -35,10 +35,21 @@ class Mapper
     );
 
     $reflectTargetClassInstance = (
-      $reflectTargetClass->newInstanceWithoutConstructor()
+      $reflectTargetClass
+        ->newInstanceWithoutConstructor()
     );
 
-    foreach($reflectTargetClass->getProperties() as $propertyFromTarget){     
+    foreach($reflectTargetClass->getProperties() as $propertyFromTarget){
+      $propertyFromTarget->setAccessible(true);
+
+      if($propertyFromTarget->getType()->isBuiltin() === false){
+        $propertyFromTarget->setValue(
+          $reflectTargetClassInstance, (new ReflectionClass(
+            $propertyFromTarget->getType()->getName()
+          ))->newInstanceWithoutConstructor()
+        );
+      }
+      
       $propertyFromTargetIsNull = (
         $propertyFromTarget->getType()->allowsNull()
       );
@@ -92,7 +103,7 @@ class Mapper
             if(sizeof($attributesFromProperty) !== 0){
               [ $propertyTargetType ] = $attributesFromProperty;
               $setMappers = $propertyTargetType->newInstance()->mapper();
-
+              
               $reflectTargetClassInstance->{
                 $propertyFromTarget->getName()
               } = Mapper::to(...$setMappers)->from(
