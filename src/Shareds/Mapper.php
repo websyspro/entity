@@ -144,15 +144,27 @@ class Mapper
   public function from(
     object|array $source
   ): mixed {
-    if(is_array($source)){
-      $dataList = (
-        DataList::create($source)
-      )->mapper(fn(mixed $mixed) => (
-        Mapper::to(
-          $this->sourceClass,
-          $this->targetClass
-        )->from($mixed)
-      ));
+    $hasList = (
+      $source instanceof DataList || is_array($source)
+    );
+
+    if($hasList){
+      if($source instanceof DataList) {
+        $dataList = $source;
+      } else {
+        $dataList = (
+          DataList::create($source)
+        );
+      }
+
+      $dataList->mapper(
+        fn(mixed $mixed) => (
+          Mapper::to(
+            $this->sourceClass,
+            $this->targetClass
+          )->from($mixed)
+        )
+      );
         
       return $dataList;
     }
