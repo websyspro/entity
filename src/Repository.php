@@ -88,14 +88,16 @@ class Repository
     return $defaultEvents;
   }
 
-  private function parseEncode(
+    private function parseEncode(
     array $row,
     array $columns
   ): array {
     return (
       Util::mapper(
-        $row, fn(mixed $value, string $key) => (
-          $columns[$key]->encode($value)
+        Util::whereByKey(
+          $row, fn(string $key) => in_array($key, array_keys($columns))
+        ), fn(mixed $value, string $key) => (
+            $columns[$key]->encode($value)
         )
       )
     );
