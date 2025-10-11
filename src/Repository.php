@@ -525,6 +525,11 @@ class Repository
   public function queryBuild(
     QueryBuild $queryBuild    
   ): DataList {
+    print_r(
+      $queryBuild->get(
+        $this->connect()->driverType()
+      )
+    );
     $queryRows = (
       $this->connect()->query(
         $queryBuild->get(
