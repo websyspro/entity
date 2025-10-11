@@ -214,20 +214,20 @@ class Repository
   public function insert(
     array|object|callable $data = []
   ): object|bool {
-    print_r($data);
     if(is_object($data) === true){
       if(is_callable($data) === false){
         $data = $this->objectToArray($data);
       }
     }
-
+    
     $dataList = DataList::create([
       is_callable($data) === true
-        ? DataByFn::create($data)->arrayFromFn()
-        : $data
+      ? DataByFn::create($data)->arrayFromFn()
+      : $data
     ]);
-
-
+    
+    print_r($dataList);
+    
     $insertData = (
       $this->insertValues(
         $dataList->mapper(
