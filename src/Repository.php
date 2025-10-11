@@ -226,6 +226,8 @@ class Repository
         : $data
     ]);
 
+    print_r($dataList);
+
     $insertData = (
       $this->insertValues(
         $dataList->mapper(
