@@ -2,6 +2,7 @@
 
 namespace Websyspro\Entity\Core\Bases;
 
+use Websyspro\Commons\Mapper;
 use Websyspro\Entity\Core\Commons\Now;
 use Websyspro\Entity\Decorations\Columns\Datetime;
 use Websyspro\Entity\Decorations\Columns\Flag;
@@ -70,5 +71,11 @@ class BaseEntity
   public function exist(
   ): bool {
     return empty(get_object_vars($this)) === false;
+  }
+
+  public function mapper(
+    string $toEntity
+  ): mixed {
+    return Mapper::to($toEntity)->from($this);
   }
 }
