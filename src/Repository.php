@@ -166,9 +166,10 @@ class Repository
         )
       )
       ->mapper(
-        fn(string $script) => (
-          $this->connect()->exec($script)
-        )
+        function(string $script){
+          print_r($script);
+          $this->connect()->exec($script);
+        }
       );
   }
 
@@ -525,11 +526,6 @@ class Repository
   public function queryBuild(
     QueryBuild $queryBuild    
   ): DataList {
-    print_r(
-      $queryBuild->get(
-        $this->connect()->driverType()
-      )
-    );
     $queryRows = (
       $this->connect()->query(
         $queryBuild->get(
