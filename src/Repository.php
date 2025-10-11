@@ -214,6 +214,7 @@ class Repository
   public function insert(
     array|object|callable $data = []
   ): object|bool {
+    print_r($data);
     if(is_object($data) === true){
       if(is_callable($data) === false){
         $data = $this->objectToArray($data);
@@ -226,7 +227,6 @@ class Repository
         : $data
     ]);
 
-    print_r($dataList);
 
     $insertData = (
       $this->insertValues(
