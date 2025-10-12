@@ -13,7 +13,7 @@ enum ColumnType: string
   case date = "date";
   case datetime = "datetime";
   case flag = "flag";
-  case mapper = "flag";
+  case mapper = "mapper";
 
   private function stringFilterQuotes(
     string $string
