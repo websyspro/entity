@@ -167,7 +167,7 @@ class Repository
       )
       ->mapper(
         function(string $script){
-          $this->connect()->exec($script);
+          return $this->connect()->exec($script);
         }
       );
   }
