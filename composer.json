@@ -16,13 +16,8 @@
   ],
   "scripts": {
     "watch": "powershell -ExecutionPolicy Bypass -File ./vendor/websyspro/watch/src/watch.ps1",
-    "update-git": "git add . && git commit -m \"Update components\" && git push origin HEAD"
+    "git:push": "git add . && git commit -m \"Update components\" && git push origin HEAD"
   },
   "require-dev": {
-    "websyspro/dynamicsql": "dev-main",
-    "websyspro/logger": "dev-main",
-    "websyspro/common": "dev-main",
-    "websyspro/watch": "dev-main",
-    "websyspro/database": "dev-main"
   }
 }
