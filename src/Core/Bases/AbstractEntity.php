@@ -10,11 +10,11 @@ use Websyspro\Entity\Enums\ColumnType;
 
 class AbstractEntity
 {
-  protected static Collection $collumnsCache = [];
+  protected static Collection|null $collumnsCache = null;
 
-  public static function getColuumns(
+  public static function getColumns(
   ): Collection {
-    if( self::$collumnsCache->exist()){
+    if( self::$collumnsCache !== null){
       return self::$collumnsCache;
     }
 
