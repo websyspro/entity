@@ -12,7 +12,7 @@ class AbstractEntity
 {
   protected static Collection $collumnsCache = [];
 
-  public function getColuumns(
+  public static function getColuumns(
   ): Collection {
     if( self::$collumnsCache->exist()){
       return self::$collumnsCache;
