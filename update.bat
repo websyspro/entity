@@ -1,1 +1,0 @@
-git add . && git commit -m "Update componentes" && git push origin HEAD
