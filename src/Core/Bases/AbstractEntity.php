@@ -39,7 +39,7 @@ class AbstractEntity
         ];
       }
 
-      $columns[$property->getName()] = $attributesToColumns;
+      $columns[$property->getName()] = (object)$attributesToColumns;
     }
 
     return $columns;
