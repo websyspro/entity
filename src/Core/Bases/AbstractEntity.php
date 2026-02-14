@@ -2,18 +2,16 @@
 
 namespace Websyspro\Entity\Core\Bases;
 
-use ReflectionAttribute;
 use ReflectionClass;
 use ReflectionProperty;
-use Websyspro\Commons\Collection;
-use Websyspro\Entity\Enums\ColumnType;
 
 class AbstractEntity
 {
-  protected static Collection|null $collumnsCache = null;
+  protected static array|null $collumnsCache = null;
 
   public static function getColumns(
-  ): Collection {
+    array $columns = []
+  ): array|null {
     if( self::$collumnsCache !== null){
       return self::$collumnsCache;
     }
@@ -22,32 +20,27 @@ class AbstractEntity
       static::class
     );
 
-    $reflectionProperties = new Collection(
-      $reflectionClass->getProperties(
-        ReflectionProperty::IS_PUBLIC
-      )
+    $reflectionProperties = $reflectionClass->getProperties(
+      ReflectionProperty::IS_PUBLIC
     );
 
-    $columns = $reflectionProperties->mapper(
-      function( ReflectionProperty $property ) {
-        $attributes = new Collection(
-          $property->getAttributes()
-        );
+    foreach( $reflectionProperties as $property ){
+      $attributes = $property->getAttributes();
+      $attributesToColumns = [];
 
-        return $attributes->mapper(
-          function( ReflectionAttribute $attribute ) use( $property ) {
-            if( is_subclass_of( $attribute->getName(), ColumnType::class )) {
-              $instance = $attribute->newInstance();
-              return [
-                "columnName" => $property->getName(),
-                "columnType" => $instance->getColumnType(),
-                "decoration" => $instance
-              ];
-            } else return [];
-          }
-        );
+      foreach( $attributes as $attribute ){
+        $instance = $attribute->newInstance();
+
+        $attributesToColumns[
+          $instance->attributeType->name
+        ] = (object)[
+          "columnType" => $attribute->getName(),
+          "instance" => $instance
+        ];
       }
-    );
+
+      $columns[$property->getName()] = (object)$attributesToColumns;
+    }
 
     return $columns;
   }
