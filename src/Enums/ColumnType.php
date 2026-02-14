@@ -40,7 +40,7 @@ enum ColumnType: string
       $datetime = preg_replace("/(\d{2})\/(\d{2})\/(\d{4}) (\d{2}:\d{2}:\d{2})/", "$3-$2-$1 $4", $this->stringFilterQuotes($datetime));
     }
 
-    return sprintf( "'%s'", $datetime );   
+    return $datetime;   
   }
 
   private function datetimeDecode(
@@ -60,7 +60,7 @@ enum ColumnType: string
       $date = preg_replace("/(\d{2})\/(\d{2})\/(\d{4})/", "$3-$2-$1", $this->stringFilterQuotes($date));
     }
 
-    return sprintf( "'%s'", $date );
+    return $date;
   }
 
   private function dateDecode(
@@ -113,9 +113,9 @@ enum ColumnType: string
   public function textEncode(
     string $string
   ): string {
-    return sprintf(
-      "'%s'", addslashes(
-        $this->stringFilterQuotes($string)
+    return addslashes(
+      $this->stringFilterQuotes(
+        $string
       )
     );
   }

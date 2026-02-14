@@ -19,5 +19,6 @@
     "git:push": "git add . && git commit -m \"Update components\" && git push origin HEAD"
   },
   "require-dev": {
+    "websyspro/commons": "dev-main" 
   }
 }

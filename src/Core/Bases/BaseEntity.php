@@ -14,7 +14,8 @@ use Websyspro\Entity\Decorations\Events\Update;
 use Websyspro\Entity\Decorations\Generations\AutoIncrement;
 use Websyspro\Entity\Decorations\Requireds\NotNull;
 
-class BaseEntity
+class BaseEntity 
+extends AbstractEntity
 {
   #[NotNull()]
   #[Number()]
