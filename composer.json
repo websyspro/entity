@@ -5,7 +5,8 @@
   "type": "library",
   "autoload": {
     "psr-4": {
-      "Websyspro\\Entity\\": "src/"
+      "Websyspro\\Entity\\": "src/",
+      "Websyspro\\Test\\": "test/"
     }
   },
   "authors": [
