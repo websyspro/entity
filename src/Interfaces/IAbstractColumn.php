@@ -8,7 +8,7 @@ use Websyspro\Entity\Enums\ColumnType;
 class IAbstractColumn
 {
   public AttributeType $attributeType = AttributeType::column;
-  public ColumnType $columnType = ColumnType::date;
+  public ColumnType $columnType = ColumnType::text;
 
   public function sql(
   ): string {
