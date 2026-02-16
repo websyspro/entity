@@ -2,8 +2,11 @@
 
 namespace Websyspro\Entity\Core\Bases;
 
+use Attribute;
 use ReflectionClass;
 use ReflectionProperty;
+use Websyspro\Entity\Enums\AttributeType;
+use Websyspro\Entity\Enums\ColumnType;
 
 class AbstractEntity
 {
@@ -25,7 +28,7 @@ class AbstractEntity
     );
 
     foreach( $reflectionProperties as $property ){
-      $attributes = $property->getAttributes();
+      $attributes = $property->getAttributes( AttributeType::column->name );
       $attributesToColumns = [];
 
       foreach( $attributes as $attribute ){
