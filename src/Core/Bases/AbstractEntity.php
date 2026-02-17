@@ -141,7 +141,7 @@ class AbstractEntity
       
     /* Remove invalid entries where attribute parsing failed or no constraint was defined */
     return $properties->where( 
-      fn( Indexes|Uniques $index ) => (
+      fn( Indexes|Uniques|array $index ) => (
         $index->property !== null 
       )
     );
