@@ -2,6 +2,11 @@
 
 namespace Websyspro\Entity\Enums;
 
+/**
+ * Enumeration of all attribute types used in entity metadata processing.
+ * Categorizes PHP attributes into functional groups for ORM operations.
+ * Used to filter and organize entity property attributes during reflection.
+ */
 enum AttributeType: int
 {
   case column = 1;

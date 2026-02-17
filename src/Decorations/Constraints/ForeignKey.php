@@ -4,15 +4,16 @@ namespace Websyspro\Entity\Decorations\Constraints;
 
 use Attribute;
 use Websyspro\Entity\Enums\AttributeType;
-use Websyspro\Entity\Interfaces\IAbstractColumn;
+use Websyspro\Entity\Shareds\AbstractColumn;
+use Websyspro\Entity\Shareds\ReferenceClass;
 
 #[Attribute( Attribute::TARGET_PROPERTY )]
 class ForeignKey
-extends IAbstractColumn
+extends AbstractColumn
 {
   public AttributeType $attributeType = AttributeType::foreigns;
 
   public function __construct(
-    public readonly string $referenceClass
+    public ReferenceClass|string $referenceClass
   ){}
 }

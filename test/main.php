@@ -2,6 +2,6 @@
 
 use Websyspro\Test\Entitys\DocumentEntity;
 
-$getColumns = DocumentEntity::getColumnsForeigns();
+$getAttrs = DocumentEntity::getAttributes();
 
-print_r($getColumns );
+print_r($getAttrs );

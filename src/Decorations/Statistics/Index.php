@@ -4,14 +4,14 @@ namespace Websyspro\Entity\Decorations\Statistics;
 
 use Attribute;
 use Websyspro\Entity\Enums\AttributeType;
-use Websyspro\Entity\Interfaces\IAbstractColumn;
+use Websyspro\Entity\Shareds\AbstractColumn;
 
 #[Attribute( Attribute::TARGET_PROPERTY )]
-class Index extends IAbstractColumn
+class Index extends AbstractColumn
 {
   public AttributeType $attributeType = AttributeType::indexes;
 
   public function __construct(
-    public readonly int $indexGroup = 1
+    public int $indexGroup = 1
   ){}
 }

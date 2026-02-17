@@ -14,6 +14,11 @@ use Websyspro\Entity\Decorations\Events\Update;
 use Websyspro\Entity\Decorations\Generations\AutoIncrement;
 use Websyspro\Entity\Decorations\Requireds\NotNull;
 
+/**
+ * Base entity class providing common database columns for all entities.
+ * Implements audit trail fields (created, updated, deleted) and soft delete pattern.
+ * All application entities should extend this class to inherit standard fields.
+ */
 class BaseEntity 
 extends AbstractEntity
 {

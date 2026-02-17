@@ -2,16 +2,16 @@
 
 namespace Websyspro\Entity\Decorations\Columns;
 
+use Websyspro\Entity\Shareds\AbstractColumn;
+use Websyspro\Entity\Enums\AttributeType;
+use Websyspro\Entity\Enums\ColumnType;
+use Websyspro\Commons\Collection;
 use Attribute;
 use UnitEnum;
-use Websyspro\Commons\DataList;
-use Websyspro\Entity\Enums\ColumnType;
-use Websyspro\Entity\Enums\AttributeType;
-use Websyspro\Entity\Interfaces\IAbstractColumn;
 
 #[Attribute( Attribute::TARGET_PROPERTY )]
 class Enum
-extends IAbstractColumn
+extends AbstractColumn
 {
   public AttributeType $attributeType = AttributeType::column;
   public ColumnType $columnType = ColumnType::longtext;
@@ -22,7 +22,7 @@ extends IAbstractColumn
 
   public function sql(
   ): string {
-    $enums = DataList::create(
+    $enums = new Collection(
       $this->enum::cases()
     )->mapper(fn(UnitEnum $case) => "'{$case->value}'");
 
