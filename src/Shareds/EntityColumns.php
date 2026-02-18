@@ -7,7 +7,7 @@ namespace Websyspro\Entity\Shareds;
  * Separates columns into initial positions (primary keys) and end positions (audit fields).
  * Used by AbstractEntity to maintain consistent column ordering across all entities.
  */
-class BaseColumns
+class EntityColumns
 {
   /**
    * Initializes base column structure with initial and end column arrays.
@@ -17,6 +17,7 @@ class BaseColumns
    */
   public function __construct(
     public array $initials,
-    public array $ends
+    public array $ends,
+    public array $alls
   ){}
 }

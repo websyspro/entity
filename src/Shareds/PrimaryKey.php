@@ -2,10 +2,9 @@
 
 namespace Websyspro\Entity\Shareds;
 
-class Column
+class PrimaryKey
 {
   public function __construct(
-    public string $name,
-    public object $instance
+    public string $name
   ){}
 }

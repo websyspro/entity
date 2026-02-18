@@ -9,7 +9,7 @@ namespace Websyspro\Entity\Shareds;
  */
 class Entity
 {
-  public string $name;
+  public string $table;
   
   /**
    * Initializes entity metadata by extracting entity name from fully qualified class name.
@@ -39,7 +39,7 @@ class Entity
     );
 
     /* Remove "Entity" suffix from last part to get clean entity name */
-    $this->name = preg_replace( 
+    $this->table = preg_replace( 
       "#Entity$#", 
       "", end( 
         $entity

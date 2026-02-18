@@ -11,6 +11,7 @@ use Websyspro\Entity\Core\Bases\BaseEntity;
 use Websyspro\Entity\Decorations\Constraints\ForeignKey;
 use Websyspro\Entity\Decorations\Constraints\OneToMany;
 use Websyspro\Entity\Decorations\Constraints\OneToOne;
+use Websyspro\Entity\Decorations\Constraints\Unique;
 
 class DocumentEntity
 extends BaseEntity

@@ -2,6 +2,5 @@
 
 use Websyspro\Test\Entitys\DocumentEntity;
 
-$getAttrs = DocumentEntity::getAttributes();
-
-print_r($getAttrs );
+$getAttributes = DocumentEntity::getAttributes();
+print_r($getAttributes );
