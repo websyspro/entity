@@ -44,8 +44,7 @@ class ForeignKey
   private function defineClears(
   ): void {
     unset( 
-      $this->column,
-      $this->entity
+      $this->column
     );
   }   
 }
