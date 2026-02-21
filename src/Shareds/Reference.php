@@ -4,15 +4,16 @@ namespace Websyspro\Entity\Shareds;
 
 class Reference
 {
-  public string $table;
   public string $key;
-  public string $entity;
+  public Entity $entity;
 
   public function __construct(
     EntityStructure $reference
   ){
-    $this->table = $reference->entity->table;
-    $this->entity = $reference->entity->class;
+    $this->entity = new Entity(
+      $reference->entity->class
+    );
+
     if( $reference->primaryKey->exist() === true ){
       $this->key = $reference->primaryKey->first()->name;
     }

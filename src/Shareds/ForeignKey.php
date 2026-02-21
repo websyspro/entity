@@ -34,7 +34,7 @@ class ForeignKey
         $this->fullname = Util::sprintFormat(
           "FOREIGNKEY_%s_%s_In_%s_%s", [
             $this->entity->table, $this->column->name,
-            $this->reference->table, $this->reference->key
+            $this->reference->entity->table, $this->reference->key
           ]
         );
       }
