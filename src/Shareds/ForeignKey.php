@@ -6,7 +6,7 @@ use Websyspro\Commons\Util;
 
 class ForeignKey
 {
-  public string $name;
+  public string $key;
   public string $fullname;
   public Reference $reference;
 
@@ -30,7 +30,7 @@ class ForeignKey
           $reference
         );
 
-        $this->name = $this->column->name;
+        $this->key = $this->column->name;
         $this->fullname = Util::sprintFormat(
           "FOREIGNKEY_%s_%s_In_%s_%s", [
             $this->entity->table, $this->column->name,
