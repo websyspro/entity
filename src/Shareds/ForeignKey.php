@@ -7,35 +7,30 @@ use Websyspro\Commons\Util;
 class ForeignKey
 {
   public string $key;
-  public string $fullname;
-  public Reference $reference;
+  public Entity $entity;
+  public EntityReference $entityReference;
 
   public function __construct(
     public Column $column,
-    public Entity $entity
+    public EntityStructure $entityStructure
   ){
-    $this->defineFullName();
+    $this->defineReference();
     $this->defineClears();
   }
 
-  private function defineFullName(
+  private function defineReference(
   ): void {
-    $reference = call_user_func_array(
-      [ $this->column->instance->referenceClass, "getAttributes" ], []
+    $entityStructureReference = Util::callUserClassFN( 
+      $this->column->instance->entityReference, 
+      "getAttributes", []
     );
 
-    if( $reference instanceof EntityStructure ){
-      if( $reference->primaryKey->exist() ){
-        $this->reference = new Reference(
-          $reference
-        );
-
+    if( $entityStructureReference instanceof EntityStructure ){
+      if( $entityStructureReference->primaryKey->exist() ){
         $this->key = $this->column->name;
-        $this->fullname = Util::sprintFormat(
-          "FOREIGNKEY_%s_%s_In_%s_%s", [
-            $this->entity->table, $this->column->name,
-            $this->reference->entity->table, $this->reference->key
-          ]
+        $this->entity = $this->entityStructure->entity;
+        $this->entityReference = new EntityReference( 
+          $entityStructureReference
         );
       }
     }
@@ -44,7 +39,8 @@ class ForeignKey
   private function defineClears(
   ): void {
     unset( 
-      $this->column
+      $this->column,
+      $this->entityStructure
     );
   }   
 }

@@ -22,7 +22,6 @@
     "git:push": "git add . && git commit -m \"Update components\" && git push origin HEAD"
   },
   "require-dev": {
-    "websyspro/commons": "dev-main", 
-    "websyspro/sqlfromclass": "dev-main"
+    "websyspro/commons": "dev-main"
   }
 }

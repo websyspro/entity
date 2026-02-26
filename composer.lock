@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e6f0aef587056c3c39ba8d9a0d08e5ac",
+    "content-hash": "efbd544148f7aabde80bd4a77628559e",
     "packages": [],
     "packages-dev": [
         {
@@ -13,12 +13,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/websyspro/commons.git",
-                "reference": "89fef8c1bbad9abb8b941b7fd9544203b4d68898"
+                "reference": "7cae50e3ce55b0cb42980493706feaa1d600e341"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/websyspro/commons/zipball/89fef8c1bbad9abb8b941b7fd9544203b4d68898",
-                "reference": "89fef8c1bbad9abb8b941b7fd9544203b4d68898",
+                "url": "https://api.github.com/repos/websyspro/commons/zipball/7cae50e3ce55b0cb42980493706feaa1d600e341",
+                "reference": "7cae50e3ce55b0cb42980493706feaa1d600e341",
                 "shasum": ""
             },
             "default-branch": true,
@@ -43,147 +43,13 @@
                 "issues": "https://github.com/websyspro/commons/issues",
                 "source": "https://github.com/websyspro/commons/tree/main"
             },
-            "time": "2026-02-21T23:19:55+00:00"
-        },
-        {
-            "name": "websyspro/devtools",
-            "version": "dev-main",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/websyspro/dev-tools.git",
-                "reference": "d4be6d2fa75a2556e821f3d97f9fc0eb779d0107"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/websyspro/dev-tools/zipball/d4be6d2fa75a2556e821f3d97f9fc0eb779d0107",
-                "reference": "d4be6d2fa75a2556e821f3d97f9fc0eb779d0107",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=8.1",
-                "websyspro/commons": "dev-main",
-                "websyspro/elements": "dev-main"
-            },
-            "default-branch": true,
-            "bin": [
-                "bin/watch",
-                "bin/reload"
-            ],
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Websyspro\\DevTools\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "websyspro",
-                    "email": "websyspro.services@gmail.com"
-                }
-            ],
-            "description": "A lightweight PHP development utility that watches source directories for file changes and automatically re-executes a target PHP entry point.",
-            "support": {
-                "issues": "https://github.com/websyspro/dev-tools/issues",
-                "source": "https://github.com/websyspro/dev-tools/tree/main"
-            },
-            "time": "2026-01-23T23:55:03+00:00"
-        },
-        {
-            "name": "websyspro/elements",
-            "version": "dev-main",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/websyspro/elements.git",
-                "reference": "2afa86c163d9b33f9e185bebfbf30d53acc2c63a"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/websyspro/elements/zipball/2afa86c163d9b33f9e185bebfbf30d53acc2c63a",
-                "reference": "2afa86c163d9b33f9e185bebfbf30d53acc2c63a",
-                "shasum": ""
-            },
-            "require": {
-                "websyspro/commons": "dev-main",
-                "websyspro/devtools": "dev-main"
-            },
-            "default-branch": true,
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Websyspro\\Elements\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "websyspro",
-                    "email": "websyspro.services@gmail.com"
-                }
-            ],
-            "description": "PHP library for dynamic DOM element creation with support for attributes, nesting and HTML rendering",
-            "support": {
-                "issues": "https://github.com/websyspro/elements/issues",
-                "source": "https://github.com/websyspro/elements/tree/main"
-            },
-            "time": "2026-02-02T17:00:09+00:00"
-        },
-        {
-            "name": "websyspro/sqlfromclass",
-            "version": "dev-main",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/websyspro/sqlfromclass.git",
-                "reference": "b381853a54b335fda2f1719499ff921a0743ecb6"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/websyspro/sqlfromclass/zipball/b381853a54b335fda2f1719499ff921a0743ecb6",
-                "reference": "b381853a54b335fda2f1719499ff921a0743ecb6",
-                "shasum": ""
-            },
-            "require": {
-                "websyspro/commons": "dev-main",
-                "websyspro/devtools": "dev-main",
-                "websyspro/entity": "dev-main"
-            },
-            "default-branch": true,
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Websyspro\\Test\\": "test/",
-                    "Websyspro\\SqlFromClass\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "websyspro",
-                    "email": "websyspro.services@gmail.com"
-                }
-            ],
-            "description": "A Composer library for building, composing, and executing SQL queries using object-oriented, class-based structures.",
-            "support": {
-                "issues": "https://github.com/websyspro/sqlfromclass/issues",
-                "source": "https://github.com/websyspro/sqlfromclass/tree/main"
-            },
-            "time": "2026-02-22T14:44:25+00:00"
+            "time": "2026-02-26T20:57:33+00:00"
         }
     ],
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
-        "websyspro/commons": 20,
-        "websyspro/sqlfromclass": 20
+        "websyspro/commons": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,

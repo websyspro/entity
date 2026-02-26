@@ -16,7 +16,7 @@ class AbstractEntity
 {
   protected static array $cacheAttrs = [];
   protected static array $cacheColumns = [];
-
+  protected static array $cacheEntityStructure = [];
   private static function getEntityColumns(
   ): EntityColumns {
     if( Util::sizeArray( self::$cacheColumns ) === 0 ){
@@ -67,7 +67,7 @@ class AbstractEntity
     );
   }
 
-  private static function getColumns(
+  private static function findByAttributeColumns(
   ): Collection {
     $columns = self::findByAttributeType( 
       AttributeType::column
@@ -101,29 +101,35 @@ class AbstractEntity
 
   public static function getAttributes(
   ): mixed {
-    $reflectionClass = new ReflectionClass(
-      static::class
-    );
+    if( isset( self::$cacheAttrs[ static::class ] ) === false ){
+      $reflectionClass = new ReflectionClass(
+        static::class
+      );
 
-    foreach( $reflectionClass->getProperties( ReflectionProperty::IS_PUBLIC ) as $property ){
-      foreach( $property->getAttributes() as $attribute ){
-        self::$cacheAttrs[ static::class ][] = new Column(
-          $property->getName(), $attribute->newInstance()
-        );
+      foreach( $reflectionClass->getProperties( ReflectionProperty::IS_PUBLIC ) as $property ){
+        foreach( $property->getAttributes() as $attribute ){
+          self::$cacheAttrs[ static::class ][] = new Column(
+            $property->getName(), $attribute->newInstance()
+          );
+        }
       }
     }
 
-    return new EntityStructure(
-      new Entity( class: static::class ),
-      self::getColumns(),
-      self::findByAttributeType( AttributeType::column ),
-      self::findByAttributeType( AttributeType::indexes ),
-      self::findByAttributeType( AttributeType::uniques ),
-      self::findByAttributeType( AttributeType::foreigns ),
-      self::findByAttributeType( AttributeType::primaryKey ),
-      self::findByAttributeType( AttributeType::requireds ),
-      self::findByAttributeType( AttributeType::oneToMany ),
-      self::findByAttributeType( AttributeType::oneToOne )
-    );
+    if( isset( self::$cacheEntityStructure[ static::class ] ) === false ){
+      self::$cacheEntityStructure[ static::class ] = new EntityStructure(
+        new Entity( static::class ),
+        self::findByAttributeColumns(),
+        self::findByAttributeType( AttributeType::column ),
+        self::findByAttributeType( AttributeType::indexes ),
+        self::findByAttributeType( AttributeType::uniques ),
+        self::findByAttributeType( AttributeType::foreigns ),
+        self::findByAttributeType( AttributeType::primaryKey ),
+        self::findByAttributeType( AttributeType::requireds ),
+        self::findByAttributeType( AttributeType::oneToMany ),
+        self::findByAttributeType( AttributeType::oneToOne )
+      );
+    }
+
+    return self::$cacheEntityStructure[ static::class ];
   }
 }

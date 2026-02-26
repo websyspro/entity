@@ -16,7 +16,7 @@ extends BaseEntity
   public string $DocumentId;
   
   #[OneToOne( DocumentEntity::class )]
-  public DocumentEntity $document;
+  public DocumentEntity $Document;
   
   #[Number()]
   #[ForeignKey(ProductEntity::class)]

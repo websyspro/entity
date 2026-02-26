@@ -20,9 +20,9 @@ extends AbstractColumn
   /**
    * Initializes one-to-many relationship with target entity class.
    * 
-   * @param string $referenceClass Fully qualified class name of child entity
+   * @param string $entityReference Fully qualified class name of child entity
    */
   public function __construct(
-    public readonly string $referenceClass
+    public string $entityReference
   ){}
 }

@@ -2,6 +2,8 @@
 
 namespace Websyspro\Entity\Shareds;
 
+use Websyspro\Commons\Util;
+
 /**
  * Represents entity metadata extracted from entity class name.
  * Provides simplified entity name by removing namespace and "Entity" suffix.
@@ -45,5 +47,5 @@ class Entity
         $entity
       )
     );
-  }
-}
+  }  
+} 

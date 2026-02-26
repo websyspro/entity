@@ -21,9 +21,9 @@ extends AbstractColumn
   /**
    * Initializes foreign key constraint with reference to target entity.
    * 
-   * @param ReferenceClass|string $referenceClass Target entity class or ReferenceClass object
+   * @param string $entityReference Target entity class or ReferenceClass object
    */
   public function __construct(
-    public ReferenceClass|string $referenceClass
+    public string $entityReference
   ){}
 }

@@ -33,7 +33,8 @@ class EntityStructure
 
   private function getGroupName(
     Collection $columns,
-    AttributeType $attributeType
+    AttributeType $attributeType,
+    Collection $groupNameList = new Collection()
   ): Collection {
     $columns = $columns->reduce(
       [], function( array|null $acc, Column $column ) {
@@ -50,7 +51,7 @@ class EntityStructure
       }
     );
 
-    return $columns->mapper(
+    $columns = $columns->mapper(
       fn( array $indexGroup ) => Util::sprintFormat(
         "%s_%s", [ match( $attributeType ){
           AttributeType::indexes => "Index", 
@@ -58,11 +59,19 @@ class EntityStructure
         }, Util::join( "_",  $indexGroup ) ]
       )
     );
+
+    $columns->mapper(
+      fn( string $groupName ) => (
+        $groupNameList->add( $groupName, $groupName )
+      )
+    );
+
+    return $groupNameList;
   }
 
   private function definePrimaryKey(
   ): void {
-    if( $this->primaryKey->exist()){
+    if( $this->primaryKey->exist() ){
       $this->primaryKey = $this->primaryKey->mapper(
         fn( Column $column ) => new PrimaryKey($column->name)
       );
@@ -89,23 +98,23 @@ class EntityStructure
   ): void {
     $this->foreigns = $this->foreigns->mapper(
       fn( Column $column ) => new ForeignKey( 
-        $column, $this->entity
+        $column, $this
       )
     );
   }
 
   private function defineRequireds(
   ): void {
-    $this->requireds = $this->requireds
-      ->mapper( fn( Column $column ) => $column->name )
-      ->values();
+    $this->requireds = $this->requireds->mapper(
+      fn( Column $column ) => $column->name
+    );
   }
 
   private function defineOneToMany(
   ): void {
     $this->oneToMany = $this->oneToMany->mapper(
       fn( Column $column ) => new Entity(
-        $column->instance->referenceClass
+        $column->instance->entityReference, false
       )
     );
   }
@@ -114,7 +123,7 @@ class EntityStructure
   ): void {
     $this->oneToOne = $this->oneToOne->mapper(
       fn( Column $column ) => new Entity(
-        $column->instance->referenceClass
+        $column->instance->entityReference, false
       )
     );
   }  
