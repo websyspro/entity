@@ -22,8 +22,7 @@ class StructureFromFn
     $this->setParametersList();
     $this->setStaticsList();
     $this->setJoinsList();
-
-    print_r($this->joins);
+    $this->setUsesList();
   }
   
   private function setParametersList(
@@ -82,10 +81,7 @@ class StructureFromFn
 
         $entityRoot = Util::sizeArray(
           Util::where( $entityHistory, 
-          fn( AttributeType $attributeType ) => (
-              $attributeType === AttributeType::oneToMany
-            )
-          )
+          fn( AttributeType $attributeType ) => $attributeType === AttributeType::oneToMany )
         ) === 0 ? EntityRoot::Yes : EntityRoot::No;
 
         if( $entity !== null ){
@@ -148,5 +144,10 @@ class StructureFromFn
     }
 
     $this->setJoinsListByItem();
+  }
+
+  private function setUsesList(
+  ): void {
+
   }
 }

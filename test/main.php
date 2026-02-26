@@ -35,7 +35,7 @@ $arrowFnToString = new StructureFromFn(
   )
 );
 
-//print_r($arrowFnToString);
+print_r($arrowFnToString);
 $end = microtime( true );
 
 var_dump( ( $end - $start ) * 1000 );
