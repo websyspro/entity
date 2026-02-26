@@ -2,14 +2,13 @@
 
 namespace Websyspro\Entity\Shareds;
 
-use Websyspro\Commons\Collection;
-use ReflectionParameter;
-use ReflectionFunction;
-use ReflectionNamedType;
-use Websyspro\Commons\Util;
-use Websyspro\Entity\Decorations\Requireds\NotNull;
 use Websyspro\Entity\Enums\AttributeType;
 use Websyspro\Entity\Enums\EntityRoot;
+use Websyspro\Commons\Collection;
+use Websyspro\Commons\Util;
+use ReflectionNamedType;
+use ReflectionParameter;
+use ReflectionFunction;
 
 class StructureFromFn
 {
