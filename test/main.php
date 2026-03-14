@@ -1,9 +1,6 @@
 <?php
 
-use Websyspro\Commons\Collection;
-use Websyspro\Entity\Enums\TokenType;
 use Websyspro\Entity\Shareds\StructureFromFn;
-use Websyspro\Entity\Shareds\Token;
 use Websyspro\Test\Entitys\DocumentItemEntity;
 use Websyspro\Test\Entitys\DocumentEntity;
 use Websyspro\Test\Entitys\OperatorEntity;

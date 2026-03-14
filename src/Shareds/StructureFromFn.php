@@ -597,7 +597,10 @@ class StructureFromFn
 
     $value = preg_replace( "#^(\{\\$|\\$)|\\}$#", "", $staticValue );
     $value = $this->statics->get( $value );
-    return $value !== null ? $value : $staticValue;
+    
+    return $value !== null 
+      ? $value 
+      : $staticValue;
   }
 
   private function setTokensOrgsParses(
