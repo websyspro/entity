@@ -26,4 +26,22 @@ enum CompareType:string
   
   /** Operador diferente (<>) */
   case NotEqual = "<>";
+
+  /** Operador LIKE para busca parcial */
+  case Like = "Like";
+
+  /** Operador NOT LIKE para busca parcial */
+  case NotLike = "Not Like";
+
+  /** Operador In para busca parcial */
+  case In = "In"; 
+
+  /** Operador Not In para busca parcial */
+  case NotIn = "Not In";
+
+  /** Operador Is para busca parcial */
+  case Is = "Is";
+ 
+  /** Operador Not para busca parcial */
+  case Not = "Not";   
 }

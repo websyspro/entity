@@ -210,7 +210,7 @@ class StructureFromFn
     bool $depth = false
   ): Collection {
     $pattern = $depth === true
-      ? $pattern = "#'[^']*'|\"[^\"]*\"|\\{\\$[\\w-]+\\}|\\$?[\\w\\\\-]+(?:->|::)[\\w\\\\-]+|\\d{2}/\\d{2}/\\d{4}|>=|<=|<>|[<>=!]+|\\(|\\)|,|([a-zA-ZÀ-ÿ\d/:$]+(?:\s+[a-zA-ZÀ-ÿ\d/:$]+)*\s*)#u"
+      ? $pattern = "#'[^']*'|\"[^\"]*\"|\\{\\$[\\w-]+\\}|\\$?[\\w\\\\-]+(?:->|::)[\\w\\\\-]+|\\d{2}/\\d{2}/\\d{4}|>=|<=|<>|[<>=!]+|\\(|\\)|,|([a-zA-ZÀ-ÿ\d/:$%\\\\]+(?:\s+[a-zA-ZÀ-ÿ\d/:$%\\\\]+)*\s*)#u"
       : "#'[^']*'|\"[^\"]*\"|\\S+#";
 
     preg_match_all(
@@ -228,9 +228,14 @@ class StructureFromFn
           $tokenType = $this->getTokenByValue( $tokenValue );
 
           return new Token( 
-            $tokenType === TokenType::FieldStatic ? TokenType::FieldValue : $tokenType, 
-            $depth === false && Util::inArray( $tokenType, [ TokenType::FieldValue, TokenType::FieldStatic ]) 
-              ? $this->setParseToken( $tokenValue, true ) : new Collection([ $tokenValue ]) 
+            $depth === false 
+              ? ( Util::inArray( $tokenType, [ TokenType::FieldStatic, TokenType::FieldEnum ]) 
+                  ? TokenType::FieldValue : $tokenType 
+                ) 
+              : $tokenType, 
+            $depth === false && Util::inArray( $tokenType, [ 
+              TokenType::FieldValue, TokenType::FieldStatic, TokenType::FieldEnum 
+            ]) ? $this->setParseToken( $tokenValue, true ) : new Collection([ $tokenValue ]) 
           );
         })
       );
@@ -300,8 +305,9 @@ class StructureFromFn
     $this->setTokensOrgsPriority();
     $this->setTokensOrgsEntitys();
     $this->setTokensOrgsGroups();
-    $this->setTokensOrgsCompares();
+    $this->setTokensOrgsResume();
     $this->setTokensOrgsParses();
+    $this->setTokensOrgsCompare();
   }
 
   private function getToken(
@@ -504,7 +510,7 @@ class StructureFromFn
     return false;
   }
 
-  private function setTokensOrgsCompares(
+  private function setTokensOrgsResume(
   ): void {
     for( $i = 0; $i < $this->tokens->count(); $i++ ){
       $currToken = $this->getToken( $i );
@@ -597,7 +603,6 @@ class StructureFromFn
 
     $value = preg_replace( "#^(\{\\$|\\$)|\\}$#", "", $staticValue );
     $value = $this->statics->get( $value );
-    
     return $value !== null 
       ? $value 
       : $staticValue;
@@ -614,7 +619,7 @@ class StructureFromFn
               $token->tokenValue = new Collection([
                 $this->parseEnum( $token->tokenValue->first())
               ]);
-            } else if( $token->takenType === TokenType::FieldValue ){
+            } else if( $token->takenType === TokenType::FieldStatic ){
               $token->tokenValue = new Collection([
                 $this->parseStatic( $token->tokenValue->first())
               ]);
@@ -623,6 +628,51 @@ class StructureFromFn
             return $token;
           }
         );
+      }
+    }
+  }
+
+  private function setTokensOrgsCompare(
+  ): void {
+    for( $i = 0; $i < $this->tokens->count(); $i++ ){
+      $currToken = $this->getToken( $i );
+      $nextToken = $this->getToken( $i + 1 );
+
+      $hasTokensValid = $currToken instanceof Token && $currToken->takenType === TokenType::Compare
+                     && $nextToken instanceof Token && $nextToken->takenType === TokenType::FieldValue;
+
+      if( $hasTokensValid ){
+        $compareValue = $currToken->tokenValue->first();
+        $value = $nextToken->tokenValue->mapper( 
+          fn( Token $token ) => $token->tokenValue->first()
+        )->joinNotSpace();
+
+        $value = preg_replace( "#\\\%#", "", $value );
+
+        $hasLike = preg_match( "#%#", $value );
+        $hasList = preg_match( "#(^\(.*\)$)#", $value );
+        $hasNull = strtoupper( $value ) === "NULL";
+
+        if( $compareValue === CompareType::Equals->value && $hasLike ){
+          $currToken->tokenValue = new Collection([ CompareType::Like->value ]);
+        } else
+        if( $compareValue === CompareType::NotEqual->value && $hasLike ){
+          $currToken->tokenValue = new Collection([ CompareType::NotLike->value  ]);
+        } else
+        if( $compareValue === CompareType::Equals->value && $hasList ){
+          $currToken->tokenValue = new Collection([ CompareType::In->value  ]);
+        } else
+        if( $compareValue === CompareType::NotEqual->value && $hasList ){
+          $currToken->tokenValue = new Collection([ CompareType::NotIn->value  ]);
+        } else
+        if( $compareValue === CompareType::Equals->value && $hasNull ){
+          $currToken->tokenValue = new Collection([ CompareType::Is->value  ]);
+        } else
+        if( $compareValue === CompareType::NotEqual->value && $hasNull ){
+          $currToken->tokenValue = new Collection([ CompareType::Not->value  ]);
+        }
+
+        $this->tokens->setValue( $i, $currToken );
       }
     }
   }

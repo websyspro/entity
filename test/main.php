@@ -16,7 +16,7 @@ $fn = fn(
   DocumentEntity $document,
   DocumentItemEntity $documentItem,
 ) => (
-  "Meu item: {$primeiroAtivo} e segundo {$segundoAtivo}" === $box->Id &&
+  "%Meu item: {$primeiroAtivo} e \% segundo {$segundoAtivo}" === $box->Id &&
   $box->CreatedBy === $document->BoxId &&
   $box->OperatorId === $operator->Id &&
   $document->Observations === 'Test de Impressão' &&
@@ -39,7 +39,7 @@ $arrowFnToString = new StructureFromFn(
   )
 );
 
-print_r( $arrowFnToString->tokens );
+print_r( $arrowFnToString->joins );
 
 $end = microtime( true );
 
