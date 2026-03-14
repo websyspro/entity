@@ -1,11 +1,17 @@
 <?php
 
+use Websyspro\Commons\Collection;
+use Websyspro\Entity\Enums\TokenType;
 use Websyspro\Entity\Shareds\StructureFromFn;
+use Websyspro\Entity\Shareds\Token;
 use Websyspro\Test\Entitys\DocumentItemEntity;
 use Websyspro\Test\Entitys\DocumentEntity;
 use Websyspro\Test\Entitys\OperatorEntity;
 use Websyspro\Test\Enums\DocumentState;
 use Websyspro\Test\Entitys\BoxEntity;
+
+$primeiroAtivo = "Primeiro";
+$segundoAtivo = "Segundo";
 
 $fn = fn(
   BoxEntity $box,
@@ -13,18 +19,19 @@ $fn = fn(
   DocumentEntity $document,
   DocumentItemEntity $documentItem,
 ) => (
-  $box->Id === 101 &&
-  $box->Id === $document->BoxId &&
+  "Meu item: {$primeiroAtivo} e segundo {$segundoAtivo}" === $box->Id &&
+  $box->CreatedBy === $document->BoxId &&
   $box->OperatorId === $operator->Id &&
-  $document->Id === $documentItem->DocumentId &&
+  $document->Observations === 'Test de Impressão' &&
+  $box->Id === 1245 &&
   $document->CreatedAt >= '02/04/2022' &&
-  $document->CreatedAt <= '15/04/2022' &&
-  $document->Observations === "Documento cancelado" &&
-  $document->Actived === null &&
-  $document->State === [ 
-    DocumentState::Finalizado, 
-    DocumentState::Cancelado
-  ]
+  $document->Id === $documentItem->DocumentId &&
+  '15/04/2022' >= $document->CreatedAt && (
+    $document->Observations === "Documento cancelado" &&
+    $document->Actived === null &&
+    $document->State === DocumentState::Cancelado &&
+    $document->State === [ DocumentState::Finalizado, DocumentState::Cancelado, $segundoAtivo ]
+  )
 );
 
 $start = microtime( true );
@@ -35,7 +42,29 @@ $arrowFnToString = new StructureFromFn(
   )
 );
 
-print_r($arrowFnToString);
+print_r( $arrowFnToString->tokens );
+
 $end = microtime( true );
 
 var_dump( ( $end - $start ) * 1000 );
+
+// $tokens = [
+//   'Meu item: {$primeiroAtivo} e segundo {$segundoAtivo}',
+//   'Test de Impressão',
+//   '02/04/2022',
+//   '15/04/2022',
+//   "Documento cancelado",
+//   '(DocumentState::Finalizado,DocumentState::Cancelado,$segundoAtivo)'
+// ];
+
+// $pattern = "#'[^']*'|\"[^\"]*\"|\\{\\$[\\w-]+\\}|\\$?[\\w\\\\-]+(?:->|::)[\\w\\\\-]+|\\d{2}/\\d{2}/\\d{4}|>=|<=|<>|[<>=!]+|\\(|\\)|,|([a-zA-ZÀ-ÿ\d/:$]+(?:\s+[a-zA-ZÀ-ÿ\d/:$]+)*\s*)#u";
+
+// foreach( $tokens as $token ){
+//   preg_match_all(
+//     $pattern,
+//     $token,
+//     $results
+//   );
+
+//   print_r($results);
+// }
