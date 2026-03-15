@@ -4,7 +4,6 @@ namespace Websyspro\Entity\Core\Bases;
 
 use ReflectionClass;
 use ReflectionProperty;
-use Websyspro\Commons\Collection;
 use Websyspro\Commons\Util;
 use Websyspro\Entity\Enums\AttributeType;
 use Websyspro\Entity\Shareds\Column;
@@ -50,7 +49,7 @@ class AbstractEntity
   private static function findByAttributeType(
     AttributeType $attributeType,
     array $newCacheAttrs = []
-  ): Collection {
+  ): array {
     $cacheAttrs = Util::where(
       self::$cacheAttrs[ static::class ],
       fn( Column $column ) => (
@@ -59,43 +58,42 @@ class AbstractEntity
     );
 
     foreach( $cacheAttrs as $attr ){
-      $newCacheAttrs[ $attr->name ] = $attr;
+      if( in_array( $attributeType, [ AttributeType::foreigns ] )){
+        $newCacheAttrs[] = $attr;
+      } else {
+        $newCacheAttrs[ $attr->name ] = $attr;
+      }
     }
 
-    return new Collection(
-      $newCacheAttrs
-    );
+    return $newCacheAttrs;
   }
 
   private static function findByAttributeColumns(
-  ): Collection {
+  ): array {
     $columns = self::findByAttributeType( 
       AttributeType::column
     );
-
+    
     $columns = array_merge(
-      $columns->where( 
-        fn( Column $column ) => Util::inArray( 
+      array_filter( 
+        $columns, fn( Column $column ) => Util::inArray( 
           $column->name, self::getEntityColumns()->initials 
-        ) === true
-      )->all(),
-      $columns->where( 
-        fn( Column $column ) => Util::inArray( 
+        ) === true 
+      ),
+      array_filter( 
+        $columns, fn( Column $column ) => Util::inArray( 
           $column->name, self::getEntityColumns()->alls 
         ) === false
-      )->all(),
-      $columns->where( 
-        fn( Column $column ) => Util::inArray( 
+      ),
+      array_filter( 
+        $columns, fn( Column $column ) => Util::inArray( 
           $column->name, self::getEntityColumns()->ends 
         ) === true
-      )->all()
+      )
     );
 
-    return new Collection(
-      Util::mapper(
-        array_values( $columns ),
-        fn( Column $column ) => $column->name
-      )
+    return array_map(
+      fn( Column $column ) => $column->name, array_values( $columns )
     );
   }
 

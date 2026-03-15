@@ -30,9 +30,9 @@ enum ColumnType: string
     string $string
   ): string {
     /* Check if string has quotes at start or end */
-    if(preg_match("/(^')|('$)/", $string) === 1){
+    if(preg_match("#(^')|('$)#", $string) === 1){
       /* Remove quotes from both ends */
-      return preg_replace("/(^')|('$)/", "", $string);
+      return preg_replace("#(^')|('$)#", "", $string);
     }
 
     return $string;
@@ -48,18 +48,19 @@ enum ColumnType: string
     string $datetime
   ): string {
     /* Return NULL as-is for null values */
-    if($datetime === "NULL"){
+    if( $datetime === "NULL" ){
       return $datetime;
     }
 
+    
     /* Convert date part from dd/mm/yyyy to yyyy-mm-dd */
-    if(preg_match("/(\d{2})\/(\d{2})\/(\d{4})/", $this->stringFilterQuotes($datetime))){
-      $datetime = preg_replace("/(\d{2})\/(\d{2})\/(\d{4})/", "$3-$2-$1", $this->stringFilterQuotes($datetime));
+    if( preg_match("#(\d{2})\/(\d{2})\/(\d{4})#", $this->stringFilterQuotes( $datetime ))){
+      $datetime = preg_replace("#(\d{2})\/(\d{2})\/(\d{4})#", "$3-$2-$1", $this->stringFilterQuotes($datetime));
     }
 
     /* Convert full datetime from dd/mm/yyyy HH:ii:ss to yyyy-mm-dd HH:ii:ss */
-    if(preg_match("/(\d{2})\/(\d{2})\/(\d{4}) (\d{2}:\d{2}:\d{2})/", $this->stringFilterQuotes($datetime))){
-      $datetime = preg_replace("/(\d{2})\/(\d{2})\/(\d{4}) (\d{2}:\d{2}:\d{2})/", "$3-$2-$1 $4", $this->stringFilterQuotes($datetime));
+    if(preg_match("#(\d{2})\/(\d{2})\/(\d{4}) (\d{2}:\d{2}:\d{2})#", $this->stringFilterQuotes($datetime))){
+      $datetime = preg_replace("#(\d{2})\/(\d{2})\/(\d{4}) (\d{2}:\d{2}:\d{2})#", "$3-$2-$1 $4", $this->stringFilterQuotes($datetime));
     }
 
     return $datetime;   
@@ -75,7 +76,7 @@ enum ColumnType: string
     string $datetime
   ): string {
     /* Convert to Brazilian datetime format */
-    return date("d/m/Y H:i:s", strtotime( $datetime ));
+    return date( "d/m/Y H:i:s", strtotime( $datetime ));
   }
 
   /**
@@ -93,8 +94,8 @@ enum ColumnType: string
     }
 
     /* Convert from dd/mm/yyyy to yyyy-mm-dd */
-    if(preg_match("/(\d{2})\/(\d{2})\/(\d{4})/", $this->stringFilterQuotes($date))){
-      $date = preg_replace("/(\d{2})\/(\d{2})\/(\d{4})/", "$3-$2-$1", $this->stringFilterQuotes($date));
+    if( preg_match( "#(\d{2})\/(\d{2})\/(\d{4})#", $this->stringFilterQuotes( $date ))){
+      $date = preg_replace("#(\d{2})\/(\d{2})\/(\d{4})#", "$3-$2-$1", $this->stringFilterQuotes($date));
     }
 
     return $date;
@@ -126,7 +127,7 @@ enum ColumnType: string
     if(preg_match("#,#", $decimal) === 1){
       /* Remove thousand separators and replace comma with dot */
       return preg_replace(
-        [ "/\./", "/,/" ], [ "", "." ], $this->stringFilterQuotes($decimal)
+        [ "#\.#", "#,#" ], [ "", "." ], $this->stringFilterQuotes($decimal)
       );
     } else {
       return $decimal;
@@ -183,7 +184,12 @@ enum ColumnType: string
    */
   public function textEncode(
     string $string
-  ): string {
+  ): string|array {
+    $hasListToInOrNotIn = "#^\(([A-Za-z0-9_]+)(,[A-Za-z0-9_]+)*\)$#";
+    if( preg_match( $hasListToInOrNotIn, $string ) === 1 ){
+      return explode(",", str_replace([ "(", ")" ], "", $string));
+    }
+
     /* Add slashes to escape special characters */
     return addslashes(
       $this->stringFilterQuotes(
@@ -238,10 +244,10 @@ enum ColumnType: string
     mixed $mixed
   ): mixed {
     /* Convert null to SQL NULL string */
-    if( is_null($mixed) || strtoupper( (string)$mixed) === "NULL" ){
+    if( is_null( $mixed ) || strtoupper(( string ) $mixed ) === "NULL" ){
       return "NULL";
     }
-
+    
     /* Apply type-specific encoding */
     return match( $this ){
       ColumnType::date => $this->dateEncode($mixed),

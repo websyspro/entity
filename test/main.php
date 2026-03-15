@@ -1,5 +1,6 @@
 <?php
 
+use Websyspro\Entity\Repository;
 use Websyspro\Entity\Shareds\StructureFromFn;
 use Websyspro\Test\Entitys\DocumentItemEntity;
 use Websyspro\Test\Entitys\DocumentEntity;
@@ -10,7 +11,10 @@ use Websyspro\Test\Entitys\BoxEntity;
 $primeiroAtivo = "Primeiro";
 $segundoAtivo = "Segundo";
 
-$fn = fn(
+$start = microtime( true );
+
+$repository = new Repository( BoxEntity::class );
+$repository->where( fn(
   BoxEntity $box,
   OperatorEntity $operator,
   DocumentEntity $document,
@@ -29,21 +33,11 @@ $fn = fn(
     $document->State === DocumentState::Cancelado &&
     $document->State === [ DocumentState::Finalizado, DocumentState::Cancelado, $segundoAtivo ]
   )
-);
+));
 
-$start = microtime( true );
+$repository->queryBuilder();
 
-$arrowFnToString = new StructureFromFn(
-  new ReflectionFunction( 
-    $fn
-  )
-);
-
-print_r( $arrowFnToString->joins );
-
-$end = microtime( true );
-
-var_dump( ( $end - $start ) * 1000 );
+var_dump( ( microtime( true ) - $start ) * 1000 );
 
 // $tokens = [
 //   'Meu item: {$primeiroAtivo} e segundo {$segundoAtivo}',
@@ -53,6 +47,8 @@ var_dump( ( $end - $start ) * 1000 );
 //   "Documento cancelado",
 //   '(DocumentState::Finalizado,DocumentState::Cancelado,$segundoAtivo)'
 // ];
+
+// ^\(([A-Za-z0-9_]+)(,[A-Za-z0-9_]+)*\)$
 
 // $pattern = "#'[^']*'|\"[^\"]*\"|\\{\\$[\\w-]+\\}|\\$?[\\w\\\\-]+(?:->|::)[\\w\\\\-]+|\\d{2}/\\d{2}/\\d{4}|>=|<=|<>|[<>=!]+|\\(|\\)|,|([a-zA-ZÀ-ÿ\d/:$]+(?:\s+[a-zA-ZÀ-ÿ\d/:$]+)*\s*)#u";
 

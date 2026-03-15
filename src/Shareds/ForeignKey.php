@@ -21,12 +21,11 @@ class ForeignKey
   private function defineReference(
   ): void {
     $entityStructureReference = Util::callUserClassFN( 
-      $this->column->instance->entityReference, 
-      "getAttributes", []
+      $this->column->instance->entityReference, "getAttributes", []
     );
 
     if( $entityStructureReference instanceof EntityStructure ){
-      if( $entityStructureReference->primaryKey->exist() ){
+      if( Util::sizeArray( $entityStructureReference->primaryKey ) !== 0 ){
         $this->key = $this->column->name;
         $this->entity = $this->entityStructure->entity;
         $this->entityReference = new EntityReference( 

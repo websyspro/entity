@@ -13,24 +13,16 @@ use Websyspro\Commons\Collection;
  */
 class Token
 {
-  public Entity $entity;
-  public string $fieldName;
-
   /**
    * @param TokenType $takenType Tipo do token (FieldEntity, Compare, Logical, etc)
    * @param string $value Valor do token
    */
   public function __construct(
-    public TokenType $takenType,
-    public Collection $tokenValue
+    public TokenType $type,
+    public array $value,
+    public TokenEntity|null $entity = null,
+    public int|null $group = null,
+    public int|null $order = null,
+    public int|null $joinOrder = null
   ){}
-
-  public function setEntity(
-    Parameter $parameter,
-    string $fieldName
-  ): Token {
-    $this->entity = $parameter->entityStructure->entity;
-    $this->fieldName = $fieldName;
-    return $this;
-  }
 }

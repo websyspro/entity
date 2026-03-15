@@ -2,18 +2,24 @@
 
 namespace Websyspro\Entity;
 
-use Websyspro\SqlFromClass\Enums\EntityRoot;
-use Websyspro\SqlFromClass\Interfaces\HierarchyJoin;
-use Websyspro\SqlFromClass\StructureTokens;
-use Websyspro\SqlFromClass\Shareds;
-use Websyspro\SqlFromClass\Token;
+use ReflectionFunction;
 use Websyspro\Commons\Collection;
+use Websyspro\Commons\Util;
+use Websyspro\Entity\Enums\AttributeType;
+use Websyspro\Entity\Enums\EntityRoot;
+use Websyspro\Entity\Enums\LogicalType;
+use Websyspro\Entity\Enums\TokenType;
+use Websyspro\Entity\Shareds\ForeignKey;
+use Websyspro\Entity\Shareds\HierarchyJoin;
+use Websyspro\Entity\Shareds\StructureFromFn;
+use Websyspro\Entity\Shareds\Token;
 
 class Repository
 {
-  public StructureTokens $structureTokens;
-  public Collection $fromSubQuery;
-  public Collection $whereSubQuery;
+  public StructureFromFn $structureFromFn;
+  public Collection $joinsPrimary;
+  public Collection $joinsSecondary;
+  public Collection $wheresPrimary;
 
   public function __construct(
     public string $entity
@@ -22,65 +28,107 @@ class Repository
   public function where(
     callable $fn
   ): Repository {
-    $this->structureTokens = Shareds::createStructure( $fn );
-    $this->structureTokens->getStructure();
+    $this->structureFromFn = new StructureFromFn(
+      new ReflectionFunction( $fn )
+    );
+
     return $this;
   }
 
-  public function getSql(
-  ): array {
-    $this->getFromSubQuerySql();
-    $this->getWhereSubQuerySql();
-    $this->setClearArgs();
-    return [];
+  public function queryBuilder(
+  ): Repository {
+    // $this->queryBuilderJoinsPrimary();
+    // $this->queryBuilderJoinsSecondary();
+    // $this->queryBuilderWheresPrimary();
+    // $this->queryBuilderWheresSecondary();
+    return $this;
   }
 
-  private function getLeftJoinStr(
-    array $args
-  ): string {
-    [ $table, $key, $joinTable, $joinKey ] = $args;
-    return "Left Join {$joinTable} On {$table}.{$key} = {$joinTable}.{$joinKey}";
-  }
-
-  private function getFromSubQuerySql(
-  ): string {
-    $joinsInRoot = $this->structureTokens->joins->where(
+  private function getJoinsByEntityRoot(
+    EntityRoot $entityRoot
+  ): Collection {
+    $joins = $this->structureFromFn->joins->where(
       fn( HierarchyJoin $hierarchyJoin ) => (
-        $hierarchyJoin->entityRoot === EntityRoot::Yes
-      )
+        $hierarchyJoin->entityRoot === $entityRoot && 
+        $hierarchyJoin->entityForeignKey instanceof ForeignKey
+      ) 
     );
 
-    $this->fromSubQuery = $joinsInRoot->mapper(
-      fn( HierarchyJoin $hierarchyJoin ) => (
-        $hierarchyJoin->entityParent === null
-          ? $hierarchyJoin->entity->table 
-          : $this->getLeftJoinStr(
-              [ 
-                $hierarchyJoin->entityJoin->table,
-                $hierarchyJoin->entityJoin->key,
-                $hierarchyJoin->entityJoin->joinTable,
-                $hierarchyJoin->entityJoin->joinKey
-            ]
-          )
-      )
-    );
-    
-    return "";
+    return $joins->mapper(
+      function( HierarchyJoin $hierarchyJoin ) {
+        if( end( $hierarchyJoin->entityHistory ) === AttributeType::oneToOne ){
+          return Util::sprintFormat( "Inner Join %s On %s.%s = %s.%s", [
+            $hierarchyJoin->entityForeignKey->entityReference->table,
+            $hierarchyJoin->entityForeignKey->entityReference->table,
+            $hierarchyJoin->entityForeignKey->entityReference->key,
+            $hierarchyJoin->entityForeignKey->entity->table,
+            $hierarchyJoin->entityForeignKey->key
+          ]);
+        } else if( end( $hierarchyJoin->entityHistory ) === AttributeType::oneToMany ){
+          return Util::sprintFormat( "Inner Join %s On %s.%s = %s.%s", [
+            $hierarchyJoin->entityForeignKey->entity->table,
+            $hierarchyJoin->entityForeignKey->entity->table,
+            $hierarchyJoin->entityForeignKey->key,
+            $hierarchyJoin->entityForeignKey->entityReference->table,
+            $hierarchyJoin->entityForeignKey->entityReference->key,
+          ]);
+        }
+      }
+    );    
   }
 
-  private function getWhereSubQuerySql(
+  private function queryBuilderJoinsPrimary(
   ): void {
-    $wheresInRoot = $this->structureTokens->tokens->mapper(
-      function( Token $token ) {
-        return $token;
-      } 
-    );
-
-    var_dump( $wheresInRoot->mapper( fn(Token $t) => $t->value )->joinWithSpace() );
+    $this->joinsPrimary = $this->getJoinsByEntityRoot( EntityRoot::Yes );
   }
 
-  private function setClearArgs(
+  private function queryBuilderJoinsSecondary(
   ): void {
-    unset( $this->structureTokens );
+    $this->joinsSecondary = $this->getJoinsByEntityRoot( EntityRoot::No );
   }
+
+  private function getWheresByEntityRoot(
+    EntityRoot $entityRoot,
+    Collection $tokens = new Collection()
+  ): Collection {
+    // $joins = $this->structureFromFn->joins->where(
+    //   fn( HierarchyJoin $hierarchyJoin ) => (
+    //     $hierarchyJoin->entityRoot === $entityRoot
+    //   ) 
+    // ); 
+
+    // $joins = $joins->mapper( 
+    //   fn( HierarchyJoin $hierarchyJoin ) => (
+    //     $hierarchyJoin->entity->table
+    //   )
+    // );
+
+    // for( $i = 0; $i < $this->structureFromFn->tokens->count(); $i++ ){
+    //   [ $field1, $equalOrRange, $field2 ] = [
+    //     $this->structureFromFn->getToken( $i + 0 ),
+    //     $this->structureFromFn->getToken( $i + 1 ),
+    //     $this->structureFromFn->getToken( $i + 2 )
+    //   ];
+
+    //   $hasField1Entity = $field1 instanceof Token && $field1->takenType === TokenType::FieldEntity;
+    //   $hasEqualOrRange = $equalOrRange instanceof Token && $equalOrRange->takenType === TokenType::FieldRange && $equalOrRange->tokenValue === LogicalType::Between->value;
+    //   $hasfield2EntityOrValue = $field2 instanceof Token && (
+    //     $field2->takenType === TokenType::FieldEntity ||
+    //     $field2->takenType === TokenType::FieldValue
+    //   );
+
+    //   if( $hasEqualOrRange ){
+    //     print_r( $equalOrRange );
+    //   }
+    // }
+
+    return $tokens;
+  }  
+
+  private function queryBuilderWheresPrimary(
+  ): void {
+    $this->wheresPrimary = $this->getWheresByEntityRoot( EntityRoot::Yes );
+  }
+
+  private function queryBuilderWheresSecondary(): void {}
 }

@@ -11,7 +11,7 @@ enum TokenType
   case FieldStatic;
   
   /** Valor literal (ex: 'texto', 123) */
-  case FieldValue;
+  case FieldString;
   
   /** Referência a um enum (ex: Status::Active) */
   case FieldEnum;
@@ -23,17 +23,20 @@ enum TokenType
   case Logical;
   
   /** Parêntese de abertura */
-  case StartParent;
+  case StartGroup;
   
   /** Parêntese de fechamento */
-  case EndParent;
+  case EndGroup;
   
   /** Token vazio */
   case Empty;
 
   /** Token desconhecido */
-  case Unknown;  
+  case Unknown;
+
+  /** Token Range */
+  case FieldRange;   
   
   /** Token a ser ignorado no processamento */
-  case FieldIgnore;
+  case FieldIgnore; 
 }
