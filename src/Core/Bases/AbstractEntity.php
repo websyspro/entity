@@ -2,14 +2,15 @@
 
 namespace Websyspro\Entity\Core\Bases;
 
-use ReflectionClass;
-use ReflectionProperty;
-use Websyspro\Commons\Util;
+use Websyspro\Entity\Shareds\EntityStructure;
+use Websyspro\Entity\Shareds\EntityColumns;
 use Websyspro\Entity\Enums\AttributeType;
 use Websyspro\Entity\Shareds\Column;
 use Websyspro\Entity\Shareds\Entity;
-use Websyspro\Entity\Shareds\EntityColumns;
-use Websyspro\Entity\Shareds\EntityStructure;
+use Websyspro\Commons\Util;
+use ReflectionProperty;
+use ReflectionClass;
+use Websyspro\Commons\Collection;
 
 class AbstractEntity
 {
@@ -49,7 +50,7 @@ class AbstractEntity
   private static function findByAttributeType(
     AttributeType $attributeType,
     array $newCacheAttrs = []
-  ): array {
+  ): Collection {
     $cacheAttrs = Util::where(
       self::$cacheAttrs[ static::class ],
       fn( Column $column ) => (
@@ -58,42 +59,43 @@ class AbstractEntity
     );
 
     foreach( $cacheAttrs as $attr ){
-      if( in_array( $attributeType, [ AttributeType::foreigns ] )){
-        $newCacheAttrs[] = $attr;
-      } else {
-        $newCacheAttrs[ $attr->name ] = $attr;
-      }
+      $newCacheAttrs[ $attr->name ] = $attr;
     }
 
-    return $newCacheAttrs;
+    return new Collection(
+      $newCacheAttrs
+    );
   }
 
   private static function findByAttributeColumns(
-  ): array {
+  ): Collection {
     $columns = self::findByAttributeType( 
       AttributeType::column
     );
-    
+
     $columns = array_merge(
-      array_filter( 
-        $columns, fn( Column $column ) => Util::inArray( 
+      $columns->where( 
+        fn( Column $column ) => Util::inArray( 
           $column->name, self::getEntityColumns()->initials 
-        ) === true 
-      ),
-      array_filter( 
-        $columns, fn( Column $column ) => Util::inArray( 
+        ) === true
+      )->toArray(),
+      $columns->where( 
+        fn( Column $column ) => Util::inArray( 
           $column->name, self::getEntityColumns()->alls 
         ) === false
-      ),
-      array_filter( 
-        $columns, fn( Column $column ) => Util::inArray( 
+      )->toArray(),
+      $columns->where( 
+        fn( Column $column ) => Util::inArray( 
           $column->name, self::getEntityColumns()->ends 
         ) === true
-      )
+      )->toArray()
     );
 
-    return array_map(
-      fn( Column $column ) => $column->name, array_values( $columns )
+    return new Collection(
+      Util::mapper(
+        array_values( $columns ),
+        fn( Column $column ) => $column->name
+      )
     );
   }
 

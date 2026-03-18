@@ -2,8 +2,6 @@
 
 namespace Websyspro\Entity\Shareds;
 
-use Websyspro\Commons\Util;
-
 class EntityReference
 {
   public string $table;
@@ -22,11 +20,8 @@ class EntityReference
     $this->entity = $this->entityStructure->entity;
     $this->table = $this->entityStructure->entity->table;
     
-    if( Util::sizeArray( $this->entityStructure->primaryKey ) !== 0 ){
-      [ $primaryKey ] = array_values( $this->entityStructure->primaryKey );
-      if( $primaryKey instanceof PrimaryKey ){
-        $this->key = $primaryKey->name;
-      }
+    if( $this->entityStructure->primaryKey->exist() ){
+      $this->key = $this->entityStructure->primaryKey->first()->name;
     }
   }
 
