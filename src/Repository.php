@@ -2,16 +2,14 @@
 
 namespace Websyspro\Entity;
 
-use ReflectionFunction;
+use Websyspro\Entity\Shareds\StructureFromFn;
+use Websyspro\Entity\Shareds\HierarchyJoin;
+use Websyspro\Entity\Shareds\ForeignKey;
+use Websyspro\Entity\Enums\EntityRoot;
 use Websyspro\Commons\Collection;
 use Websyspro\Commons\Util;
-use Websyspro\Entity\Enums\AttributeType;
-use Websyspro\Entity\Enums\EntityRoot;
-use Websyspro\Entity\Enums\LogicalType;
+use ReflectionFunction;
 use Websyspro\Entity\Enums\TokenType;
-use Websyspro\Entity\Shareds\ForeignKey;
-use Websyspro\Entity\Shareds\HierarchyJoin;
-use Websyspro\Entity\Shareds\StructureFromFn;
 use Websyspro\Entity\Shareds\Token;
 
 class Repository
@@ -20,6 +18,7 @@ class Repository
   public Collection $joinsPrimary;
   public Collection $joinsSecondary;
   public Collection $wheresPrimary;
+  public Collection $wheresSecondary;
 
   public function __construct(
     public string $entity
@@ -37,10 +36,12 @@ class Repository
 
   public function queryBuilder(
   ): Repository {
-    // $this->queryBuilderJoinsPrimary();
-    // $this->queryBuilderJoinsSecondary();
-    // $this->queryBuilderWheresPrimary();
-    // $this->queryBuilderWheresSecondary();
+    $this->queryBuilderJoinsPrimary();
+    $this->queryBuilderJoinsSecondary();
+    $this->queryBuilderWheresPrimary();
+    $this->queryBuilderWheresSecondary();
+
+    //print_r( $this->wheresPrimary );
     return $this;
   }
 
@@ -56,21 +57,19 @@ class Repository
 
     return $joins->mapper(
       function( HierarchyJoin $hierarchyJoin ) {
-        if( end( $hierarchyJoin->entityHistory ) === AttributeType::oneToOne ){
-          return Util::sprintFormat( "Inner Join %s On %s.%s = %s.%s", [
-            $hierarchyJoin->entityForeignKey->entityReference->table,
+        if( $hierarchyJoin->entityRoot === EntityRoot::Yes ){
+          return Util::sprintFormat( 'Inner Join %1$s On %1$s.%2$s = %3$s.%4$s', [
             $hierarchyJoin->entityForeignKey->entityReference->table,
             $hierarchyJoin->entityForeignKey->entityReference->key,
             $hierarchyJoin->entityForeignKey->entity->table,
             $hierarchyJoin->entityForeignKey->key
           ]);
-        } else if( end( $hierarchyJoin->entityHistory ) === AttributeType::oneToMany ){
-          return Util::sprintFormat( "Inner Join %s On %s.%s = %s.%s", [
-            $hierarchyJoin->entityForeignKey->entity->table,
-            $hierarchyJoin->entityForeignKey->entity->table,
-            $hierarchyJoin->entityForeignKey->key,
+        } else if( $hierarchyJoin->entityRoot === EntityRoot::No ){
+          return Util::sprintFormat( 'Inner Join %3$s On %3$s.%4$s = %1$s.%2$s', [
             $hierarchyJoin->entityForeignKey->entityReference->table,
             $hierarchyJoin->entityForeignKey->entityReference->key,
+            $hierarchyJoin->entityForeignKey->entity->table,
+            $hierarchyJoin->entityForeignKey->key,
           ]);
         }
       }
@@ -88,47 +87,20 @@ class Repository
   }
 
   private function getWheresByEntityRoot(
-    EntityRoot $entityRoot,
-    Collection $tokens = new Collection()
+    array $entityRootLit
   ): Collection {
-    // $joins = $this->structureFromFn->joins->where(
-    //   fn( HierarchyJoin $hierarchyJoin ) => (
-    //     $hierarchyJoin->entityRoot === $entityRoot
-    //   ) 
-    // ); 
-
-    // $joins = $joins->mapper( 
-    //   fn( HierarchyJoin $hierarchyJoin ) => (
-    //     $hierarchyJoin->entity->table
-    //   )
-    // );
-
-    // for( $i = 0; $i < $this->structureFromFn->tokens->count(); $i++ ){
-    //   [ $field1, $equalOrRange, $field2 ] = [
-    //     $this->structureFromFn->getToken( $i + 0 ),
-    //     $this->structureFromFn->getToken( $i + 1 ),
-    //     $this->structureFromFn->getToken( $i + 2 )
-    //   ];
-
-    //   $hasField1Entity = $field1 instanceof Token && $field1->takenType === TokenType::FieldEntity;
-    //   $hasEqualOrRange = $equalOrRange instanceof Token && $equalOrRange->takenType === TokenType::FieldRange && $equalOrRange->tokenValue === LogicalType::Between->value;
-    //   $hasfield2EntityOrValue = $field2 instanceof Token && (
-    //     $field2->takenType === TokenType::FieldEntity ||
-    //     $field2->takenType === TokenType::FieldValue
-    //   );
-
-    //   if( $hasEqualOrRange ){
-    //     print_r( $equalOrRange );
-    //   }
-    // }
-
-    return $tokens;
+    return $this->structureFromFn->tokens->where(
+      fn( Token $token ) => Util::inArray( $token->entityRoot, $entityRootLit )
+    );
   }  
 
   private function queryBuilderWheresPrimary(
   ): void {
-    $this->wheresPrimary = $this->getWheresByEntityRoot( EntityRoot::Yes );
+    $this->wheresPrimary = $this->getWheresByEntityRoot([ EntityRoot::Yes ]);
   }
 
-  private function queryBuilderWheresSecondary(): void {}
+  private function queryBuilderWheresSecondary(
+  ): void {
+    $this->wheresSecondary = $this->getWheresByEntityRoot([ EntityRoot::Yes, EntityRoot::No ]);
+  }
 }

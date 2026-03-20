@@ -17,10 +17,10 @@ enum TokenType
   case FieldEnum;
   
   /** Operador de comparação (ex: =, >, <) */
-  case Compare;
+  case FieldCompare;
   
   /** Operador lógico (ex: &&, ||, and, or) */
-  case Logical;
+  case FieldLogical;
   
   /** Parêntese de abertura */
   case StartGroup;

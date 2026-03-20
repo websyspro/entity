@@ -205,7 +205,7 @@ class StructureFromFn
     string $value
   ): TokenType {
     if( Util::match( "#(=|==|===|<>|!=|!==|>=|<=)#", $value )){
-      return TokenType::Compare;
+      return TokenType::FieldCompare;
     } else
     if( Util::match( "#^\\\$.*->.*$#", $value )){
       return TokenType::FieldEntity;
@@ -217,7 +217,7 @@ class StructureFromFn
       return TokenType::FieldString;
     } else
     if( Util::match( "#(&&|\|\||And|Or)#", $value )){
-      return TokenType::Logical;
+      return TokenType::FieldLogical;
     }else
     if( Util::match( "#^[a-zA-Z]{1}.*::.*(->(?:name|value))?$#", $value )){
       return TokenType::FieldEnum;
@@ -408,11 +408,15 @@ class StructureFromFn
     $this->setTokensOrgsEntitys();
     $this->setTokensOrgsGroups();
     $this->setTokensOrgsResume();
+    $this->setTokensOrgsRoots();
     $this->setTokensOrgsParses();
     $this->setTokensOrgsCompare();
     $this->setTokensOrgsJoinsText();
     $this->setTokensOrgsParsesText();
-    $this->setTokensOrgsParams();
+    // $this->setTokensOrgsParams();
+
+    print_r( $this->tokens );
+
   }
 
   public function isValidTokens(
@@ -442,9 +446,9 @@ class StructureFromFn
     Token $compToken,
     Token $nextToken  
   ): bool {
-    return ( $currToken->type === TokenType::FieldEntity || $currToken->type === TokenType::FieldString ) 
-        && ( $compToken->type === TokenType::Compare || $compToken->type === TokenType::FieldRange ) 
-        && ( $nextToken->type === TokenType::FieldEntity || $nextToken->type === TokenType::FieldString );
+    return ( $currToken->type === TokenType::FieldEntity  || $currToken->type === TokenType::FieldString ) 
+        && ( $compToken->type === TokenType::FieldCompare || $compToken->type === TokenType::FieldRange ) 
+        && ( $nextToken->type === TokenType::FieldEntity  || $nextToken->type === TokenType::FieldString );
   }
 
   private function setTokensOrgsPriority(
@@ -489,6 +493,7 @@ class StructureFromFn
   private function setTokensOrgsEntitys(
   ): void {
     for( $i = 0; $i < $this->tokens->count(); $i++ ){
+      $logiToken = $this->tokens->getOneOrFail( $i - 1 );
       $currToken = $this->tokens->getOneOrFail( $i + 0 );
       $compToken = $this->tokens->getOneOrFail( $i + 1 );
       $nextToken = $this->tokens->getOneOrFail( $i + 2 );
@@ -503,11 +508,18 @@ class StructureFromFn
         ); 
         
         if( $isFieldEntityOrStringAndCompared ){
-          if( $nextToken->type === TokenType::FieldString ){
+          if( Util::inArray( $currToken->type, [ TokenType::FieldEntity, TokenType::FieldString ])){
             if( $nextToken->entity === null ){
               $nextToken->entity = $currToken->entity;
+              $compToken->entity = $currToken->entity;
               $nextToken->entityRoot = $currToken->entityRoot;
+              $compToken->entityRoot = $currToken->entityRoot;
             }
+
+            if( $logiToken instanceof Token && $logiToken->type === TokenType::FieldLogical ){
+              $logiToken->entity = $currToken->entity;
+              $logiToken->entityRoot = $currToken->entityRoot;
+            }            
           }
         }
       }
@@ -532,7 +544,7 @@ class StructureFromFn
 
                 if( $isTokenGroup ){
                   $logicalToken = $this->tokens->getOneOrFail( $j - 1 );
-                  $isPrevToken = $logicalToken instanceof Token && $logicalToken->type === TokenType::Logical;
+                  $isPrevToken = $logicalToken instanceof Token && $logicalToken->type === TokenType::FieldLogical;
 
                   $this->tokens->spliceIn( 
                     $i + 3, 0, $this->tokens->spliceOut(
@@ -545,6 +557,57 @@ class StructureFromFn
               }
             }
           }
+        }
+      }
+    }
+  }
+
+  private function getGroupCount(
+    int $groupCount = 0
+  ): int {
+    for( $i = 0; $i < $this->tokens->count(); $i++ ){
+      $currToken = $this->tokens->getOneOrFail( $i + 0 );
+      if( $currToken instanceof Token && $currToken->type === TokenType::StartGroup ){
+        $groupCount++;
+      }
+    }
+
+    return $groupCount;
+  }
+
+  private function getEntityRootsInGroup(
+    int $group
+  ): Collection {
+    $tokens = $this->tokens->where(
+      fn( Token $token ) => $token->group === $group && Util::inArray(
+        $token->type, [ TokenType::FieldEntity, TokenType::FieldString ]
+      )
+    );
+
+    return $tokens->mapper( 
+      fn( Token $token ) => $token->entityRoot
+    );
+  }
+
+  private function setTokensOrgsRoots(
+  ): void {
+    for( $group = 1; $group <= $this->getGroupCount(); $group++ ){
+      $groupWheres = $this->getEntityRootsInGroup( $group );
+
+      $isGroupWheresIsRootEntityYes = $groupWheres->where(
+        fn( EntityRoot $entityRoot ) => $entityRoot === EntityRoot::Yes
+      );
+
+      for( $i = 0; $i < $this->tokens->count(); $i++ ){
+        $groupToken = $this->tokens->getOneOrFail( $i + 0 );
+
+        $isStartOrEndGroup = $groupToken instanceof Token && Util::inArray(
+          $groupToken->type, [ TokenType::StartGroup, TokenType::EndGroup ]
+        );
+
+        if( $isStartOrEndGroup && $groupToken->group === $group ){
+          $groupToken->entityRoot = $isGroupWheresIsRootEntityYes->exist() 
+            ? EntityRoot::Yes : EntityRoot::No;
         }
       }
     }
@@ -637,7 +700,7 @@ class StructureFromFn
           if( $valCurrToken instanceof Token && $valCurrToken instanceof Token ){
             $nextToken->value = new Collection([
               $valCurrToken->value->first(), new Token( 
-                TokenType::Logical, new Collection([ 
+                TokenType::FieldLogical, new Collection([ 
                   LogicalType::And->value
                 ])
               ), $valNextToken->value->first()
@@ -761,7 +824,7 @@ class StructureFromFn
       $currToken = $this->tokens->getOneOrFail( $i + 0 );
       $nextToken = $this->tokens->getOneOrFail( $i + 1 );
 
-      $isTokensValid = $currToken instanceof Token && $currToken->type === TokenType::Compare
+      $isTokensValid = $currToken instanceof Token && $currToken->type === TokenType::FieldCompare
                     && $nextToken instanceof Token && $nextToken->type === TokenType::FieldString;
 
       if( $isTokensValid ){
@@ -870,7 +933,7 @@ class StructureFromFn
     string|null $key = null
   ): Collection {
     $key = "$[Param_{$this->params->count()}]";
-    $this->params->add( new Param($value, $key), $key);
+    $this->params->add( new Param( $value, $key ), $key );
     return new Collection([ $key ]);
   }
 
