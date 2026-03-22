@@ -5,22 +5,22 @@ namespace Websyspro\Entity\Enums;
 enum TokenType
 {
   /** Campo de uma entidade (ex: $user->name) */
-  case FieldEntity;
+  case Entity;
   
   /** Variável estática capturada pela closure (ex: $variable) */
-  case FieldStatic;
+  case Static;
   
   /** Valor literal (ex: 'texto', 123) */
-  case FieldString;
+  case String;
   
   /** Referência a um enum (ex: Status::Active) */
-  case FieldEnum;
+  case Enum;
   
   /** Operador de comparação (ex: =, >, <) */
-  case FieldCompare;
+  case Compare;
   
   /** Operador lógico (ex: &&, ||, and, or) */
-  case FieldLogical;
+  case Logical;
   
   /** Parêntese de abertura */
   case StartGroup;
@@ -35,8 +35,8 @@ enum TokenType
   case Unknown;
 
   /** Token Range */
-  case FieldRange;   
+  case Range;   
   
   /** Token a ser ignorado no processamento */
-  case FieldIgnore; 
+  case Ignore; 
 }

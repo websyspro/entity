@@ -1,7 +1,9 @@
 <?php
 
+use Dom\Document;
 use Websyspro\Entity\Repository;
 use Websyspro\Entity\Shareds\StructureFromFn;
+use Websyspro\Test\Connect\DB;
 use Websyspro\Test\Entitys\DocumentItemEntity;
 use Websyspro\Test\Entitys\DocumentEntity;
 use Websyspro\Test\Entitys\OperatorEntity;
@@ -13,29 +15,53 @@ $segundoAtivo = "Segundo";
 
 $start = microtime( true );
 
-$repository = new Repository( BoxEntity::class );
+// $repository = new Repository( BoxEntity::class );
+// $repository->where( fn(
+//   BoxEntity $box,
+//   OperatorEntity $operator,
+//   DocumentEntity $document,
+//   DocumentItemEntity $documentItem,
+// ) => (
+//   "%Meu item: {$primeiroAtivo} e \% segundo {$segundoAtivo}" === $box->Id &&
+//   $box->CreatedBy === $document->BoxId &&
+//   $box->OperatorId === $operator->Id &&
+//   $document->Observations === 'Test de Impressão' &&
+//   $box->Id === 1245 &&
+//   $document->CreatedAt >= '02/04/2022' &&
+//   $document->Id === $documentItem->DocumentId &&
+//   '15/04/2022' >= $document->CreatedAt && (
+//     $document->Observations === "Documento cancelado" &&
+//     $document->Actived === null &&
+//     $document->State === DocumentState::Cancelado &&
+//     $document->State === [ DocumentState::Finalizado, DocumentState::Cancelado, $segundoAtivo ]
+//   )
+// ));
+
+$repository = new Repository( DocumentEntity::class );
 $repository->where( fn(
-  BoxEntity $box,
-  OperatorEntity $operator,
   DocumentEntity $document,
-  DocumentItemEntity $documentItem,
+  DocumentItemEntity $documentItem
 ) => (
-  "%Meu item: {$primeiroAtivo} e \% segundo {$segundoAtivo}" === $box->Id &&
-  $box->CreatedBy === $document->BoxId &&
-  $box->OperatorId === $operator->Id &&
-  $document->Observations === 'Test de Impressão' &&
-  $box->Id === 1245 &&
-  $document->CreatedAt >= '02/04/2022' &&
-  $document->Id === $documentItem->DocumentId &&
-  '15/04/2022' >= $document->CreatedAt && (
-    $document->Observations === "Documento cancelado" &&
-    $document->Actived === null &&
-    $document->State === DocumentState::Cancelado &&
+  $document->Observations === "%Meu item: {$primeiroAtivo} e \% segundo {$segundoAtivo}" &&
+  $document->CreatedAt >= '02/04/2023' &&
+  $document->Id === 100 &&
+  '10/04/2023' >= $document->CreatedAt &&
+  $document->State = DocumentState::Cancelado && (
+    $documentItem->DocumentId = $document->Id &&
     $document->State === [ DocumentState::Finalizado, DocumentState::Cancelado, $segundoAtivo ]
   )
 ));
 
 $repository->queryBuilder();
+
+// print_r( $repository->structureFromFn->tokens );
+
+// echo $repository->sql->first();
+
+// $query = DB::queryWithPrepared( $repository->sql->first(), $repository->prepareds);
+// print_r( $query );
+
+
 
 var_dump( ( microtime( true ) - $start ) * 1000 );
 
