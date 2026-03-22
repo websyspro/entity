@@ -5,6 +5,7 @@ namespace Websyspro\Entity\Shareds;
 use Websyspro\Entity\Enums\CompareType;
 use Websyspro\Entity\Enums\EntityRoot;
 use Websyspro\Entity\Enums\TokenType;
+use Websyspro\Commons\Util;
 
 class Token
 {
@@ -45,20 +46,48 @@ class Token
     return $this;
   }
 
-  private function setValueFromEntity(
-  ): void {
-    // if( $this->type === TokenType::Entity ){
-    //   if( $this->entity !== null ){
-    //     $this->value = Util::sprintFormat(
-    //       "%s.%s", [ $this->entity->table, $this->entity->field ]
-    //     );
-    //   }
-    // }
-  }
+  public function setParseCompare(
+    Token $token
+  ): Token {
+    $tokenValue = preg_replace( "#\\\%#", "", $token->value );
+    $hasLike = preg_match( "#%#", $tokenValue );
+    $hasList = preg_match( "#(^\(.*\)$)#", $tokenValue );
+    $hasNull = strtoupper( $tokenValue ) === "NULL";
+
+    if( $this->value === CompareType::Equals->value && $hasLike ){
+      $this->value = CompareType::Like->value;
+    } else if( $this->value === CompareType::NotEqual->value && $hasLike ){
+      $this->value = CompareType::NotLike->value;
+    } else if( $this->value === CompareType::Equals->value && $hasList ){
+      $this->value = CompareType::In->value;
+      $this->type = TokenType::Range;
+    } else if( $this->value === CompareType::NotEqual->value && $hasList ){
+      $this->value = CompareType::NotIn->value;
+      $this->type = TokenType::Range;
+    } else if( $this->value === CompareType::Equals->value && $hasNull ){
+      $this->value = CompareType::Is->value;
+    } else if( $this->value === CompareType::NotEqual->value && $hasNull ){
+      $this->value = CompareType::Not->value;
+    }
+
+    return $this;
+  }  
 
   private function tokenStart(
   ): void {
+    $this->tokenStartParseEntityWithField();
     $this->tokenStartRemoveSingleQuotes();
+  }
+
+  private function tokenStartParseEntityWithField(
+  ): void {
+    if( $this->type === TokenType::Entity ){
+      if( $this->entity !== null ){
+        $this->value = Util::sprintFormat(
+          "%s.%s", [ $this->entity->table, $this->entity->field ]
+        );
+      }
+    }
   }
 
   private function tokenStartRemoveSingleQuotes(

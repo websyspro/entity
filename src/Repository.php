@@ -4,15 +4,15 @@ namespace Websyspro\Entity;
 
 use Websyspro\Entity\Shareds\EntityStructure;
 use Websyspro\Entity\Shareds\HierarchyJoin;
+use Websyspro\Entity\Shareds\Structure;
 use Websyspro\Entity\Shareds\Parameter;
 use Websyspro\Entity\Enums\EntityRoot;
-use Websyspro\Entity\Enums\TokenType;
 use Websyspro\Entity\Shareds\Token;
+use Websyspro\Entity\Shareds\Param;
 use Websyspro\Commons\Collection;
 use Websyspro\Commons\Util;
 use ReflectionFunction;
-use Websyspro\Entity\Shareds\Param;
-use Websyspro\Entity\Shareds\Structure;
+use Websyspro\Entity\Enums\TokenType;
 
 class Repository
 {
@@ -27,7 +27,7 @@ class Repository
   public Collection $wheresPrimaryCompare;
   public Collection $wheresSecondaryCompare;
   public Collection $prepareds;
-  public Collection $sql;
+  public string $sql;
 
   public function __construct(
     string $entity
@@ -50,21 +50,23 @@ class Repository
   public function queryBuilder(
   ): Repository {
     $this->queryBuilderInitial();
-    // $this->queryBuilderJoinsPrimary();
-    // $this->queryBuilderJoinsSecondary();
-    // $this->queryBuilderColumnsPrimary();
-    // $this->queryBuilderColumnsSecondary();
-    // $this->queryBuilderWheresPrimary();
-    // $this->queryBuilderWheresSecondary();
-    // $this->queryBuilderWheresPrimaryCompares();
-    // $this->queryBuilderWheresSecondaryCompares();
-    // $this->queryBuilderConstructorSQL();
+    $this->queryBuilderJoinsPrimary();
+    $this->queryBuilderJoinsSecondary();
+    $this->queryBuilderColumnsPrimary();
+    $this->queryBuilderColumnsSecondary();
+    $this->queryBuilderWheresPrimary();
+    $this->queryBuilderWheresSecondary();
+    $this->queryBuilderWheresPrimaryCompare();
+    $this->queryBuilderWheresSecondaryCompare();
+    $this->queryBuilderConstructorSQL();
     return $this;
   }
 
   private function queryBuilderInitial(
   ): void {
     $this->prepareds = new Collection();
+    $this->wheresPrimary = new Collection();
+    $this->wheresSecondary = new Collection();
   }
 
   private function getJoinsByEntityRoot(
@@ -123,8 +125,9 @@ class Repository
       }
     );
 
+
     $columns = $columns->mapper(
-      function( HierarchyJoin $hierarchyJoin ) use ($entityRoot){
+      function( HierarchyJoin $hierarchyJoin ) use ( $entityRoot ){
         $parameter = $this->structure->parameters->getOneOrFail( $hierarchyJoin->entity->class );
         if( $parameter instanceof Parameter ){
           return $parameter->entityStructure->columns->mapper(
@@ -157,7 +160,7 @@ class Repository
     array $entityRootLit
   ): Collection {
     return $this->structure->tokens->where(
-      fn( Token $token ) => Util::inArray( $token->root, $entityRootLit )
+      fn( Token $token, int $i ) => Util::inArray( $token->root, $entityRootLit )
     );
   }  
 
@@ -171,92 +174,51 @@ class Repository
     $this->wheresSecondary = $this->getWheresByEntityRoot([ EntityRoot::Yes, EntityRoot::No ]);
   }
 
-  private function queryBuilderWheresCompares(
-    Collection $tokens
-  ): Collection {
-    return $tokens->mapper(
-      function( Token $token ){
-        $isTokenEntityOrString = Util::inArray( 
-          $token->type, [ TokenType::Entity, TokenType::String ]
-        );
-
-        if( $isTokenEntityOrString === false ){
-          if( $token->value instanceof Collection && $token->value->exist()){
-            [ $tokenValue ] = $token->value->toArray();
-            return $tokenValue;
+  private function queryBuilderWheresPrimaryCompare(
+  ): void {
+    $this->wheresPrimaryCompare = $this->wheresPrimary
+      ->where( function( Token $token, int $i ){
+        if( $token->type === TokenType::Logical ){
+          $prevToken = $this->wheresSecondary->getOneOrFail( $i - 1 );
+          if( $prevToken instanceof Token ){
+            if( $prevToken->type === TokenType::StartGroup ){
+              return false;
+            }
           }
-        } else if( $token->type === TokenType::Entity ){
-          return Util::sprintFormat( "%s.%s", [
-            $token->entity->table, $token->entity->field
-          ]);
-        } else if( $token->type === TokenType::String ){
-          // $tokenValue = $token->value->mapper(
-          //   function( Token $depthToken ){
-          //     $isTokenCompareOrRange = Util::inArray( 
-          //       $depthToken->type, [ 
-          //         TokenType::Compare,
-          //         TokenType::Logical
-          //       ]
-          //     );
-
-          //     [ $depthTokenValue ] = $depthToken->value->toArray();
-          //     return $isTokenCompareOrRange 
-          //       ? Util::sprintFormat( " %s ", [ $depthTokenValue ]) : $depthTokenValue;
-          //   }
-          // );
-
-          // if( $tokenValue instanceof Collection ){
-          //   return $tokenValue->joinNotSpace();
-          // }
-          return $token->value;
         }
 
-        return $token;
-      }  
-    );
+        return true;
+      })
+      ->mapper( fn( Token $token ) => $token->value );    
   }
 
-  private function queryBuilderWheresPrimaryCompares(
+  private function queryBuilderWheresSecondaryCompare(
   ): void {
-    $this->wheresPrimaryCompare = $this->queryBuilderWheresCompares( $this->wheresPrimary );
-  }
-
-  private function queryBuilderWheresSecondaryCompares(
-  ): void {
-    $this->wheresSecondaryCompare = $this->queryBuilderWheresCompares( $this->wheresSecondary );
-  }
+    $this->wheresSecondaryCompare = $this->wheresSecondary->mapper(
+      fn( Token $token ) => $token->value
+    );      
+  }  
 
   private function queryBuilderConstructorSQL(
   ): void {
-    $sqlWithParamsKeys = Util::sprintFormat(
-      'Select %1$s From ( 
-       Select %2$s From %3$s 
-        Where %4$s 
-        Limit 0, 12 ) 
-           As %5$s 
-        Where %6$s', [
-        $this->columnsSecondary->joinWithComma(),
-        $this->columnsPrimary->joinWithComma(),
-        $this->joinsPrimary->joinWithSpace(),
-        $this->wheresPrimaryCompare->joinWithSpace(),
-        $this->joinsSecondary->joinWithSpace(),
-        $this->wheresSecondaryCompare->joinWithSpace(),
-      ]
-    );
+    $this->sql = preg_replace_callback( 
+      "#\:param_\d+#", function ( $matches ){
+        [ $paramKey ] = $matches;
+        $param = $this->structure->params->getOneOrFail( $paramKey );
+        if( $param instanceof Param ){
+          $this->prepareds->add( $param->value );  
+        }
 
-    $this->sql = new Collection([
-      preg_replace_callback( 
-        "#\\$\[(Param_\d+)\]#",
-        function ( $matches ){
-          [ $paramKey ] = array_slice( $matches, 1 );
-          $param = $this->structure->params->getOneOrFail( $paramKey );
-          if( $param instanceof Param ){
-            $this->prepareds->add( $param->value );  
-          }
-
-          return "?";
-        }, $sqlWithParamsKeys
+        return "?";
+      }, Util::sprintFormat( "Select %s From ( Select %s From %s Where %s Limit 0, 12 ) As %s Where %s", [
+          $this->columnsSecondary->joinWithComma(),
+          $this->columnsPrimary->joinWithComma(),
+          $this->joinsPrimary->joinWithSpace(),
+          $this->wheresPrimaryCompare->joinWithSpace(),
+          $this->joinsSecondary->joinWithSpace(),
+          $this->wheresSecondaryCompare->joinWithSpace(),
+        ]
       )
-    ]);
+    );
   }
 }

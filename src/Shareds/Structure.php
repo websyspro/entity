@@ -40,9 +40,8 @@ class Structure
     $this->setTokensListGroups();
     $this->setTokensListParses();
     $this->setTokensListResume();
-
-    print_r( $this->tokens );
-    // var_dump( $this->tokens->mapper( fn( Token $token ) => $token->value)->joinWithSpace() );
+    
+    // var_dump( $this->tokens->mapper( fn( Token $token ) => $token->value )->joinWithSpace() );
   }
 
   private function setCreateList(
@@ -212,12 +211,6 @@ class Structure
     int $groupStartPos = -1,
     int $group = 1
   ): Collection {
-    // $pattern = $depth === true
-    //   ? "#'[^']*'|\"[^\"]*\"|\\{\\$[\\w-]+\\}|\\$?[\\w\\\\-]+(?:->|::)[\\w\\\\-]+|\\d{2}/\\d{2}/\\d{4}|>=|<=|<>|[<>=!]+|\\(|\\)|,|([a-zA-ZÀ-ÿ\d/:$%\\\\]+(?:\s+[a-zA-ZÀ-ÿ\d/:$%\\\\]+)*\s*)#u"
-    //   : "#'[^']*'|\"[^\"]*\"|\\S+#";
-
-
-
     $tokensFromPattern = StructureUtil::getBreakTokens( $sourceString );
     
     if( Util::sizeArray( $tokensFromPattern ) !== 0 ){
@@ -279,12 +272,12 @@ class Structure
           
           if( $currToken->type === TokenType::Entity && $nextToken->type === TokenType::String ){
             $tokens[ $i + 0 ] = $currToken;
-            $tokens[ $i + 1 ] = $compToken->setRoot( $currToken->root );
+            $tokens[ $i + 1 ] = $compToken->setRoot( $currToken->root )->setParseCompare( $nextToken );
             $tokens[ $i + 2 ] = $nextToken->setRoot( $currToken->root )->setEntity( $currToken->entity ); 
           } else 
           if( $currToken->type === TokenType::String && $nextToken->type === TokenType::Entity ){
             $tokens[ $i + 0 ] = $nextToken;
-            $tokens[ $i + 1 ] = $compToken->setRoot( $nextToken->root )->setInvertCompare();
+            $tokens[ $i + 1 ] = $compToken->setRoot( $nextToken->root )->setInvertCompare()->setParseCompare( $currToken );
             $tokens[ $i + 2 ] = $currToken->setRoot( $nextToken->root )->setEntity( $nextToken->entity );   
           } else {
             $tokens[ $i + 0 ] = $currToken;
@@ -720,94 +713,34 @@ class Structure
 
             }
 
-            $currTokenValue = $columnType->Encode( Util::join( "", $tokens ));
+            $parseEncodeValue = $columnType->Encode( 
+              Util::join( "", $tokens )
+            );
 
-            if( Util::isArray( $currTokenValue )){
-              $currToken->value = Util::join( ",", $currTokenValue );
-            } else $currToken->value = $currTokenValue;
+            if( Util::isArray( $parseEncodeValue )){
+              for( $p=0; $p < Util::sizeArray( $parseEncodeValue ); $p++ ){
+                $parseEncodeValue[ $p ] = $this->addParam( $parseEncodeValue[ $p ]);
+              }
+
+              $currToken->value = Util::sprintFormat(
+                "(%s)", [ Util::join( ",", $parseEncodeValue )]
+              );
+            } else {
+              $parseEncodeValue = $this->addParam( $parseEncodeValue );
+              $currToken->value = $parseEncodeValue;
+            }
           }
         }
       }
     }
   }
 
-  private function setTokensOrgsCompare(
-  ): void {
-    // for( $i = 0; $i < $this->tokens->count(); $i++ ){
-    //   $currToken = $this->tokens->getOneOrFail( $i + 0 );
-    //   $nextToken = $this->tokens->getOneOrFail( $i + 1 );
-
-    //   $isTokensValid = $currToken instanceof Token && $currToken->type === TokenType::Compare
-    //                 && $nextToken instanceof Token && $nextToken->type === TokenType::String;
-
-    //   if( $isTokensValid ){
-    //     $compareValue = $currToken->value->first();
-    //     $value = $nextToken->value->mapper( 
-    //       fn( Token $token ) => $token->value->first()
-    //     )->joinNotSpace();
-
-    //     $value = preg_replace( "#\\\%#", "", $value );
-
-    //     $hasLike = preg_match( "#%#", $value );
-    //     $hasList = preg_match( "#(^\(.*\)$)#", $value );
-    //     $hasNull = strtoupper( $value ) === "NULL";
-
-    //     if( $compareValue === CompareType::Equals->value && $hasLike ){
-    //       $currToken->value = new Collection([ CompareType::Like->value ]);
-    //     } else if( $compareValue === CompareType::NotEqual->value && $hasLike ){
-    //       $currToken->value = new Collection([ CompareType::NotLike->value  ]);
-    //     } else if( $compareValue === CompareType::Equals->value && $hasList ){
-    //       $currToken->value = new Collection([ CompareType::In->value  ]);
-    //       $currToken->type = TokenType::Range;
-    //     } else if( $compareValue === CompareType::NotEqual->value && $hasList ){
-    //       $currToken->value = new Collection([ CompareType::NotIn->value  ]);
-    //       $currToken->type = TokenType::Range;
-    //     } else if( $compareValue === CompareType::Equals->value && $hasNull ){
-    //       $currToken->value = new Collection([ CompareType::Is->value  ]);
-    //     } else if( $compareValue === CompareType::NotEqual->value && $hasNull ){
-    //       $currToken->value = new Collection([ CompareType::Not->value  ]);
-    //     }
-
-    //     $this->tokens->setValue( $i, $currToken );
-    //   }
-    // }
-  }
-
   private function addParam(
     string $value,
     string|null $key = null
-  ): Collection {
-    $key = "$[Param_{$this->params->count()}]";
-    $this->params->add( new Param( $value, $key ), "Param_{$this->params->count()}" );
-    return new Collection([ $key ]);
-  }
-
-  private function setTokensOrgsParams(
-  ): void {
-    // for( $i = 0; $i < $this->tokens->count(); $i++ ){
-    //   $currToken = $this->tokens->getOneOrFail( $i + 1 );
-
-    //   if( $currToken instanceof Token && $currToken->type === TokenType::String ){
-    //     $currToken->value = $currToken->value->mapper( 
-    //       function( Token $token ){
-    //         $isTokenChange = Util::inArray( 
-    //           $token->type, [
-    //             TokenType::Enum,
-    //             TokenType::Static,
-    //             TokenType::String 
-    //           ]
-    //         );
-
-    //         if( $isTokenChange ){
-    //           $token->value = $this->addParam(
-    //             $token->value->first()
-    //           );
-    //         }
-
-    //         return $token;
-    //       }
-    //     );
-    //   }
-    // }
+  ): string {
+    $key = ":param_{$this->params->count()}";
+    $this->params->add( new Param( $value, $key ), $key );
+    return $key;
   }
 }

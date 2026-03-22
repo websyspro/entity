@@ -9,6 +9,7 @@ use Websyspro\Test\Entitys\DocumentEntity;
 use Websyspro\Test\Entitys\OperatorEntity;
 use Websyspro\Test\Enums\DocumentState;
 use Websyspro\Test\Entitys\BoxEntity;
+use Websyspro\Test\Entitys\CustomerEntity;
 
 $primeiroAtivo = "Primeiro";
 $segundoAtivo = "Segundo";
@@ -37,29 +38,36 @@ $start = microtime( true );
 //   )
 // ));
 
-$repository = new Repository( DocumentEntity::class );
-$repository->where( fn(
-  DocumentEntity $document,
-  DocumentItemEntity $documentItem
+// $repository = new Repository( DocumentEntity::class );
+// $repository->where( fn(
+//   DocumentEntity $document,
+//   // DocumentItemEntity $documentItem
+// ) => (
+//   $document->Id !== [ 301, 302, 405 ]
+// ));
+
+// $repository->queryBuilder();
+
+$repository = new Repository( CustomerEntity::class );
+$repository->where( fn( 
+  CustomerEntity $customer,
+  DocumentEntity $document
 ) => (
-  $document->Observations === "%Meu item: {$primeiroAtivo} e \% segundo {$segundoAtivo}" &&
-  $document->CreatedAt >= '02/04/2023' &&
-  $document->Id === 100 &&
-  '10/04/2023' >= $document->CreatedAt &&
-  $document->State = DocumentState::Cancelado && (
-    $documentItem->DocumentId = $document->Id &&
-    $document->State === [ DocumentState::Finalizado, DocumentState::Cancelado, $segundoAtivo ]
-  )
+  $customer->Name === 'LINDSON%DOUGLAS%DO%SANTOS%' &&
+  $customer->Id === $document->CustomerId &&
+  $document->State === [ DocumentState::Finalizado, DocumentState::Cancelado ] &&
+  $document->CreatedAt >= '06/04/2023' &&
+  $document->CreatedAt <= '10/04/2023'
 ));
 
 $repository->queryBuilder();
 
 // print_r( $repository->structureFromFn->tokens );
 
-// echo $repository->sql->first();
+echo $repository->sql;
 
-// $query = DB::queryWithPrepared( $repository->sql->first(), $repository->prepareds);
-// print_r( $query );
+$query = DB::queryWithPrepared( $repository->sql, $repository->prepareds);
+print_r( $query );
 
 
 

@@ -197,6 +197,24 @@ enum ColumnType: string
       )
     );
   }
+
+  /**
+   * Escapes text for safe database insertion.
+   * 
+   * @param string $string Text to escape
+   * @return string Escaped text
+   */
+  public function numberEncode(
+    string $string
+  ): string|array {
+    $hasListToInOrNotIn = "#^\((\d+)(,\d+)*\)$#";
+    if( preg_match( $hasListToInOrNotIn, $string ) === 1 ){
+      return explode(",", str_replace([ "(", ")" ], "", $string));
+    }
+
+    /* Add slashes to escape special characters */
+    return $string;
+  }  
   
   /**
    * Converts boolean/string flag to integer (1 or 0) for database storage.
@@ -250,13 +268,14 @@ enum ColumnType: string
     
     /* Apply type-specific encoding */
     return match( $this ){
-      ColumnType::date => $this->dateEncode($mixed),
-      ColumnType::datetime => $this->datetimeEncode($mixed),
-      ColumnType::decimal => $this->decimalEncode($mixed),
-      ColumnType::text => $this->textEncode($mixed),
-      ColumnType::enum => $this->textEncode($mixed),
-      ColumnType::longtext => $this->textEncode($mixed),
-      ColumnType::flag => $this->flagEncode($mixed),
+      ColumnType::date => $this->dateEncode( $mixed ),
+      ColumnType::datetime => $this->datetimeEncode( $mixed ),
+      ColumnType::decimal => $this->decimalEncode( $mixed ),
+      ColumnType::text => $this->textEncode( $mixed ),
+      ColumnType::number => $this->numberEncode( $mixed ),
+      ColumnType::enum => $this->textEncode( $mixed ),
+      ColumnType::longtext => $this->textEncode( $mixed ),
+      ColumnType::flag => $this->flagEncode( $mixed ),
         default => $mixed
     };
   }
