@@ -163,7 +163,7 @@ class StructureUtil
     $rowsFromFile = StructureUtil::getFileBody( $reflectionFunction );
     $rowsFromFile = $rowsFromFile->where( fn( string $row ) => !Util::match( "#^.*//#", $row ));
 
-    $sourceFile = preg_replace([
+    return preg_replace([
         "#/\*.*?\*/#",
         "#\r#",
         "#\n\s*#",
@@ -183,7 +183,7 @@ class StructureUtil
         "#true#",
         "#false#"
       ], [
-        "",  
+        "",     // Remove /* ... */
         "",     // Remove carriage return
         " ",    // Remove quebras de linha
         "",     // Remove abertura de função
@@ -203,7 +203,5 @@ class StructureUtil
         "0"     // Converte false em 0
       ], $rowsFromFile->toString()
     );
-
-    return $sourceFile;
   }
 }
