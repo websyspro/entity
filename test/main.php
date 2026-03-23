@@ -10,6 +10,8 @@ use Websyspro\Test\Entitys\OperatorEntity;
 use Websyspro\Test\Enums\DocumentState;
 use Websyspro\Test\Entitys\BoxEntity;
 use Websyspro\Test\Entitys\CustomerEntity;
+use Websyspro\Test\Entitys\ProductEntity;
+use Websyspro\Test\Entitys\ProductGroupEntity;
 
 $primeiroAtivo = "Primeiro";
 $segundoAtivo = "Segundo";
@@ -51,20 +53,33 @@ $start = microtime( true );
 $repository = new Repository( CustomerEntity::class );
 $repository->where( fn( 
   CustomerEntity $customer,
-  DocumentEntity $document
-) => (
+  DocumentEntity $document,
+  DocumentItemEntity $documentItem,
+  ProductEntity $product,
+  ProductGroupEntity $productGroup
+) => (  
   $customer->Name === 'LINDSON%DOUGLAS%DO%SANTOS%' &&
   $customer->Id === $document->CustomerId &&
   $document->State === [ DocumentState::Finalizado, DocumentState::Cancelado ] &&
   $document->CreatedAt >= '06/04/2023' &&
-  $document->CreatedAt <= '10/04/2023'
+  $document->CreatedAt <= '10/04/2023' &&
+  $document->Id === $documentItem->DocumentId &&
+  $documentItem->ProductId === $product->Id &&
+  $product->ProductGroupId === $productGroup->Id
 ));
 
+$repository->orderByAsc( fn(CustomerEntity $customer) => $customer->CreatedAt );
 $repository->queryBuilder();
 
-// print_r( $repository->structureFromFn->tokens );
+// $repository = new Repository( ProductEntity::class );
+// $repository->where( fn(
+//   ProductEntity $product,
+//   ProductGroupEntity $productGroup
+// ) => $product->ProductGroupId === $productGroup->Id && $productGroup->Name === 'Salão' );
 
-echo $repository->sql;
+// $repository->queryBuilder();
+
+// echo $repository->sql;
 
 $query = DB::queryWithPrepared( $repository->sql, $repository->prepareds);
 print_r( $query );

@@ -2,6 +2,8 @@
 
 namespace Websyspro\Entity\Shareds;
 
+use ReflectionFunction;
+use Websyspro\Commons\Collection;
 use Websyspro\Entity\Enums\TokenType;
 use Websyspro\Entity\Enums\EntityRoot;
 use Websyspro\Commons\Util;
@@ -140,5 +142,68 @@ class StructureUtil
     }
 
     return [ null, null ];
+  }
+
+  private static function getFileBody(
+    ReflectionFunction $reflectionFunction
+  ): Collection {
+    $rowsFromFile = new Collection(
+      file( $reflectionFunction->getFileName())
+    );
+
+    return $rowsFromFile->slice(
+      $reflectionFunction->getStartLine() - 1, 
+      $reflectionFunction->getEndLine() - $reflectionFunction->getStartLine() + 1
+    );
+  }
+
+  public static function getSourceFile(
+    ReflectionFunction $reflectionFunction
+  ): string {
+    $rowsFromFile = StructureUtil::getFileBody( $reflectionFunction );
+    $rowsFromFile = $rowsFromFile->where( fn( string $row ) => !Util::match( "#^.*//#", $row ));
+
+    $sourceFile = preg_replace([
+        "#/\*.*?\*/#",
+        "#\r#",
+        "#\n\s*#",
+        "#^.*\\{.*return\s*#",
+        "#\s*;\s*\\}\s*#",
+        "#^.*(fn|function)\s*\(#",
+        "#\s*\);\s*$#",
+        "#^.*?\)\s*=>\s*#s",
+        "#\\[\s*#s",
+        "#\s*\\]#s",
+        "#,\s*#s",
+        "#\"#s",
+        "#&&#",
+        "#\|\|#",
+        "#(!==|!=)#",
+        "#(===|==|=)#",
+        "#true#",
+        "#false#"
+      ], [
+        "",  
+        "",     // Remove carriage return
+        " ",    // Remove quebras de linha
+        "",     // Remove abertura de função
+        "",     // Remove fechamento de função
+        "fn(",  // Normaliza declaração de função
+        "",     // Remove fechamento de parênteses
+        "",     // Remove arrow function
+        "(",    // Converte colchetes em parênteses
+        ")",    // Converte colchetes em parênteses
+        ",",    // Normaliza vírgulas
+        "'",    // Converte aspas duplas em simples
+        "And",  // Converte && em And
+        "Or",   // Converte || em Or
+        "<>",   // Normaliza operador diferente
+        "=",    // Normaliza operador igual
+        "1",    // Converte true em 1
+        "0"     // Converte false em 0
+      ], $rowsFromFile->toString()
+    );
+
+    return $sourceFile;
   }
 }

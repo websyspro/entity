@@ -16,6 +16,8 @@ use Websyspro\Entity\Enums\TokenType;
 
 class Repository
 {
+  public mixed $fn;
+  public string $sql;
   public EntityStructure $entityStructure;
   public Structure $structure;
   public Collection $joinsPrimary;
@@ -27,7 +29,8 @@ class Repository
   public Collection $wheresPrimaryCompare;
   public Collection $wheresSecondaryCompare;
   public Collection $prepareds;
-  public string $sql;
+  public Collection $orderByAsc;
+  public Collection $orderByDesc;
 
   public function __construct(
     string $entity
@@ -40,16 +43,27 @@ class Repository
   public function where(
     callable $fn
   ): Repository {
-    $this->structure = new Structure(
-      new ReflectionFunction( $fn )
-    );
-
+    $this->fn = $fn;
     return $this;
   }
+
+  public function orderByAsc(
+    callable $fn
+  ): Repository {
+    print_r( $fn );
+    return $this;
+  }
+
+  public function orderByDesc(
+    callable $fn
+  ): Repository {
+    return $this;
+  }  
 
   public function queryBuilder(
   ): Repository {
     $this->queryBuilderInitial();
+    $this->queryBuilderApplyWhere();
     $this->queryBuilderJoinsPrimary();
     $this->queryBuilderJoinsSecondary();
     $this->queryBuilderColumnsPrimary();
@@ -65,9 +79,20 @@ class Repository
   private function queryBuilderInitial(
   ): void {
     $this->prepareds = new Collection();
+    $this->orderByAsc = new Collection();
+    $this->orderByDesc = new Collection();
     $this->wheresPrimary = new Collection();
     $this->wheresSecondary = new Collection();
   }
+
+  private function queryBuilderApplyWhere(
+  ): Repository {
+    $this->structure = new Structure(
+      new ReflectionFunction( $this->fn )
+    );
+
+    return $this;
+  }   
 
   private function getJoinsByEntityRoot(
     array $entityRoot
@@ -92,12 +117,17 @@ class Repository
               $hierarchyJoin->entityForeignKey->key
             ]);
           } else if( $hierarchyJoin->entityRoot === EntityRoot::No ){
-            return Util::sprintFormat( 'Inner Join %3$s On %3$s.%4$s = %1$s.%2$s', [
-              $hierarchyJoin->entityForeignKey->entityReference->table,
-              $hierarchyJoin->entityForeignKey->entityReference->key,
-              $hierarchyJoin->entityForeignKey->entity->table,
-              $hierarchyJoin->entityForeignKey->key,
-            ]);
+            return Util::sprintFormat( 
+              $hierarchyJoin->entity->table !== 
+              $hierarchyJoin->entityForeignKey->entityReference->table
+                ? 'Inner Join %3$s On %3$s.%4$s = %1$s.%2$s' 
+                : 'Inner Join %1$s On %1$s.%2$s = %3$s.%4$s', [
+                  $hierarchyJoin->entityForeignKey->entityReference->table,
+                  $hierarchyJoin->entityForeignKey->entityReference->key,
+                  $hierarchyJoin->entityForeignKey->entity->table,
+                  $hierarchyJoin->entityForeignKey->key
+              ]
+            );
           }
         }
       }
@@ -174,12 +204,13 @@ class Repository
     $this->wheresSecondary = $this->getWheresByEntityRoot([ EntityRoot::Yes, EntityRoot::No ]);
   }
 
-  private function queryBuilderWheresPrimaryCompare(
-  ): void {
-    $this->wheresPrimaryCompare = $this->wheresPrimary
-      ->where( function( Token $token, int $i ){
+  private function queryBuilderWheresCompare(
+    Collection $wheres
+  ): Collection {
+    $wheres = $wheres->where( 
+      function( Token $token, int $i ) use ($wheres){
         if( $token->type === TokenType::Logical ){
-          $prevToken = $this->wheresSecondary->getOneOrFail( $i - 1 );
+          $prevToken = $wheres->getOneOrFail( $i - 1 );
           if( $prevToken instanceof Token ){
             if( $prevToken->type === TokenType::StartGroup ){
               return false;
@@ -188,16 +219,26 @@ class Repository
         }
 
         return true;
-      })
-      ->mapper( fn( Token $token ) => $token->value );    
+      }
+    );
+    
+    return $wheres->mapper( fn( Token $token ) => $token->value );     
+  }
+
+  private function queryBuilderWheresPrimaryCompare(
+  ): void {
+    $this->wheresPrimaryCompare = $this->queryBuilderWheresCompare( $this->wheresPrimary );
   }
 
   private function queryBuilderWheresSecondaryCompare(
   ): void {
-    $this->wheresSecondaryCompare = $this->wheresSecondary->mapper(
-      fn( Token $token ) => $token->value
-    );      
-  }  
+    $this->wheresSecondaryCompare = $this->queryBuilderWheresCompare( $this->wheresSecondary );    
+  }
+  
+  private function getSQLFormat(
+  ): string {
+    return "Select %s From ( Select %s From %s Where %s Limit 0, 6 ) As %s Where %s";
+  }
 
   private function queryBuilderConstructorSQL(
   ): void {
@@ -210,7 +251,7 @@ class Repository
         }
 
         return "?";
-      }, Util::sprintFormat( "Select %s From ( Select %s From %s Where %s Limit 0, 12 ) As %s Where %s", [
+      }, Util::sprintFormat( $this->getSQLFormat(), [
           $this->columnsSecondary->joinWithComma(),
           $this->columnsPrimary->joinWithComma(),
           $this->joinsPrimary->joinWithSpace(),

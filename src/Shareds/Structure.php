@@ -40,8 +40,6 @@ class Structure
     $this->setTokensListGroups();
     $this->setTokensListParses();
     $this->setTokensListResume();
-    
-    // var_dump( $this->tokens->mapper( fn( Token $token ) => $token->value )->joinWithSpace() );
   }
 
   private function setCreateList(
@@ -316,56 +314,9 @@ class Structure
 
   private function setTokensList(
   ): void {
-    $sourceFileArrowFN = new Collection(
-      file( $this->reflectionFunction->getFileName())
+    $this->tokens = $this->setParseToken(
+      StructureUtil::getSourceFile( $this->reflectionFunction )
     );
-
-    $sourceString = preg_replace(
-      [
-        "#\r#",
-        "#\n\s*#",
-        "#^.*\\{.*return\s*#",
-        "#\s*;\s*\\}\s*#",
-        "#^.*(fn|function)\s*\(#",
-        "#\s*\);\s*$#",
-        "#^.*?\)\s*=>\s*#s",
-        "#\\[\s*#s",
-        "#\s*\\]#s",
-        "#,\s*#s",
-        "#\"#s",
-        "#&&#",
-        "#\|\|#",
-        "#(!==|!=)#",
-        "#(===|==|=)#",
-        "#true#",
-        "#false#"
-      ], 
-      [
-        "",     // Remove carriage return
-        " ",    // Remove quebras de linha
-        "",     // Remove abertura de função
-        "",     // Remove fechamento de função
-        "fn(",  // Normaliza declaração de função
-        "",     // Remove fechamento de parênteses
-        "",     // Remove arrow function
-        "(",    // Converte colchetes em parênteses
-        ")",    // Converte colchetes em parênteses
-        ",",    // Normaliza vírgulas
-        "'",    // Converte aspas duplas em simples
-        "And",  // Converte && em And
-        "Or",   // Converte || em Or
-        "<>",   // Normaliza operador diferente
-        "=",    // Normaliza operador igual
-        "1",    // Converte true em 1
-        "0"     // Converte false em 0
-      ],  
-      $sourceFileArrowFN->slice(
-        $this->reflectionFunction->getStartLine() - 1,
-        $this->reflectionFunction->getEndLine() - $this->reflectionFunction->getStartLine() + 1
-      )->toString()
-    );
-
-    $this->tokens = $this->setParseToken( $sourceString );
   }
 
   public function isValidTokens(
