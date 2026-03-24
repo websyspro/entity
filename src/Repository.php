@@ -196,17 +196,25 @@ class Repository
   }
 
   private function queryBuilderWheresPrimary(
-  ): string {
-    return $this->queryBuilderWheresCompare(
+  ): string|null {
+    $wheres = $this->queryBuilderWheresCompare(
       $this->getWheresByEntityRoot([ EntityRoot::Yes ])
-    )->joinWithSpace();
+    );
+
+    return $wheres->exist() 
+      ? Util::sprintFormat( "Where %s", [ $wheres->joinWithSpace() ])
+      : null;
   }
 
   private function queryBuilderWheresSecondary(
-  ): string {
-    return $this->queryBuilderWheresCompare(
+  ): string|null {
+    $wheres = $this->queryBuilderWheresCompare(
       $this->getWheresByEntityRoot([ EntityRoot::Yes, EntityRoot::No ])
-    )->joinWithSpace();    
+    );
+
+    return $wheres->exist() 
+      ? Util::sprintFormat( "Where %s", [ $wheres->joinWithSpace() ])
+      : null;    
   }
 
   private function queryBuilderOrderBy(
@@ -268,23 +276,31 @@ class Repository
     };
    }
   
-  private function getSQLFormat(
+  private function setReplaceParams(
+    array $matches
   ): string {
-    return "Select %s From ( Select %s From %s Where %s %s %s ) As %s Where %s";
+    [ $paramKey ] = $matches;
+    $param = $this->structure->params->getOneOrFail( $paramKey );
+    if( $param instanceof Param ){
+      $this->prepareds->add( $param->value );  
+    }
+
+    return "?";
   }
+  
+  private function getStringFormat(
+  ): string {
+    return "Select %s From ( Select %s From %s %s %s %s ) As %s %s";
+  }  
 
   private function queryBuilderConstructorSQL(
   ): void {
     $this->sql = preg_replace_callback( 
-      "#\:param_\d+#", function ( $matches ){
-        [ $paramKey ] = $matches;
-        $param = $this->structure->params->getOneOrFail( $paramKey );
-        if( $param instanceof Param ){
-          $this->prepareds->add( $param->value );  
-        }
-
-        return "?";
-      }, Util::sprintFormat( $this->getSQLFormat(), [
+      "#\:param_\d+#", fn( array $matches ) => (
+        $this->setReplaceParams( $matches )
+      ), 
+      Util::sprintFormat( 
+        $this->getStringFormat(), [
           $this->queryBuilderColumnsSecondary(),
           $this->queryBuilderColumnsPrimary(),
           $this->queryBuilderJoinsPrimary(),

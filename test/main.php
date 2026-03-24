@@ -1,10 +1,10 @@
 <?php
 
 use Websyspro\Entity\Core\Database;
-use Websyspro\Test\Crm\Entitys\ColecaoEntity;
-use Websyspro\Test\Entitys\ProductGroupEntity;
-use Websyspro\Test\Entitys\ProductEntity;
 use Websyspro\Entity\Repository;
+use Websyspro\Test\Crm\Entitys\AspNetRolesEntity;
+use Websyspro\Test\Crm\Entitys\AspNetUserRolesEntity;
+use Websyspro\Test\Crm\Entitys\AspNetUsersEntity;
 
 $primeiroAtivo = "Primeiro";
 $segundoAtivo = "Segundo";
@@ -76,9 +76,31 @@ $start = microtime( true );
 // $query = Database::queryWithPrepared( $repository->sql, $repository->prepareds);
 // print_r( $query );
 
-$repository = new Repository( ColecaoEntity::class );
-$repository->where( fn( ColecaoEntity $colecao ) => $colecao->IsActive === true );
-$repository->orderByAsc( fn ( ColecaoEntity $colecao ) => $colecao->Nome );
+// $repository = new Repository( ColecaoEntity::class );
+// $repository->where( fn( ColecaoEntity $colecao ) => $colecao->IsActive === true );
+// $repository->orderByAsc( fn ( ColecaoEntity $colecao ) => $colecao->Nome );
+// $repository->paged( 1, 4 );
+// $repository->queryBuilder();
+
+// echo $repository->sql;
+
+// $query = Database::query( $repository->sql, $repository->prepareds->toArray());
+// print_r( $query );
+
+// $query = Database::query( "select * from Colecao where Id=?", [ "E842AB51-21B2-491B-A0B6-012F1171478C" ]);
+// print_r( $query );
+
+$repository = new Repository( AspNetUsersEntity::class );
+$repository->where( fn( 
+  AspNetUsersEntity $user,
+  AspNetUserRolesEntity $userRoles,
+  AspNetRolesEntity $roles
+) => (
+  $user->EmailConfirmed === true &&
+  $user->Id === $userRoles->UserId &&
+  $userRoles->RoleId === $roles->Id
+));
+$repository->orderByDesc( fn ( AspNetUsersEntity $user ) => $user->UserName );
 $repository->paged( 1, 4 );
 $repository->queryBuilder();
 
@@ -86,9 +108,6 @@ echo $repository->sql;
 
 $query = Database::query( $repository->sql, $repository->prepareds->toArray());
 print_r( $query );
-
-// $query = Database::query( "select * from Colecao where Id=?", [ "E842AB51-21B2-491B-A0B6-012F1171478C" ]);
-// print_r( $query );
 
 var_dump( ( microtime( true ) - $start ) * 1000 );
 
