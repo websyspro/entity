@@ -7,10 +7,10 @@ use Websyspro\Entity\Shareds\EntityColumns;
 use Websyspro\Entity\Enums\AttributeType;
 use Websyspro\Entity\Shareds\Column;
 use Websyspro\Entity\Shareds\Entity;
+use Websyspro\Commons\Collection;
 use Websyspro\Commons\Util;
 use ReflectionProperty;
 use ReflectionClass;
-use Websyspro\Commons\Collection;
 
 class AbstractEntity
 {

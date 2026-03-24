@@ -65,28 +65,18 @@ class Structure
     }
   }
 
-  private function getTypeName(
-    ReflectionParameter $reflectionParameter
-  ): string|null {
-    if( $reflectionParameter->getType() instanceof ReflectionNamedType ){
-      return $reflectionParameter->getType()->getName();
-    }
-
-    return null;
-  }
-  
   private function setParametersList(
   ): void {
     foreach( $this->reflectionFunction->getParameters() as $parameter ){
       if( $parameter instanceof ReflectionParameter ){
         $this->parametersList->add( 
-          $this->getTypeName( $parameter ), $parameter->getName()
+          StructureUtil::getTypeName( $parameter ), $parameter->getName()
         );
         
         $this->parameters->add(
           new Parameter( $parameter->getName(), Util::callUserClassFN( 
-            $this->getTypeName( $parameter ), "getAttributes", []
-          )), $this->getTypeName( $parameter )
+            StructureUtil::getTypeName( $parameter ), "getAttributes", []
+          )), StructureUtil::getTypeName( $parameter )
         );
       }
     }
@@ -627,20 +617,24 @@ class Structure
   private function getExplodeValue(
     string $value
   ): array {
-    $pattern ="#'[^']*'|\"[^\"]*\"|\\{\\$[\\w-]+\\}|\\$?[\\w\\\\-]+(?:->|::)[\\w\\\\-]+|\\d{2}/\\d{2}/\\d{4}|>=|<=|<>|[<>=!]+|\\(|\\)|,|([a-zA-ZÀ-ÿ\d/:$%\\\\]+(?:\s+[a-zA-ZÀ-ÿ\d/:$%\\\\]+)*\s*)#u";
+    if( StructureUtil::isContainsStatic( $value ) || StructureUtil::isEnumValue( $value )){
+      $pattern ="#'[^']*'|\"[^\"]*\"|\\{\\$[\\w-]+\\}|\\$?[\\w\\\\-]+(?:->|::)[\\w\\\\-]+|\\d{2}/\\d{2}/\\d{4}|>=|<=|<>|[<>=!]+|\\(|\\)|,|([a-zA-ZÀ-ÿ\d/:$%\\\\]+(?:\s+[a-zA-ZÀ-ÿ\d/:$%\\\\]+)*\s*)#u";
 
-    preg_match_all( $pattern, 
-      preg_replace( "#^'|'$#", "", $value ),
-        $tokensFromPattern 
-    );
+      preg_match_all( $pattern, 
+        preg_replace( "#^'|'$#", "", $value ),
+          $tokensFromPattern 
+      );
 
-    return array_map( 
-      fn( string $value ) => (
-        preg_replace( [
-          "#^'|'$#", "#^\\{\\$#", "#\\}$#" 
-        ], [ "", "$", "" ], $value )
-      ), array_shift( $tokensFromPattern )
-    );
+      return array_map( 
+        fn( string $value ) => (
+          preg_replace( [
+            "#^'|'$#", "#^\\{\\$#", "#\\}$#" 
+          ], [ "", "$", "" ], $value )
+        ), array_shift( $tokensFromPattern )
+      );      
+    }
+
+    return [ $value ];
   }  
 
   private function setTokensListParses(

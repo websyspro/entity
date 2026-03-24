@@ -3,6 +3,8 @@
 namespace Websyspro\Entity\Shareds;
 
 use ReflectionFunction;
+use ReflectionNamedType;
+use ReflectionParameter;
 use Websyspro\Commons\Collection;
 use Websyspro\Entity\Enums\TokenType;
 use Websyspro\Entity\Enums\EntityRoot;
@@ -10,6 +12,16 @@ use Websyspro\Commons\Util;
 
 class StructureUtil
 {
+  public static function getTypeName(
+    ReflectionParameter $reflectionParameter
+  ): string|null {
+    if( $reflectionParameter->getType() instanceof ReflectionNamedType ){
+      return $reflectionParameter->getType()->getName();
+    }
+
+    return null;
+  }
+
   public static function createToken(
     TokenType $type,
     string $value,
@@ -79,6 +91,12 @@ class StructureUtil
   ): bool {
     return Util::match( "#^[a-zA-Z]{1}.*::.*(->(?:name|value))?$#", $value );
   }
+
+  public static function isContainsStatic(
+    string $value
+  ): bool {    
+    return Util::match( "#{\\$|\\$#", $value );
+  }  
 
   public static function isStaticValue(
     string $value

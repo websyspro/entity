@@ -1,17 +1,10 @@
 <?php
 
-use Dom\Document;
-use Websyspro\Entity\Repository;
-use Websyspro\Entity\Shareds\StructureFromFn;
-use Websyspro\Test\Connect\DB;
-use Websyspro\Test\Entitys\DocumentItemEntity;
-use Websyspro\Test\Entitys\DocumentEntity;
-use Websyspro\Test\Entitys\OperatorEntity;
-use Websyspro\Test\Enums\DocumentState;
-use Websyspro\Test\Entitys\BoxEntity;
-use Websyspro\Test\Entitys\CustomerEntity;
-use Websyspro\Test\Entitys\ProductEntity;
+use Websyspro\Entity\Core\Database;
+use Websyspro\Test\Crm\Entitys\ColecaoEntity;
 use Websyspro\Test\Entitys\ProductGroupEntity;
+use Websyspro\Test\Entitys\ProductEntity;
+use Websyspro\Entity\Repository;
 
 $primeiroAtivo = "Primeiro";
 $segundoAtivo = "Segundo";
@@ -50,41 +43,52 @@ $start = microtime( true );
 
 // $repository->queryBuilder();
 
-$repository = new Repository( CustomerEntity::class );
-$repository->where( fn( 
-  CustomerEntity $customer,
-  DocumentEntity $document,
-  DocumentItemEntity $documentItem,
-  ProductEntity $product,
-  ProductGroupEntity $productGroup
-) => (  
-  $customer->Name === 'LINDSON%DOUGLAS%DO%SANTOS%' &&
-  $customer->Id === $document->CustomerId &&
-  $document->State === [ DocumentState::Finalizado, DocumentState::Cancelado ] &&
-  $document->CreatedAt >= '06/04/2023' &&
-  $document->CreatedAt <= '10/04/2023' &&
-  $document->Id === $documentItem->DocumentId &&
-  $documentItem->ProductId === $product->Id &&
-  $product->ProductGroupId === $productGroup->Id
-));
-
-$repository->orderByAsc( fn(CustomerEntity $customer) => $customer->CreatedAt );
-$repository->queryBuilder();
-
-// $repository = new Repository( ProductEntity::class );
-// $repository->where( fn(
+// $repository = new Repository( CustomerEntity::class );
+// $repository->where( fn( 
+//   CustomerEntity $customer,
+//   DocumentEntity $document,
+//   DocumentItemEntity $documentItem,
 //   ProductEntity $product,
 //   ProductGroupEntity $productGroup
-// ) => $product->ProductGroupId === $productGroup->Id && $productGroup->Name === 'Salão' );
+// ) => (  
+//   $customer->Name === 'LINDSON%DOUGLAS%DO%SANTOS%' &&
+//   $customer->Id === $document->CustomerId &&
+//   $document->State === [ DocumentState::Finalizado, DocumentState::Cancelado ] &&
+//   $document->CreatedAt >= '06/04/2023' &&
+//   $document->CreatedAt <= '10/04/2023' &&
+//   $document->Id === $documentItem->DocumentId &&
+//   $documentItem->ProductId === $product->Id &&
+//   $product->ProductGroupId === $productGroup->Id
+// ));
 
+// //$repository->orderByAsc( fn(CustomerEntity $customer) => $customer->Id );
+// $repository->orderByDesc( fn(CustomerEntity $customer) => $customer->Id );
+// $repository->queryBuilder();
+
+// $repository = new Repository( ProductEntity::class );
+// $repository->where( fn( ProductEntity $product, ProductGroupEntity $productGroup ) => $product->ProductGroupId === $productGroup->Id );
+// //$repository->orderByDesc( fn ( ProductEntity $product ) => $product->Id );
+// $repository->paged( 1, 24 );
 // $repository->queryBuilder();
 
 // echo $repository->sql;
 
-$query = DB::queryWithPrepared( $repository->sql, $repository->prepareds);
+// $query = Database::queryWithPrepared( $repository->sql, $repository->prepareds);
+// print_r( $query );
+
+$repository = new Repository( ColecaoEntity::class );
+$repository->where( fn( ColecaoEntity $colecao ) => $colecao->IsActive === true );
+$repository->orderByAsc( fn ( ColecaoEntity $colecao ) => $colecao->Nome );
+$repository->paged( 1, 4 );
+$repository->queryBuilder();
+
+echo $repository->sql;
+
+$query = Database::query( $repository->sql, $repository->prepareds->toArray());
 print_r( $query );
 
-
+// $query = Database::query( "select * from Colecao where Id=?", [ "E842AB51-21B2-491B-A0B6-012F1171478C" ]);
+// print_r( $query );
 
 var_dump( ( microtime( true ) - $start ) * 1000 );
 
