@@ -35,6 +35,7 @@ class Structure
     $this->setParametersList();
     $this->setStaticsList();
     $this->setJoinsList();
+    $this->setJoinsAltList();
     $this->setUsesList();
     $this->setTokensList();
     $this->setTokensListGroups();
@@ -94,6 +95,10 @@ class Structure
     $this->setJoinsRecursiveList(
       $this->entitys->first()
     );
+  }
+
+  private function setJoinsAltList(): void {
+    
   }
 
   private function setJoinsRecursiveList(

@@ -13,7 +13,9 @@ use Websyspro\Entity\Decorations\Columns\Text;
 use Websyspro\Entity\Decorations\Constraints\ForeignKey;
 use Websyspro\Entity\Decorations\Constraints\OneToMany;
 use Websyspro\Entity\Decorations\Constraints\OneToOne;
+use Websyspro\Entity\Decorations\EntityName;
 
+#[EntityName( "boxTest" )]
 class BoxEntity 
 extends BaseEntity
 {
@@ -32,7 +34,7 @@ extends BaseEntity
   public ?string $OperatorId;
 
   #[OneToOne(OperatorEntity::class)]
-  public Collection $Operador;
+  public OperatorEntity $Operador;
 
   #[Text(255)]
   public string $Printer;
@@ -44,5 +46,5 @@ extends BaseEntity
   public string $OpeningBalance;
 
   #[OneToMany(DocumentEntity::class)]
-  public Collection $document;
+  public Collection $Documents;
 }
