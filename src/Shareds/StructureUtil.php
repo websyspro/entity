@@ -12,7 +12,14 @@ use Websyspro\Commons\Util;
 
 class StructureUtil
 {
-  public static function getTypeName(
+  public static function getParameterName(
+    ReflectionParameter $reflectionParameter
+  ): string|null {
+    return $reflectionParameter->getName();
+  }
+
+
+  public static function getParameterTypeName(
     ReflectionParameter $reflectionParameter
   ): string|null {
     if( $reflectionParameter->getType() instanceof ReflectionNamedType ){
@@ -187,7 +194,7 @@ class StructureUtil
         "#\n\s*#",
         "#^.*\\{.*return\s*#",
         "#\s*;\s*\\}\s*#",
-        "#^.*(fn|function)\s*\(#",
+        "#^[^(]*(fn|function)\s*\(#",
         "#\s*\);\s*$#",
         "#^.*?\)\s*=>\s*#s",
         "#\\[\s*#s",

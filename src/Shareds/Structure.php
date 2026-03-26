@@ -71,13 +71,13 @@ class Structure
     foreach( $this->reflectionFunction->getParameters() as $parameter ){
       if( $parameter instanceof ReflectionParameter ){
         $this->parametersList->add( 
-          StructureUtil::getTypeName( $parameter ), $parameter->getName()
+          StructureUtil::getParameterName( $parameter ), $parameter->getName()
         );
         
         $this->parameters->add(
           new Parameter( $parameter->getName(), Util::callUserClassFN( 
-            StructureUtil::getTypeName( $parameter ), "getAttributes", []
-          )), StructureUtil::getTypeName( $parameter )
+            StructureUtil::getParameterName( $parameter ), "getAttributes", []
+          )), StructureUtil::getParameterTypeName( $parameter )
         );
       }
     }
