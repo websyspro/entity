@@ -1,12 +1,15 @@
 <?php
 
 
+use Websyspro\Commons\Util as Utilizacao;
 use Websyspro\Test\Entitys\DocumentItemEntity;
 use Websyspro\Entity\Shareds\StructureFile;
 use Websyspro\Test\Entitys\DocumentEntity;
 use Websyspro\Test\Entitys\BoxEntity;
 
 $start = microtime( true );
+
+Utilizacao::match("", microtime( true ) - $start );
 
 $call = fn( BoxEntity $box ) => 
   $box->Actived === true &&

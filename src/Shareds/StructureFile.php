@@ -2,12 +2,13 @@
 
 namespace Websyspro\Entity\Shareds;
 
-use Websyspro\Commons\Collection;
-use ReflectionFunction;
-use ReflectionParameter;
-use Websyspro\Commons\Util;
-use Websyspro\Entity\Consts\Patterns;
 use Websyspro\Entity\Interfaces\Parameter;
+use Websyspro\Entity\Consts\Patterns;
+use Websyspro\Commons\Collection;
+use Websyspro\Commons\Util;
+use ReflectionParameter;
+use ReflectionFunction;
+use Websyspro\Entity\Interfaces\Uses;
 
 class StructureFile
 {
@@ -68,9 +69,9 @@ class StructureFile
 
   private function structureFileUses(
   ): void {
-    $this->uses = $this->rows->where(
-      fn( string $row ) => Util::match( "#^.*use\s*#", $row )
-    );
+    $this->uses = $this->rows
+      ->where( fn( string $row ) => Util::match( Patterns::PATTERN_NAMESPACE_WHERES, $row ))
+      ->mapper( fn( string $use ) => new Uses( Util::replace( Patterns::PATTERN_NAMESPACE_HYDRATE, "", $use ) ));
   } 
   
   private function structureFileBody(

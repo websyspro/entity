@@ -6,7 +6,7 @@ class Patterns
 { 
   public const string PATTERN_REMOVE_COMMENT_LINE = "#^.*//#";
   public const string PATTERN_TOKEN = "#'[^']*'|\"[^\"]*\"|\\S+#";
-  public const array PATTERN_HYDRATE_BODY = [
+  public const array  PATTERN_HYDRATE_BODY = [
     [ "#/\*.*?\*/#",
       "#\r#",
       "#\n\s*#",
@@ -47,5 +47,11 @@ class Patterns
       "1",    // Converte true em 1
       "0"     // Converte false em 0
     ]
-  ]; 
+  ];
+
+  public const string PATTERN_NAMESPACE_ALIAS = "#\s+as\s+#";
+
+  public const array  PATTERN_NAMESPACE_HYDRATE = [ "#^use\s*#", "#;\s*$#" ];
+  public const string PATTERN_NAMESPACE_BREAKS = "\\";
+  public const string PATTERN_NAMESPACE_WHERES = "#^.*use\s*#";
 }
