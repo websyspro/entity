@@ -2,7 +2,6 @@
 
 namespace Websyspro\Test\Entitys;
 
-use Websyspro\Commons\Collection;
 use Websyspro\Entity\Decorations\Statistics\Index;
 use Websyspro\Entity\Decorations\Columns\Decimal;
 use Websyspro\Entity\Decorations\Columns\Number;
@@ -11,6 +10,7 @@ use Websyspro\Entity\Core\Bases\BaseEntity;
 use Websyspro\Entity\Decorations\Constraints\ForeignKey;
 use Websyspro\Entity\Decorations\Constraints\OneToMany;
 use Websyspro\Entity\Decorations\Constraints\OneToOne;
+use Websyspro\Entity\Shareds\EntityList;
 
 class DocumentEntity
 extends BaseEntity
@@ -73,5 +73,5 @@ extends BaseEntity
   public string $Observations;
 
   #[OneToMany(DocumentItemEntity::class)]
-  public Collection $DocumentItems;
+  public EntityList $DocumentItems;
 }

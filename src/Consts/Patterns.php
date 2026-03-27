@@ -5,6 +5,7 @@ namespace Websyspro\Entity\Consts;
 class Patterns
 { 
   public const string PATTERN_REMOVE_COMMENT_LINE = "#^.*//#";
+  public const string PATTERN_REMOVE_DEFINED_VAR_KEY = "#^\\$#";
   public const string PATTERN_TOKEN = "#'[^']*'|\"[^\"]*\"|\\S+#";
   public const array  PATTERN_HYDRATE_BODY = [
     [ "#/\*.*?\*/#",
@@ -20,6 +21,7 @@ class Patterns
       "#,\s*#s",
       "#\"#s",
       "#\s{2,}#",
+      "#;\s*$#",
       "#&&#",
       "#\|\|#",
       "#(!==|!=)#",
@@ -39,7 +41,8 @@ class Patterns
       ")",    // Converte colchetes em parênteses
       ",",    // Normaliza vírgulas
       "'",    // Converte aspas duplas em simples
-      " ",     // Remove espaços em brancos
+      " ",    // Remove espaços em brancos
+      "",     // Remover ;
       "And",  // Converte && em And
       "Or",   // Converte || em Or
       "<>",   // Normaliza operador diferente
@@ -50,8 +53,12 @@ class Patterns
   ];
 
   public const string PATTERN_NAMESPACE_ALIAS = "#\s+as\s+#";
-
   public const array  PATTERN_NAMESPACE_HYDRATE = [ "#^use\s*#", "#;\s*$#" ];
-  public const string PATTERN_NAMESPACE_BREAKS = "\\";
+  public const string PATTERN_NAMESPACE_BREAKS = "#\\\#";
   public const string PATTERN_NAMESPACE_WHERES = "#^.*use\s*#";
+  public const string PATTERN_NAMESPACE_SEPARETOR = "\\";
+  public const string PATTERN_HIERARCHY_JOINS_SEPARETOR = "#->#";
+  public const string PATTERN_IS_HIERARCHY_JOINS = "#^\\$.*->.*->.*$#";
+  public const string PATTERN_IS_HIERARCHY_JOINS_FROM_LIST = "#->.*\\($#";
+  public const string PATTERN_REMOVE_END_HIERARCHY_JOINS = "#^\\$|->[^->()]+(\\()?$#";
 }

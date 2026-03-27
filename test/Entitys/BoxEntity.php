@@ -2,7 +2,6 @@
 
 namespace Websyspro\Test\Entitys;
 
-use Websyspro\Commons\Collection;
 use Websyspro\Entity\Core\Bases\BaseEntity;
 use Websyspro\Entity\Decorations\Constraints\Unique;
 use Websyspro\Entity\Decorations\Statistics\Index;
@@ -14,6 +13,7 @@ use Websyspro\Entity\Decorations\Constraints\ForeignKey;
 use Websyspro\Entity\Decorations\Constraints\OneToMany;
 use Websyspro\Entity\Decorations\Constraints\OneToOne;
 use Websyspro\Entity\Decorations\EntityName;
+use Websyspro\Entity\Shareds\EntityList;
 
 #[EntityName( "boxTest" )]
 class BoxEntity 
@@ -31,7 +31,7 @@ extends BaseEntity
   #[Number()]
   #[ForeignKey(OperatorEntity::class)]
   #[Unique(2)]
-  public ?string $OperatorId;
+  public string $OperatorId;
 
   #[OneToOne(OperatorEntity::class)]
   public OperatorEntity $Operador;
@@ -46,5 +46,5 @@ extends BaseEntity
   public string $OpeningBalance;
 
   #[OneToMany(DocumentEntity::class)]
-  public Collection $Documents;
+  public EntityList $Documents;
 }

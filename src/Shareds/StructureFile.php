@@ -3,20 +3,23 @@
 namespace Websyspro\Entity\Shareds;
 
 use Websyspro\Entity\Interfaces\Parameter;
+use Websyspro\Entity\Interfaces\UsePath;
 use Websyspro\Entity\Consts\Patterns;
 use Websyspro\Commons\Collection;
 use Websyspro\Commons\Util;
 use ReflectionParameter;
 use ReflectionFunction;
-use Websyspro\Entity\Interfaces\Uses;
+use ReflectionNamedType;
+use ReflectionProperty;
 
 class StructureFile
 {
   private Collection $rows;
   private Collection $namespace;
-  private Collection $uses;
+  private Collection $usePaths;
   private Collection $statics;
   private Collection $parameters;
+  private Collection $joins;
   private Collection $body;
   private Collection $tokens;
 
@@ -35,10 +38,11 @@ class StructureFile
 
     $this->structureFileNamespace();
     $this->structureFileParameters();    
-    $this->structureFileSatics();
-    $this->structureFileUses();
+    $this->structureFileStatics();
+    $this->structureFileUsePaths();
     $this->structureFileBody();
-    $this->structureHidrate();
+    $this->structureFileHidrate();
+    $this->structureFileHidrateJoins();
   }
 
   private function structureFileNamespace(
@@ -60,18 +64,18 @@ class StructureFile
     );
   }
 
-  private function structureFileSatics(
+  private function structureFileStatics(
   ): void {
     $this->statics = new Collection(
       $this->reflectionFunction->getStaticVariables()
     );    
   }  
 
-  private function structureFileUses(
+  private function structureFileUsePaths(
   ): void {
-    $this->uses = $this->rows
+    $this->usePaths = $this->rows
       ->where( fn( string $row ) => Util::match( Patterns::PATTERN_NAMESPACE_WHERES, $row ))
-      ->mapper( fn( string $use ) => new Uses( Util::replace( Patterns::PATTERN_NAMESPACE_HYDRATE, "", $use ) ));
+      ->mapper( fn( string $use ) => new UsePath( Util::replace( Patterns::PATTERN_NAMESPACE_HYDRATE, $use ) ));
   } 
   
   private function structureFileBody(
@@ -83,7 +87,7 @@ class StructureFile
     );
   }
 
-  private function structureHidrate(
+  private function structureFileHidrate(
   ): void {
     $this->body = $this->body->where( fn( string $row ) => 
       Util::match( Patterns::PATTERN_REMOVE_COMMENT_LINE, $row ) === false
@@ -96,6 +100,83 @@ class StructureFile
       Util::matchAll( Patterns::PATTERN_TOKEN, preg_replace(
         $hydrateBodyFrom, $hydrateBodyTos, $this->body->toString()
       ))
+    );
+  }
+
+  private function isStructureJoins(
+    string $token,
+    int $index
+  ): void {
+    if( Util::match( Patterns::PATTERN_IS_HIERARCHY_JOINS, $token )){
+      $strutureJoin = Util::replace( Patterns::PATTERN_REMOVE_END_HIERARCHY_JOINS, $token );
+      $strutureJoinList = Util::split( Patterns::PATTERN_HIERARCHY_JOINS_SEPARETOR, $strutureJoin );
+
+      $strutureJoinList->mapper(
+        function( string $paramterName, int $i ) use ( $index, $strutureJoinList ){
+          if( (int)$i !== 0 ){
+            $parentEntity = $strutureJoinList->getOneOrFail( $i - 1 );
+            if( $parentEntity ){
+              $parameterParentEntityList = $this->parameters->where(
+                fn( Parameter $parameter ) => $parameter->name === Util::replace( 
+                  Patterns::PATTERN_REMOVE_DEFINED_VAR_KEY, lcfirst( $parentEntity )
+                )
+              );
+              
+              if( $parameterParentEntityList->exist() ){
+                [ $parameterParentEntity ] = $parameterParentEntityList->toArray();
+              
+                if( $parameterParentEntity instanceof Parameter ){     
+                  if ( property_exists( $parameterParentEntity->usePath->path, $paramterName )) {
+                    $reflectionProperty = new ReflectionProperty(
+                      $parameterParentEntity->usePath->path, $paramterName
+                    );
+
+                    if( $reflectionProperty->getType() instanceof ReflectionNamedType ){
+                      if( $reflectionProperty->getType()->getName() === EntityList::class ){
+                        $entity = $this->tokens->getOneOrFail( $index + 2 );
+                        $parameter = $this->tokens->getOneOrFail( $index + 3 ); 
+
+                        if( $entity && $parameter ){
+                          $usePaths = $this->usePaths->where( fn( UsePath $usePath )  => $usePath->entity === $entity );
+                          if( $usePaths instanceof Collection && $usePaths->exist() ){
+                            [ $usePath ] = $usePaths->toArray();
+                            if( $usePath instanceof UsePath ){
+                              var_dump( $parentEntity . " -> " . $paramterName . "[M]" );
+                              $this->parameters->add( 
+                                new Parameter( 
+                                  $parameter,
+                                  $usePath->path
+                                )
+                              );
+                            } 
+                          }
+                        }
+                      } else {
+                        var_dump( $parentEntity . " -> " . $paramterName . "[S]" );
+                        $this->parameters->add( 
+                          new Parameter( 
+                            $paramterName,
+                            $reflectionProperty->getType()->getName()
+                          )
+                        );
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      );
+    }
+  }
+
+  private function structureFileHidrateJoins(
+  ): void {
+    $this->tokens->mapper( 
+      fn( string $token, int $index ) => (
+        $this->isStructureJoins( $token, $index )
+      )
     );
   }
   
