@@ -32,4 +32,4 @@ $leftTimer = number_format( microtime( true ) - $start, 6, ",", "." );
 
 echo "Execute timer: {$leftTimer}(ms)" . PHP_EOL . PHP_EOL;
 
-print_r( $structureFile );
+// print_r( $structureFile );

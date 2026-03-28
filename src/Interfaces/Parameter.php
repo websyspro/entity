@@ -29,7 +29,11 @@ class Parameter
     string $name,
     string $entity
   ): void {
-    $this->name = Util::replace( Patterns::PATTERN_REMOVE_DEFINED_VAR_KEY, lcfirst( $name ));
+    $this->name = Util::replace( 
+      Patterns::PATTERN_REMOVE_DEFINED_VAR_KEY, 
+      lcfirst( $name )
+    );
+
     $this->usePath = new UsePath( $entity );
     $this->structure = Util::callUserClassFN( 
       $this->usePath->path, "getAttributes", []

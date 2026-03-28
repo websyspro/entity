@@ -141,7 +141,7 @@ class StructureFile
                           if( $usePaths instanceof Collection && $usePaths->exist() ){
                             [ $usePath ] = $usePaths->toArray();
                             if( $usePath instanceof UsePath ){
-                              var_dump( $parentEntity . " -> " . $paramterName . "[M]" );
+                              // var_dump( $parentEntity . " -> " . $paramterName . "[M]" );
                               $this->parameters->add( 
                                 new Parameter( 
                                   $parameter,
@@ -152,7 +152,7 @@ class StructureFile
                           }
                         }
                       } else {
-                        var_dump( $parentEntity . " -> " . $paramterName . "[S]" );
+                        // var_dump( $parentEntity . " -> " . $paramterName . "[S]" );
                         $this->parameters->add( 
                           new Parameter( 
                             $paramterName,

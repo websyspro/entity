@@ -105,7 +105,7 @@ class AbstractEntity
       $reflectionClass = new ReflectionClass(
         static::class
       );
-
+      
       foreach( $reflectionClass->getProperties( ReflectionProperty::IS_PUBLIC ) as $property ){
         foreach( $property->getAttributes() as $attribute ){
           self::$cacheAttrs[ static::class ][] = new Column(
@@ -114,8 +114,9 @@ class AbstractEntity
         }
       }
     }
-
+    
     if( isset( self::$cacheEntityStructure[ static::class ] ) === false ){
+      var_dump( static::class );
       self::$cacheEntityStructure[ static::class ] = new EntityStructure(
         new Entity( static::class ),
         self::findByAttributeColumns(),
