@@ -32,8 +32,6 @@ extends BaseEntity
   #[ForeignKey(OperatorEntity::class)]
   #[Unique(2)]
   public string $OperatorId;
-
-  #[OneToOne(OperatorEntity::class)]
   public OperatorEntity $Operador;
 
   #[Text(255)]
@@ -45,6 +43,5 @@ extends BaseEntity
   #[Decimal(10,2)]
   public string $OpeningBalance;
 
-  #[OneToMany(DocumentEntity::class)]
   public EntityList $Documents;
 }

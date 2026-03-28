@@ -20,20 +20,20 @@ class ForeignKey
 
   private function defineReference(
   ): void {
-    $entityStructureReference = Util::callUserClassFN( 
-      $this->column->instance->entityReference, 
-      "getAttributes", []
-    );
+    // $entityStructureReference = Util::callUserClassFN( 
+    //   $this->column->instance->entityReference, 
+    //   "meta", []
+    // );
 
-    if( $entityStructureReference instanceof EntityStructure ){
-      if( $entityStructureReference->primaryKey->exist() ){
-        $this->key = $this->column->name;
-        $this->entity = $this->entityStructure->entity;
-        $this->entityReference = new EntityReference( 
-          $entityStructureReference
-        );
-      }
-    }
+    // if( $entityStructureReference instanceof EntityStructure ){
+    //   if( $entityStructureReference->primaryKey->exist() ){
+    //     $this->key = $this->column->name;
+    //     $this->entity = $this->entityStructure->entity;
+    //     $this->entityReference = new EntityReference( 
+    //       $entityStructureReference
+    //     );
+    //   }
+    // }
   }
 
   private function defineClears(
