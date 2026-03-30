@@ -2,9 +2,9 @@
 
 namespace Websyspro\Entity\Interfaces;
 
-use Websyspro\Commons\Util;
+use Websyspro\Entity\Shareds\EntityStructure;
 use Websyspro\Entity\Consts\Patterns;
-use Websyspro\Entity\Shareds\EntityMeta;
+use Websyspro\Entity\Enums\MetaType;
 
 class Parameter
 {
@@ -13,7 +13,7 @@ class Parameter
   public string $namespace;
   public string $entity;
   public string $path;
-  public EntityMeta $entityMeta;
+  public EntityStructure $entityStructure;
 
   public function __construct(
     string $name,
@@ -29,14 +29,16 @@ class Parameter
     string $name,
     string $entity
   ): void {
-    $this->name = Util::replace( 
-      Patterns::PATTERN_REMOVE_DEFINED_VAR_KEY, 
-      lcfirst( $name )
+    $this->name = preg_replace(
+      Patterns::PATTERN_REMOVE_DEFINED_VAR_KEY, "", $name
     );
 
     $this->usePath = new UsePath( $entity );
-    $this->entityMeta = Util::callUserClassFN( 
-      $this->usePath->path, "meta", []
-    );
+
+    if( class_exists( $this->usePath->path )){
+      $this->entityStructure = call_user_func_array(
+        [ $this->usePath->path, "meta" ], [ MetaType::Query ]
+      );      
+    }
   }
 }

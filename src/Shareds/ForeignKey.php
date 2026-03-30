@@ -2,45 +2,23 @@
 
 namespace Websyspro\Entity\Shareds;
 
-use Websyspro\Commons\Util;
-
 class ForeignKey
 {
-  public string $key;
+  public string $name;
   public Entity $entity;
-  public EntityReference $entityReference;
 
   public function __construct(
-    public Column $column,
-    public EntityStructure $entityStructure
+    Column $column
   ){
-    $this->defineReference();
-    $this->defineClears();
+    $this->defineInits( $column );
   }
 
-  private function defineReference(
+  private function defineInits(
+    Column $column
   ): void {
-    // $entityStructureReference = Util::callUserClassFN( 
-    //   $this->column->instance->entityReference, 
-    //   "meta", []
-    // );
-
-    // if( $entityStructureReference instanceof EntityStructure ){
-    //   if( $entityStructureReference->primaryKey->exist() ){
-    //     $this->key = $this->column->name;
-    //     $this->entity = $this->entityStructure->entity;
-    //     $this->entityReference = new EntityReference( 
-    //       $entityStructureReference
-    //     );
-    //   }
-    // }
-  }
-
-  private function defineClears(
-  ): void {
-    unset( 
-      $this->column,
-      $this->entityStructure
+    $this->name = $column->name;
+    $this->entity = new Entity(
+      $column->instance->entityReference
     );
-  }   
+  }
 }

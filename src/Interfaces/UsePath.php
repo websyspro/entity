@@ -3,7 +3,6 @@
 namespace Websyspro\Entity\Interfaces;
 
 use Websyspro\Entity\Consts\Patterns;
-use Websyspro\Commons\Util;
 
 class UsePath
 {
@@ -21,30 +20,34 @@ class UsePath
   private function namespaceParsed(
     string $use
   ): void {
-    if( Util::match( Patterns::PATTERN_NAMESPACE_ALIAS, $use )){
-      $namespaceWithAliasArr = Util::split(
+    if( (bool)preg_match( Patterns::PATTERN_NAMESPACE_ALIAS, $use ) === true ){
+      $namespaceWithAliasArr = preg_split(
         Patterns::PATTERN_NAMESPACE_ALIAS, $use
       );
 
-      if( $namespaceWithAliasArr->exist()){
+      if( empty( $namespaceWithAliasArr ) === false ){
         [ $this->namespace, $this->alias ] = [
-          $namespaceWithAliasArr->slice( 0, -1 )->toString(),
-          $namespaceWithAliasArr->slice( -1 )->toString()
+          implode( "", array_slice( $namespaceWithAliasArr, 0, -1 )),
+          implode( "", array_slice( $namespaceWithAliasArr, -1 ))
         ];
       }
     } else {
       $this->namespace = $use;
     }
 
-    $namespacePaths = Util::split( 
+    $namespacePaths = preg_split( 
       Patterns::PATTERN_NAMESPACE_BREAKS, $this->namespace
     );
 
     [ $this->namespace, $this->entity ] = [
-      $namespacePaths->slice( 0, -1 )->join( Patterns::PATTERN_NAMESPACE_SEPARETOR ),
-      $namespacePaths->slice( -1 )->join( Patterns::PATTERN_NAMESPACE_SEPARETOR ),
+      join( Patterns::PATTERN_NAMESPACE_SEPARETOR, array_slice( $namespacePaths, 0, -1 )),
+      join( Patterns::PATTERN_NAMESPACE_SEPARETOR, array_slice( $namespacePaths, -1 ))
     ];
 
-    $this->path = Util::join( Patterns::PATTERN_NAMESPACE_SEPARETOR, [ $this->namespace, $this->entity ]);
+    $this->path = implode( 
+      Patterns::PATTERN_NAMESPACE_SEPARETOR, [
+        $this->namespace, $this->entity
+      ]
+    );
   }
 }

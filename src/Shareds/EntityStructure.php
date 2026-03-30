@@ -2,120 +2,92 @@
 
 namespace Websyspro\Entity\Shareds;
 
+use Websyspro\Entity\Decorations\Constraints\Unique;
+use Websyspro\Entity\Decorations\Statistics\Index;
+use Websyspro\Entity\Enums\AttributeType;
+
 class EntityStructure
 {
   public function __construct(
     public Entity $entity,
-    public array $columns,
-    public array $types,
-    public array $indexes,
-    public array $uniques,
-    public array $foreigns,
-    public array $primaryKey,
-    public array $requireds
+    public array $columns = [],
+    public array $types = [],
+    public array $indexes = [],
+    public array $uniques = [],
+    public array $foreigns = [],
+    public array $primaryKey = [],
+    public array $requireds = []
   ){
-    print_r( $this );
-    // $this->definePrimaryKey();
-    // $this->defineIndexes();
-    // $this->defineUniques();
-    // $this->defineForeigns();
-    // $this->defineRequireds();
-    // $this->defineOneToMany();
-    // $this->defineOneToOne();
+    $this->definePrimaryKey();
+    $this->defineIndexes();
+    $this->defineUniques();
+    $this->defineForeigns();
+    $this->defineRequireds();
   }
 
-  // private function getGroupName(
-  //   Collection $columns,
-  //   AttributeType $attributeType,
-  //   Collection $groupNameList = new Collection()
-  // ): Collection {
-  //   $columns = $columns->reduce(
-  //     [], function( array|null $acc, Column $column ) {
-  //       if( $column->instance instanceof Index || $column->instance instanceof Unique ){
-  //         if( isset( $column->instance->indexGroup )){
-  //           $acc[ $column->instance->indexGroup ][] = $column->name; 
-  //         } else
-  //         if( isset( $column->instance->uniqueGroup )){
-  //           $acc[ $column->instance->uniqueGroup ][] = $column->name;
-  //         }
-  //       } 
+  private function getGroupName(
+    array $columns,
+    AttributeType $attributeType
+  ): array {
+    $columns = array_reduce( $columns, function( array|null $acc, Column $column ) {
+      if( $column->instance instanceof Index || $column->instance instanceof Unique ){
+        if( isset( $column->instance->indexGroup )){
+          $acc[ $column->instance->indexGroup ][] = $column->name; 
+        } else
+        if( isset( $column->instance->uniqueGroup )){
+          $acc[ $column->instance->uniqueGroup ][] = $column->name;
+        }
+      } 
 
-  //       return $acc;
-  //     }
-  //   );
+      return $acc;
+    }, []);
 
-  //   $columns = $columns->mapper(
-  //     fn( array $indexGroup ) => Util::sprintFormat(
-  //       "%s_%s", [ match( $attributeType ){
-  //         AttributeType::indexes => "Index", 
-  //         AttributeType::uniques => "Unique"
-  //       }, Util::join( "_",  $indexGroup ) ]
-  //     )
-  //   );
+    $columns = array_map( 
+      fn( array $indexGroup ) => sprintf(
+        "%s_%s", match( $attributeType ){
+          AttributeType::indexes => "Index", 
+          AttributeType::uniques => "Unique"
+        }, implode( "_", $indexGroup ) 
+      ), $columns
+    );
 
-  //   $columns->mapper(
-  //     fn( string $groupName ) => (
-  //       $groupNameList->add( $groupName, $groupName )
-  //     )
-  //   );
-
-  //   return $groupNameList;
-  // }
+    return $columns;
+  }
 
   private function definePrimaryKey(
   ): void {
-    // if( $this->primaryKey->exist() ){
-    //   $this->primaryKey = $this->primaryKey->mapper(
-    //     fn( Column $column ) => new PrimaryKey($column->name)
-    //   );
-    // }
+    if( empty( $this->primaryKey ) === false ){
+      $this->primaryKey = array_map(
+        fn( Column $column ) => new PrimaryKey( $column->name ), $this->primaryKey
+      );      
+    }
   }
 
   private function defineIndexes(
   ): void {
-    // $this->indexes = $this->getGroupName( 
-    //   $this->indexes, AttributeType::indexes
-    // );
+    $this->indexes = $this->getGroupName( 
+      $this->indexes, AttributeType::indexes
+    );
   }
 
   private function defineUniques(
   ): void {
-    // $this->uniques = $this->getGroupName( 
-    //   $this->uniques, AttributeType::uniques
-    // );
+    $this->uniques = $this->getGroupName( 
+      $this->uniques, AttributeType::uniques
+    );
   }
 
   private function defineForeigns(
   ): void {
-    // $this->foreigns = $this->foreigns->mapper(
-    //   fn( Column $column ) => new ForeignKey( 
-    //     $column, $this
-    //   )
-    // );
+    $this->foreigns = array_map(
+      fn( Column $column ) => new ForeignKey( $column ), $this->foreigns
+    );
   }
 
   private function defineRequireds(
   ): void {
-    // $this->requireds = $this->requireds->mapper(
-    //   fn( Column $column ) => $column->name
-    // );
+    $this->requireds = array_map( 
+      fn( Column $column ) => $column->name, $this->requireds
+    );
   }
-
-  private function defineOneToMany(
-  ): void {
-    // $this->oneToMany = $this->oneToMany->mapper(
-    //   fn( Column $column ) => new Entity(
-    //     $column->instance->entityReference
-    //   )
-    // );
-  }
-
-  private function defineOneToOne(
-  ): void {
-    // $this->oneToOne = $this->oneToOne->mapper(
-    //   fn( Column $column ) => new Entity(
-    //     $column->instance->entityReference
-    //   )
-    // );
-  }  
 }

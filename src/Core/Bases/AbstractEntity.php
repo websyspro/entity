@@ -2,16 +2,28 @@
 
 namespace Websyspro\Entity\Core\Bases;
 
+use Websyspro\Entity\Decorations\Columns\Time;
 use Websyspro\Entity\Decorations\Constraints\ForeignKey;
 use Websyspro\Entity\Decorations\Constraints\PrimaryKey;
+use Websyspro\Entity\Decorations\Constraints\Unique;
+use Websyspro\Entity\Decorations\Statistics\Index;
 use Websyspro\Entity\Shareds\EntityStructure;
+use Websyspro\Entity\Shareds\AbstractColumn;
+use Websyspro\Entity\Decorations\Columns\Date;
+use Websyspro\Entity\Decorations\Columns\Datetime;
+use Websyspro\Entity\Decorations\Columns\Decimal;
+use Websyspro\Entity\Decorations\Columns\LongText;
+use Websyspro\Entity\Decorations\Columns\Number;
+use Websyspro\Entity\Decorations\Columns\Text;
+use Websyspro\Entity\Decorations\Columns\Enum;
+use Websyspro\Entity\Decorations\Columns\Flag;
 use Websyspro\Entity\Enums\AttributeType;
 use Websyspro\Entity\Shareds\Entity;
 use Websyspro\Entity\Shareds\Column;
+use Websyspro\Entity\Enums\MetaType;
 use ReflectionAttribute;
 use ReflectionProperty;
 use ReflectionClass;
-use Websyspro\Entity\Shareds\AbstractColumn;
 
 class AbstractEntity
 {
@@ -36,10 +48,8 @@ class AbstractEntity
   private static function getColumsCenters(
   ): array {
     return array_filter( 
-      self::$cacheColumns[ static::class ][ AttributeType::column->name ], fn(string $column) => (
-        $column !== reset( self::$cacheColumnsBase ) || in_array( 
-          $column, self::$cacheColumnsBase 
-        ) === false
+      self::$cacheColumns[ static::class ][ AttributeType::column->name ], fn( string $column ) => (
+        in_array( $column, self::$cacheColumnsBase ) === false
       )
     );
   }  
@@ -58,18 +68,15 @@ class AbstractEntity
     if (empty( self::$cacheColumnsBase )) {
       self::$cacheColumnsBase = array_map(
         fn( ReflectionProperty $column ) => $column->name, 
-          self::$cacheReflectionClassBase->getProperties(
-            ReflectionProperty::IS_PUBLIC
-          )
+          self::$cacheReflectionClassBase->getProperties( ReflectionProperty::IS_PUBLIC )
       );
     }
     
     if (empty( self::$cacheColumns[ static::class ][ AttributeType::column->name ])) {
       self::$cacheColumns[ static::class ][ AttributeType::column->name ] = array_map(
-        fn( ReflectionProperty $column ) => $column->name,
-          self::$cacheReflectionClass[ static::class ]->getProperties(
-            ReflectionProperty::IS_PUBLIC
-          )
+        fn( ReflectionProperty $column ) => $column->name, array_filter( 
+          self::$cacheReflectionClass[ static::class ]->getProperties( ReflectionProperty::IS_PUBLIC
+        ), fn( ReflectionProperty $column ) => empty($column->getAttributes( static::class )) === false)
       );
 
       self::$cacheColumns[ static::class ][ AttributeType::column->name ] = array_merge(
@@ -78,6 +85,38 @@ class AbstractEntity
     }
 
     return self::$cacheColumns[ static::class ][ AttributeType::column->name ];
+  }
+
+  private static function isConstrants(
+    string $columnType
+  ): bool {
+    return in_array( 
+      $columnType, [ 
+        ForeignKey::class,
+        PrimaryKey::class,
+        Index::class, 
+        Unique::class
+      ]
+    );
+  }
+
+  private static function isColumnField(
+    string $columnType
+  ): bool {
+    return in_array( 
+      $columnType, [ 
+        Date::class, 
+        Datetime::class,
+        Decimal::class,
+        Enum::class,
+        Flag::class,
+        LongText::class,
+        Number::class,
+        Text::class,
+        Number::class,
+        Time::class
+      ]
+    );
   }
 
   private static function getColumnByType(
@@ -101,13 +140,23 @@ class AbstractEntity
     if( isset(self::$cacheAttributesByType[ static::class ][ $columnType ]) === false ){
       self::$cacheAttributesByType[ static::class ][ $columnType ] = [];
 
-      foreach( self::$cacheAttributes[ static::class ] as $column ){
-        if( $column instanceof Column && $column->columnType === $columnType ){
-          if( $column->instance instanceof ReflectionAttribute ){
-            $column->instance = $column->instance->newInstance();
-          }
+      if( self::isConstrants( $columnType )){
+        foreach( self::$cacheAttributes[ static::class ] as $column ){
+          if( $column instanceof Column && $column->columnType === $columnType ){
+            if( $column->instance instanceof ReflectionAttribute ){
+              $column->instance = $column->instance->newInstance();
+            }
 
-          self::$cacheAttributesByType[ static::class ][ $columnType ][] = $column;
+            self::$cacheAttributesByType[ static::class ][ $columnType ][] = $column;
+          }
+        }
+      } else {
+        foreach( self::$cacheAttributes[ static::class ] as $column ){
+          if( $column->instance instanceof ReflectionAttribute ){
+            if( self::isColumnField( $column->columnType )){
+              self::$cacheAttributesByType[ static::class ][ $columnType ][] = $column;
+            }
+          }
         }
       }
     }
@@ -130,8 +179,19 @@ class AbstractEntity
     return self::getColumnByType( PrimaryKey::class );
   }  
 
+  private static function getIndexes(
+  ): array {
+    return self::getColumnByType( Index::class );
+  }
+  
+  private static function getUnique(
+  ): array {
+    return self::getColumnByType( Unique::class );
+  }  
+
   public static function meta(
-  ): mixed {
+    MetaType $metaType
+  ): EntityStructure {
     if ( isset( self::$cacheReflectionClassBase ) === false){
       self::$cacheReflectionClassBase = new ReflectionClass( BaseEntity::class );
     }
@@ -140,17 +200,27 @@ class AbstractEntity
       self::$cacheReflectionClass[ static::class ] = new ReflectionClass( static::class );
     }
 
+    if( $metaType === MetaType::Query ){
+      return new EntityStructure(
+        new Entity( static::class ),
+        self::getColumns(),
+        self::getTypes(), [], [],
+        self::getForeignKeys(),
+        self::getPrimaryKeys(), [] 
+      );
+    } else if( MetaType::Schema ) {
+      return new EntityStructure(
+        new Entity( static::class ),
+        self::getColumns(), [],
+        self::getIndexes(),
+        self::getUnique(),
+        self::getForeignKeys(),
+        self::getPrimaryKeys(), [] 
+      );
+    }
+
     return new EntityStructure(
-      new Entity( static::class ),
-      self::getColumns(),
-      [],
-      [],
-      [],
-      self::getForeignKeys(),
-      self::getPrimaryKeys(),
-      [],
-      [],
-      [] 
+      new Entity( static::class )
     );
   }
 }
