@@ -3,33 +3,63 @@
 namespace Websyspro\Entity\Shareds;
 
 use Websyspro\Entity\Enums\CompareType;
-use Websyspro\Entity\Enums\EntityRoot;
-use Websyspro\Entity\Enums\TokenType;
+use Websyspro\Entity\Enums\Type;
+use Websyspro\Entity\Enums\MultiLine;
 use Websyspro\Commons\Util;
 
 class Token
 {
+  public int $group;
+  public string $value;
+  public Type $type;
+  public string|null $field = null;
+  public Entity|null $entity = null;
+  public MultiLine $multiLine; 
+
+
   public function __construct(
-    public TokenType $type,
-    public string $value,
-    public int $group,
-    public TokenEntity|null $entity = null,
-    public EntityRoot|null $root = null
+    string $value,
+    int $group,
+    Type $type
   ){
-    $this->tokenStart();
+    $this->defineInitial(
+      $value, 
+      $group,
+      $type
+    );
+
+    $this->defineEntityWithField();
+    $this->defineRemoveSingleQuotes();
+  }
+
+  private function defineInitial(
+    string $value,
+    int $group,
+    Type $type
+  ): void {
+    $this->value = $value;
+    $this->group = $group;
+    $this->type = $type;
   }
 
   public function setEntity(
-    TokenEntity $entity
+    Entity|null $entity
   ): Token {
     $this->entity = $entity;
     return $this;
+  }
+
+  public function setField(
+    string|null $field
+  ): Token {
+    $this->field = $field;
+    return $this;
   }  
 
-  public function setRoot(
-    EntityRoot $root
+  public function setMultiLine(
+    MultiLine $multiLine
   ): Token {
-    $this->root = $root;
+    $this->multiLine = $multiLine;
     return $this;
   }
 
@@ -44,7 +74,7 @@ class Token
     };
 
     return $this;
-  }
+  } 
 
   public function setParseCompare(
     Token $token
@@ -60,10 +90,10 @@ class Token
       $this->value = CompareType::NotLike->value;
     } else if( $this->value === CompareType::Equals->value && $hasList ){
       $this->value = CompareType::In->value;
-      $this->type = TokenType::Range;
+      $this->type = Type::Range;
     } else if( $this->value === CompareType::NotEqual->value && $hasList ){
       $this->value = CompareType::NotIn->value;
-      $this->type = TokenType::Range;
+      $this->type = Type::Range;
     } else if( $this->value === CompareType::Equals->value && $hasNull ){
       $this->value = CompareType::Is->value;
     } else if( $this->value === CompareType::NotEqual->value && $hasNull ){
@@ -73,24 +103,18 @@ class Token
     return $this;
   }  
 
-  private function tokenStart(
+  private function defineEntityWithField(
   ): void {
-    $this->tokenStartParseEntityWithField();
-    $this->tokenStartRemoveSingleQuotes();
-  }
-
-  private function tokenStartParseEntityWithField(
-  ): void {
-    if( $this->type === TokenType::Entity ){
+    if( $this->type === Type::Entity ){
       if( $this->entity !== null ){
         $this->value = Util::sprintFormat(
-          "%s.%s", [ $this->entity->table, $this->entity->field ]
+          "%s.%s", [ $this->entity->table, $this->field ]
         );
       }
     }
   }
 
-  private function tokenStartRemoveSingleQuotes(
+  private function defineRemoveSingleQuotes(
   ): void {
     $this->value = trim( 
       $this->value, "'"

@@ -1,5 +1,6 @@
 <?php
 
+use Websyspro\Commons\Collection;
 use Websyspro\Entity\Shareds\StructureFile;
 use Websyspro\Test\Entitys\BoxEntity;
 use Websyspro\Test\Entitys\DocumentEntity;
@@ -27,7 +28,7 @@ $structureFile = new StructureFile(
   new ReflectionFunction( $call )
 );
 
-// print_r( $structureFile );
+
 
 // $start = microtime( true );
 
@@ -42,5 +43,8 @@ $structureFile = new StructureFile(
 
 $leftTimer = number_format((microtime( true ) - $start) * 1000, 6, ",", "." );
 echo "Execute timer: {$leftTimer}(ms)" . PHP_EOL . PHP_EOL;
+
+// print_r( (new Collection($structureFile->tokens))->joinWithSpace() );
+print_r( $structureFile->tokens );
 
 // print_r( $structureFile );

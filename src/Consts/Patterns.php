@@ -51,7 +51,7 @@ class Patterns
       "0"     // Converte false em 0
     ]
   ];
-
+  public const string PATTERN_IS_NAMESPACE = "#^.*namespace#";
   public const string PATTERN_NAMESPACE_ALIAS = "#\s+as\s+#";
   public const array  PATTERN_NAMESPACE_HYDRATE = [ "#^use\s*#", "#;\s*$#" ];
   public const string PATTERN_NAMESPACE_BREAKS = "#\\\#";
@@ -61,4 +61,6 @@ class Patterns
   public const string PATTERN_IS_HIERARCHY_JOINS = "#^\\$.*->.*->.*$#";
   public const string PATTERN_IS_HIERARCHY_JOINS_FROM_LIST = "#->.*\\($#";
   public const string PATTERN_REMOVE_END_HIERARCHY_JOINS = "#^\\$|->[^->()]+(\\()?$#";
+  public const string PATTERN_SIMPLE_TOKEN = "#\\$[a-zA-Z_][a-zA-Z0-9_]*->[a-zA-Z0-9_]+->#";
+  public const string PATTERS_SIMPLE_QUOTATION_MARKS = "#(^\\')|(\\'$)#";
 }

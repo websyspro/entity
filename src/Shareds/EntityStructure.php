@@ -8,86 +8,122 @@ use Websyspro\Entity\Enums\AttributeType;
 
 class EntityStructure
 {
+  public array $types = [];
+  public array $indexes = [];
+  public array $uniques = [];  
+  public array $foreigns = [];
+  public array $primaryKey = [];
+  public array $requireds = [];
+
   public function __construct(
     public Entity $entity,
     public array $columns = [],
-    public array $types = [],
-    public array $indexes = [],
-    public array $uniques = [],
-    public array $foreigns = [],
-    public array $primaryKey = [],
-    public array $requireds = []
+    array $types = [],
+    array $indexes = [],
+    array $uniques = [],
+    array $foreigns = [],
+    array $primaryKey = [],
+    array $requireds = []
   ){
-    $this->definePrimaryKey();
-    $this->defineIndexes();
-    $this->defineUniques();
-    $this->defineForeigns();
-    $this->defineRequireds();
+    $this->defineTypes( $types );
+    $this->definePrimaryKey( $primaryKey );
+    $this->defineIndexes( $indexes );
+    $this->defineUniques( $uniques );
+    $this->defineForeigns( $foreigns );
+    $this->defineRequireds( $requireds );
+  }
+
+  private function defineTypes(
+    array $types = []
+  ): void {
+    foreach( $types as $type ){
+      if( $type instanceof Column ){
+        $this->types[ $type->name ] = $type;
+      }
+    }
   }
 
   private function getGroupName(
     array $columns,
+    array $accumulates,
     AttributeType $attributeType
   ): array {
-    $columns = array_reduce( $columns, function( array|null $acc, Column $column ) {
-      if( $column->instance instanceof Index || $column->instance instanceof Unique ){
-        if( isset( $column->instance->indexGroup )){
-          $acc[ $column->instance->indexGroup ][] = $column->name; 
-        } else
-        if( isset( $column->instance->uniqueGroup )){
-          $acc[ $column->instance->uniqueGroup ][] = $column->name;
+    if( empty( $columns )){
+      return [];
+    }
+
+    foreach( $columns as $column ){
+      if( $column instanceof Column ){
+        if( $column->instance instanceof Index || $column->instance instanceof Unique ){
+          if( isset( $column->instance->indexGroup )){
+            $accumulates[ $column->instance->indexGroup ] = $column->name;
+          } else
+          if( isset( $column->instance->uniqueGroup )){
+            $accumulates[ $column->instance->uniqueGroup ] = $column->name;
+          }
         }
-      } 
+      }
+    }
 
-      return $acc;
-    }, []);
-
-    $columns = array_map( 
-      fn( array $indexGroup ) => sprintf(
+    foreach( $accumulates as $key => $accumulate ){
+      $accumulates[ $key ] = sprintf(
         "%s_%s", match( $attributeType ){
           AttributeType::indexes => "Index", 
           AttributeType::uniques => "Unique"
-        }, implode( "_", $indexGroup ) 
-      ), $columns
-    );
+        }, implode( "_", $accumulate ) 
+      );
+    }
 
-    return $columns;
+    return $accumulates;
   }
 
   private function definePrimaryKey(
+    array $primaryKey = []
   ): void {
-    if( empty( $this->primaryKey ) === false ){
-      $this->primaryKey = array_map(
-        fn( Column $column ) => new PrimaryKey( $column->name ), $this->primaryKey
-      );      
+    foreach( $primaryKey as $column ){
+      if( $column instanceof Column ){
+        $this->primaryKey[] = $column->name;
+      }
     }
   }
 
   private function defineIndexes(
+    array $indexes = []
   ): void {
     $this->indexes = $this->getGroupName( 
-      $this->indexes, AttributeType::indexes
+      $indexes, [], AttributeType::indexes
     );
   }
 
   private function defineUniques(
+    array $uniques = []
   ): void {
     $this->uniques = $this->getGroupName( 
-      $this->uniques, AttributeType::uniques
+      $uniques, [], AttributeType::uniques
     );
   }
 
   private function defineForeigns(
+    array $foreigns = []
   ): void {
-    $this->foreigns = array_map(
-      fn( Column $column ) => new ForeignKey( $column ), $this->foreigns
-    );
+    foreach( $foreigns as $column ){
+      if( $column instanceof Column ){
+        $foreignNew = new ForeignKey( $column );
+
+        if( $foreignNew instanceof ForeignKey ){
+          $this->foreigns[ $foreignNew->entity->class ] = $foreignNew;
+        }
+      }
+    }
   }
 
   private function defineRequireds(
+    array $requireds = []
   ): void {
-    $this->requireds = array_map( 
-      fn( Column $column ) => $column->name, $this->requireds
-    );
+    foreach( $requireds as $column ){
+      if( $column instanceof Column ){
+        $this->requireds[ $column->name ] = $column->name;
+      }
+    }
   }
 }

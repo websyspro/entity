@@ -7,9 +7,9 @@ use Websyspro\Entity\Consts\Patterns;
 class UsePath
 {
   public string $namespace;
-  public string $entity;
+  public string $name;
   public string $alias;
-  public string $path;
+  public string $entity;
 
   public function __construct(
     string $use
@@ -39,14 +39,14 @@ class UsePath
       Patterns::PATTERN_NAMESPACE_BREAKS, $this->namespace
     );
 
-    [ $this->namespace, $this->entity ] = [
+    [ $this->namespace, $this->name ] = [
       join( Patterns::PATTERN_NAMESPACE_SEPARETOR, array_slice( $namespacePaths, 0, -1 )),
       join( Patterns::PATTERN_NAMESPACE_SEPARETOR, array_slice( $namespacePaths, -1 ))
     ];
 
-    $this->path = implode( 
+    $this->entity = implode( 
       Patterns::PATTERN_NAMESPACE_SEPARETOR, [
-        $this->namespace, $this->entity
+        $this->namespace, $this->name
       ]
     );
   }

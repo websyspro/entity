@@ -24,15 +24,13 @@ extends BaseEntity
   #[ForeignKey(ProductGroupEntity::class)]
   public int $ProductGroupId;
 
-  #[OneToOne(ProductGroupEntity::class)]
-  public ProductGroupEntity $ProductGroup;
-
   #[Text(1)]
   public string $State;
-
+  
   #[Decimal(10,2)]
   public float $Amount;
-
+  
   #[Decimal(10,2)]
   public float $TotalStock;
+  public ProductGroupEntity $ProductGroup;
 }

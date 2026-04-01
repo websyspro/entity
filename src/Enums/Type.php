@@ -2,7 +2,7 @@
 
 namespace Websyspro\Entity\Enums;
 
-enum TokenType
+enum Type
 {
   /** Campo de uma entidade (ex: $user->name) */
   case Entity;

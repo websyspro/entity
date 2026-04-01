@@ -5,39 +5,38 @@ namespace Websyspro\Entity\Interfaces;
 use Websyspro\Entity\Shareds\EntityStructure;
 use Websyspro\Entity\Consts\Patterns;
 use Websyspro\Entity\Enums\MetaType;
+use Websyspro\Entity\Enums\MultiLine;
 
 class Parameter
 {
   public string $name;
   public UsePath $usePath;
-  public string $namespace;
-  public string $entity;
-  public string $path;
+  public MultiLine $multiLine;
   public EntityStructure $entityStructure;
 
   public function __construct(
     string $name,
-    string $entity
+    string $entity,
+    MultiLine $multiLine = MultiLine::No
   ){
     $this->parameterParsed(
-      $name, $entity
+      $name, $entity, $multiLine
     );
   }
 
 
   private function parameterParsed(
     string $name,
-    string $entity
+    string $entity,
+    MultiLine $multiLine
   ): void {
-    $this->name = preg_replace(
-      Patterns::PATTERN_REMOVE_DEFINED_VAR_KEY, "", $name
-    );
-
+    $this->name = preg_replace( Patterns::PATTERN_REMOVE_DEFINED_VAR_KEY, "", $name );
     $this->usePath = new UsePath( $entity );
+    $this->multiLine = $multiLine;
 
-    if( class_exists( $this->usePath->path )){
+    if( class_exists( $this->usePath->entity )){
       $this->entityStructure = call_user_func_array(
-        [ $this->usePath->path, "meta" ], [ MetaType::Query ]
+        [ $this->usePath->entity, "meta" ], [ MetaType::Query ]
       );      
     }
   }
