@@ -14,7 +14,7 @@ class Token
   public Type $type;
   public string|null $field = null;
   public Entity|null $entity = null;
-  public MultiLine $multiLine; 
+  public MultiLine|null $multiLine = null; 
 
 
   public function __construct(
@@ -57,7 +57,7 @@ class Token
   }  
 
   public function setMultiLine(
-    MultiLine $multiLine
+    MultiLine|null $multiLine
   ): Token {
     $this->multiLine = $multiLine;
     return $this;

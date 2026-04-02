@@ -127,7 +127,7 @@ class StructureUtil
 
     foreach( $structureFile->joins as $join ){
       if( $join instanceof Join ){
-        if( $join->entity === $entity->class ){
+        if( $join->entity->class === $entity->class ){
           return $join->multiLine;
         }
       }

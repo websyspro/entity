@@ -139,7 +139,7 @@ class AbstractEntity
   private static function isConstrants(
     string $columnType
   ): bool {
-    return in_array($columnType, [
+    return in_array( $columnType, [
       ForeignKey::class,
       PrimaryKey::class,
       Index::class,
@@ -201,7 +201,7 @@ class AbstractEntity
     if ( !isset( self::$cacheAttributesByType[ static::class ][ $columnType ])) {
       self::$cacheAttributesByType[ static::class ][ $columnType ] = [];
 
-      if (self::isConstrants($columnType)) {
+      if (self::isConstrants( $columnType )) {
         foreach( self::$cacheAttributes[ static::class ] as $column ){
           if ( $column instanceof Column && $column->columnType === $columnType ) {
             if ($column->instance instanceof ReflectionAttribute) {
@@ -215,6 +215,7 @@ class AbstractEntity
         foreach ( self::$cacheAttributes[ static::class ] as $column ){
           if ($column->instance instanceof ReflectionAttribute) {
             if (self::isColumnField( $column->columnType )) {
+              // $column->instance = $column->instance->newInstance();
               self::$cacheAttributesByType[ static::class ][ $columnType ][] = $column;
             }
           }

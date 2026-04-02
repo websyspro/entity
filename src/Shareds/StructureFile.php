@@ -2,6 +2,9 @@
 
 namespace Websyspro\Entity\Shareds;
 
+use BackedEnum;
+use Websyspro\Entity\Decorations\Columns\Datetime;
+use Websyspro\Entity\Enums\ColumnType;
 use Websyspro\Entity\Interfaces\Parameter;
 use Websyspro\Entity\Interfaces\UsePath;
 use Websyspro\Entity\Consts\Patterns;
@@ -10,6 +13,17 @@ use ReflectionNamedType;
 use ReflectionUnionType;
 use ReflectionFunction;
 use ReflectionProperty;
+use UnitEnum;
+use Websyspro\Entity\Decorations\Columns\Date;
+use Websyspro\Entity\Decorations\Columns\Decimal;
+use Websyspro\Entity\Decorations\Columns\Enum;
+use Websyspro\Entity\Decorations\Columns\Flag;
+use Websyspro\Entity\Decorations\Columns\LongText;
+use Websyspro\Entity\Decorations\Columns\Time;
+use Websyspro\Entity\Decorations\Columns\Text;
+use Websyspro\Entity\Decorations\Columns\Number;
+use Websyspro\Entity\Enums\CompareType;
+use Websyspro\Entity\Enums\LogicalType;
 use Websyspro\Entity\Enums\Type;
 use Websyspro\Entity\Interfaces\Join;
 
@@ -23,6 +37,7 @@ class StructureFile
   public array $body = [];
   public array $joins = [];
   public array $tokens = [];
+  public array $params = [];
 
   public function __construct(
     public ReflectionFunction $reflectionFunction
@@ -46,6 +61,9 @@ class StructureFile
     $this->structureFileJoins();
     $this->structureFileTokens();
     $this->structureFileBuild();
+    $this->structureFileGroups();
+    $this->structureFileParses();
+    $this->structureFileResume();
   }
 
   private function structureFileNamespace(
@@ -170,10 +188,7 @@ class StructureFile
       if( $parameterParent instanceof Parameter && $parameterChild instanceof Parameter ){
         $this->joins[] = $parameterBase === $parameterParent && $parameterChild->multiLine === MultiLine::No
           ? new Join( MultiLine::No, $parameterChild, $parameterParent )
-          : ( $parameterChild->multiLine === MultiLine::No
-              ? new Join( MultiLine::No, $parameterChild, $parameterParent )
-              : new Join( MultiLine::Yes, $parameterChild, $parameterParent )
-            );
+          : new Join( MultiLine::Yes, $parameterChild, $parameterParent );
       }
     }
 
@@ -195,50 +210,44 @@ class StructureFile
           $parameterChild = $strutureJoinList[ $i ];
 
           if( $parameterParent ){
-            $parameterParentEntityList = array_values( array_filter(
-              $this->parameters, fn( Parameter $parameter ) => $parameter->name === preg_replace( 
-                Patterns::PATTERN_REMOVE_DEFINED_VAR_KEY, "", $parameterParent
-              )
-            ));
-            
-            if( empty( $parameterParentEntityList ) === false ){
-              [ $parameterParentEntity ] = $parameterParentEntityList;
-            
-              if( $parameterParentEntity instanceof Parameter ){     
-                if ( property_exists( $parameterParentEntity->usePath->entity, $parameterChild )) {
-                  $reflectionProperty = new ReflectionProperty(
-                    $parameterParentEntity->usePath->entity, $parameterChild
-                  );
+            foreach( $this->parameters as $parameter ){
+              if( $parameter instanceof Parameter ){
+                if( $parameter->name === preg_replace( Patterns::PATTERN_REMOVE_DEFINED_VAR_KEY, "", $parameterParent )){
+                  if ( property_exists( $parameter->usePath->entity, $parameterChild )) {
+                    $reflectionProperty = new ReflectionProperty(
+                      $parameter->usePath->entity, $parameterChild
+                    );
 
-                  if( $reflectionProperty->getType() instanceof ReflectionNamedType ){
-                    if( self::getPropertyTypeName( $reflectionProperty ) === EntityList::class ){
-                      $name = $this->tokens[ $index + 2 ];
-                      $parameterChild = $this->tokens[ $index + 3 ];
-                      
-                      if( $name && $parameterChild ){
-                        foreach( $this->usePaths as $usePath ){
-                          if( $usePath->name === $name ){
-                            $paramterNew = $this->addJoin(
-                              $parameterBase, $this->getParameterByName( $parameterParent ), new Parameter( 
-                                $parameterChild, $usePath->entity, MultiLine::Yes
-                              )
-                            );
+                    if( $reflectionProperty->getType() instanceof ReflectionNamedType ){
+                      if( self::getPropertyTypeName( $reflectionProperty ) === EntityList::class ){
+                        $name = $this->tokens[ $index + 2 ];
+                        $parameterChild = $this->tokens[ $index + 3 ];
+                        
+                        if( $name && $parameterChild ){
+                          foreach( $this->usePaths as $usePath ){
+                            if( $usePath->name === $name ){
+                              $paramterNew = $this->addJoin(
+                                $parameterBase, $this->getParameterByName( $parameterParent ), new Parameter( 
+                                  $parameterChild, $usePath->entity, MultiLine::Yes
+                                )
+                              );
 
-                            $this->parameters[ $paramterNew->name ] = $paramterNew;
+                              $this->parameters[ $paramterNew->name ] = $paramterNew;
+                            }
                           }
                         }
-                      }
-                    } else {
-                      $paramterNew = $this->addJoin(
-                        $parameterBase, $this->getParameterByName( $parameterParent ), new Parameter( 
-                          $parameterChild, self::getPropertyTypeName( $reflectionProperty ), MultiLine::No
-                        )
-                      );
+                      } else {
+                        $paramterNew = $this->addJoin(
+                          $parameterBase, $this->getParameterByName( $parameterParent ), new Parameter( 
+                            $parameterChild, self::getPropertyTypeName( $reflectionProperty ), MultiLine::No
+                          )
+                        );
 
-                      $this->parameters[ $paramterNew->name ] = $paramterNew;
+                        $this->parameters[ $paramterNew->name ] = $paramterNew;
+                      }
                     }
                   }
-                }
+                }                
               }
             }
           }
@@ -390,6 +399,344 @@ class StructureFile
       }
     }
   }
+
+  public function isFieldsEquals(
+    Token $currToken,
+    Token $nextToken     
+  ): bool {
+    return $currToken->entity->table === $nextToken->entity->table 
+        && $currToken->field === $nextToken->field;
+  }  
+
+  private function structureFileGroups(
+  ): void {
+    for( $i = 0; $i < sizeof($this->tokens); $i++ ){
+      $currToken = $this->tokens[ $i + 0 ];
+
+      if( $currToken instanceof Token && $currToken->type === Type::Entity ) {
+        for( $j = $i + 3; $j < sizeof( $this->tokens ); $j++ ){
+          $nextToken = $this->tokens[ $j ];
+
+          if( $nextToken instanceof Token ){
+            if( $currToken->group === $nextToken->group ){
+              if( $nextToken->type === Type::Entity ){
+                $isTokenGroup = $this->isFieldsEquals(
+                  $currToken, $nextToken
+                );
+
+                if( $isTokenGroup ){
+                  $logicalToken = $this->tokens[ $j - 1 ];
+                  $isPrevToken = $logicalToken instanceof Token && $logicalToken->type === Type::Logical;
+
+                  array_splice( $this->tokens, $i + 3, 0, array_splice(
+                    $this->tokens, $isPrevToken ? $j - 1 : $j, $isPrevToken ? 4 : 3
+                  ));
+
+                  $i += 2;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  private function getExplodeValue(
+    string $value
+  ): array {
+    if( StructureUtil::isContainsStatic( $value ) || StructureUtil::isEnumValue( $value )){
+      $pattern ="#'[^']*'|\"[^\"]*\"|\\{\\$[\\w-]+\\}|\\$?[\\w\\\\-]+(?:->|::)[\\w\\\\-]+|\\d{2}/\\d{2}/\\d{4}|>=|<=|<>|[<>=!]+|\\(|\\)|,|([a-zA-ZÀ-ÿ\d/:$%\\\\]+(?:\s+[a-zA-ZÀ-ÿ\d/:$%\\\\]+)*\s*)#u";
+
+      preg_match_all( $pattern, 
+        preg_replace( "#^'|'$#", "", $value ),
+          $tokensFromPattern 
+      );
+
+      return array_map( 
+        fn( string $value ) => (
+          preg_replace( [
+            "#^'|'$#", "#^\\{\\$#", "#\\}$#" 
+          ], [ "", "$", "" ], $value )
+        ), array_shift( $tokensFromPattern )
+      );      
+    }
+
+    return [ $value ];
+  }
+
+  private function parseEnum(
+    string $enumValue
+  ): string {
+    $isNotEnum = preg_match( 
+      "#^([\w\\\]+)::(\w+)(?:->(\w+))?$#", $enumValue, $enumPaths 
+    ) === 0;
+
+    if( $isNotEnum ){
+      return $enumValue;
+    }
+
+    if( sizeof( $enumPaths ) === 4 ){
+      [ $class, $case, $property ] = array_slice( $enumPaths, 1 );
+    } else [ $class, $case ] = array_slice( $enumPaths, 1 );
+
+    if( preg_match( "#^\\\#", $class ) === 0 ){
+      foreach( $this->usePaths as $usePath ){
+        if( $usePath instanceof UsePath ){
+          if( $usePath->entity === $class ){
+            $classPath = $usePath;
+          }
+        }
+      }
+    }
+
+    if( enum_exists($classPath->entity) === false && class_exists($classPath->entity) === false) {
+      return $enumValue;
+    }
+    
+    $enumCase = constant( 
+      "{$classPath->entity}::{$case}"
+    );
+
+    if( $enumCase instanceof UnitEnum ){
+      if( isset( $property ) && $property === "name" ){
+        return $enumCase->name;
+      } else
+      if( isset( $property ) && $property === "value" && $enumCase instanceof BackedEnum ){
+        return $enumCase->value;
+      } else
+      if( isset( $property ) === false ){
+        return ( $enumCase instanceof BackedEnum ) 
+          ? $enumCase->value 
+          : $enumCase->name;
+      }
+    } else {
+      return $enumCase;
+    }
+
+    return $enumValue;
+  }
+
+  private function parseStatic(
+    string $staticValue
+  ): string {
+    if( preg_match( "#^(\{\\$|\\$)|\\}$#", $staticValue ) === 0 ){
+      return $staticValue;
+    }
+
+    $staticVar = preg_replace( "#^(\{\\$|\\$)|\\}$#", "", $staticValue );
+
+    foreach( $this->statics as $static => $value ){
+      if( $static === $staticVar ){
+        return $value;
+      }
+    }
+
+    return $staticValue;
+  }  
+  
+  private function getColumnType(
+    Token $token
+  ): ColumnType|null {
+    foreach( $this->parameters as $parameter ){
+      if( $parameter instanceof Parameter ){
+        if( $parameter->entityStructure->entity->class === $token->entity->class ){
+          if( $parameter->entityStructure->types[ $token->field ] instanceof Column ){
+            return match( $parameter->entityStructure->types[ $token->field ]->columnType ){
+              Date::class => ColumnType::date,
+              Datetime::class => ColumnType::datetime,
+              Decimal::class => ColumnType::decimal,
+              Enum::class => ColumnType::enum,
+              Flag::class => ColumnType::flag,
+              LongText::class => ColumnType::longtext,
+              Number::class => ColumnType::number,
+              Text::class => ColumnType::text,
+              Time::class => ColumnType::time,
+                default => ColumnType::text 
+            };
+          }
+        }
+      }
+    }
+
+    return null;
+  }
+  
+  private function addParam(
+    string $value,
+    string|null $key = null
+  ): string {
+    $key = sprintf( ":param_%s", sizeof( $this->params ));
+    $this->params[ $key ] = new Param( $value, $key );
+    return $key;
+  }  
+  
+  private function structureFileParses(
+  ): void {
+    for( $i = 0; $i < sizeof( $this->tokens ); $i++ ){
+      $currToken = $this->tokens[ $i + 0 ];
+
+      if( $currToken instanceof Token && $currToken->type === Type::String ){
+        $tokens = $this->getExplodeValue( $currToken->value );
+
+        if( is_array( $tokens ) && sizeof( $tokens ) !== 0 ){
+          $columnType = $this->getColumnType( $currToken );
+          
+          if( $columnType instanceof ColumnType ){
+            for( $j = 0; $j < sizeof( $tokens ); $j++ ){
+              if( StructureUtil::isEnumValue( $tokens[ $j ] )){
+                $tokens[ $j ] = $this->parseEnum( $tokens[ $j ] );
+              } else if( StructureUtil::isStaticValue( $tokens[ $j ] )){
+                $tokens[ $j ] = $this->parseStatic( $tokens[ $j ] );
+              }
+
+            }
+
+            $parseEncodeValue = $columnType->Encode( 
+              implode( "", $tokens )
+            );
+
+            if( is_array( $parseEncodeValue )){
+              for( $p=0; $p < sizeof( $parseEncodeValue ); $p++ ){
+                $parseEncodeValue[ $p ] = $this->addParam( $parseEncodeValue[ $p ]);
+              }
+
+              $currToken->value = sprintf(
+                "(%s)", implode( ",", $parseEncodeValue )
+              );
+            } else {
+              $parseEncodeValue = $this->addParam( $parseEncodeValue );
+              $currToken->value = $parseEncodeValue;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  private function hasBetweenIsValidsTokens(
+    mixed $currToken, 
+    mixed $currCompToken,
+    mixed $currValToken,
+    mixed $logicalToken, 
+    mixed $nextToken,
+    mixed $nextCompToken,
+    mixed $nextValToken    
+  ): bool {
+    return $currToken instanceof Token
+        && $currCompToken instanceof Token && in_array(
+          CompareType::tryFrom( $currCompToken->value ), [
+            CompareType::GreaterEqual, CompareType::LessEqual,
+            CompareType::Greater, CompareType::Less
+          ]
+        )
+        && $currValToken instanceof Token
+        && $logicalToken instanceof Token && $logicalToken->type === Type::Logical
+        && $nextToken instanceof Token
+        && $nextCompToken instanceof Token && in_array(
+          CompareType::tryFrom( $nextCompToken->value ), [
+            CompareType::GreaterEqual, CompareType::LessEqual,
+            CompareType::Greater, CompareType::Less
+          ]
+        )
+        && $nextValToken instanceof Token
+        && $currCompToken->value !== $nextCompToken->value
+        && ( CompareType::tryFrom( $currCompToken->value ) === CompareType::GreaterEqual
+          && CompareType::tryFrom( $nextCompToken->value ) === CompareType::LessEqual 
+          || CompareType::tryFrom( $currCompToken->value ) === CompareType::Greater
+          && CompareType::tryFrom( $nextCompToken->value ) === CompareType::Less
+        );
+  }
+
+  private function hasBetweenIsEqualEntity(
+    Token $currToken, 
+    Token $nextToken 
+  ): bool {
+    $isEntitysValids = $currToken->entity->table === $nextToken->entity->table;
+    $isFieldsValids = $currToken->field === $nextToken->field;
+    
+    
+    if( $isEntitysValids === false || $isFieldsValids === false ){
+      return false;
+    }
+
+    $columnType = $this->getColumnType( $currToken );
+    if( $columnType instanceof ColumnType ){
+      $isColumnTypeValid = in_array( $columnType, [ 
+        ColumnType::date, ColumnType::datetime, ColumnType::number, ColumnType::decimal
+      ]);
+
+      return $isColumnTypeValid;
+    }
+
+    return false;
+  }
+
+  private function hasBetween(
+    int $index
+  ): bool {
+    if( sizeof( $this->tokens ) - $index >= 7 ){
+      [ $currToken, $currCompToken, $currValToken, $logicalToken, 
+        $nextToken, $nextCompToken, $nextValToken
+      ] = array_slice( $this->tokens, $index, 7 );
+
+      $hasBetweenIsValidsTokens = $this->hasBetweenIsValidsTokens(
+        $currToken, $currCompToken, $currValToken, $logicalToken, 
+        $nextToken, $nextCompToken, $nextValToken
+      );
+
+      if( $hasBetweenIsValidsTokens ){
+        return $this->hasBetweenIsEqualEntity( 
+          $currToken, $nextToken
+        );
+      }
+    }
+
+    return false;
+  }  
+  
+  private function structureFileResume(
+  ): void {
+    for( $i = 0; $i < sizeof( $this->tokens ); $i++ ){
+      $currToken = $this->tokens[ $i + 0 ];
+      $nextToken = $this->tokens[ $i + 2 ] ?? null;
+
+      if( $currToken instanceof Token && $nextToken instanceof Token ){
+        if( $this->hasBetween( $i )){
+
+          $tokensMoveds = array_splice( 
+            $this->tokens, $i, 7
+          );
+
+          [ $valCurrToken, $valNextToken ] = array_merge(
+            array_slice( $tokensMoveds, 2, 1 ),
+            array_slice( $tokensMoveds, 6, 1 )
+          );
+
+          if( $valCurrToken instanceof Token && $valNextToken instanceof Token ){
+            $currTokenBetween = new Token( LogicalType::Between->value, $currToken->group, Type::Range );
+            $currTokenBetweenValue = new Token( "{$valCurrToken->value} And {$valNextToken->value}", $currToken->group, Type::String );
+
+            array_splice(
+              $this->tokens, $i, 0, [
+                $currToken,
+                $currTokenBetween
+                  ->setEntity( $currToken->entity )
+                  ->setField( $currToken->field )
+                  ->setMultiLine( $currToken->multiLine ),
+                $currTokenBetweenValue
+                  ->setEntity( $currToken->entity )
+                  ->setField( $currToken->field )
+                  ->setMultiLine( $currToken->multiLine )
+              ]
+            );
+            
+            $i += 6;
+          }
+        }
+      }
+    }
+  }  
   
   private function structureClear(
   ): void {

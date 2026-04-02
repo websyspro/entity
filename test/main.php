@@ -1,6 +1,5 @@
 <?php
 
-use Websyspro\Commons\Collection;
 use Websyspro\Entity\Shareds\StructureFile;
 use Websyspro\Test\Entitys\BoxEntity;
 use Websyspro\Test\Entitys\DocumentEntity;
@@ -8,11 +7,14 @@ use Websyspro\Test\Entitys\DocumentItemEntity;
 
 $start = microtime( true );
 
+$staticTest = "THIAGO"; 
+
 $call = fn( BoxEntity $box ) => 
   $box->Actived === true &&
   $box->OperatorId === 6 &&
+  $box->CreatedAt >= '12/05/2024' &&
   $box->Operador->Id === 6 || (
-    $box->Name === 'THIAGO' &&
+    $box->Name === $staticTest &&
     $box->Actived === false
   ) && 
   $box->Documents->where( fn( DocumentEntity $document ) =>
@@ -22,12 +24,12 @@ $call = fn( BoxEntity $box ) =>
       $documentItem->Product->ProductGroup->Name === 'ELETRONICOS'
     )
   ) &&
-  $box->Name === 'EMERSON';
+  $box->Name === 'EMERSON' &&
+  $box->CreatedAt <= '18/05/2024';
 
 $structureFile = new StructureFile(
   new ReflectionFunction( $call )
 );
-
 
 
 // $start = microtime( true );
