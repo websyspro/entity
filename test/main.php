@@ -47,6 +47,6 @@ $leftTimer = number_format((microtime( true ) - $start) * 1000, 6, ",", "." );
 echo "Execute timer: {$leftTimer}(ms)" . PHP_EOL . PHP_EOL;
 
 // print_r( (new Collection($structureFile->tokens))->joinWithSpace() );
-print_r( $structureFile->tokens );
+print_r( $structureFile->params );
 
 // print_r( $structureFile );

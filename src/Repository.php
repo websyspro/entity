@@ -5,19 +5,21 @@ namespace Websyspro\Entity;
 use Websyspro\Entity\Shareds\EntityStructure;
 use Websyspro\Entity\Shareds\HierarchyJoin;
 use Websyspro\Entity\Shareds\OrderByDesc;
+use Websyspro\Entity\Shareds\PrimaryKey;
 use Websyspro\Entity\Shareds\OrderByAsc;
 use Websyspro\Entity\Shareds\Structure;
 use Websyspro\Entity\Shareds\Parameter;
+use Websyspro\Entity\Enums\DriverType;
 use Websyspro\Entity\Enums\EntityRoot;
 use Websyspro\Entity\Enums\TokenType;
+use Websyspro\Entity\Enums\MetaType;
+use Websyspro\Entity\Core\Database;
 use Websyspro\Entity\Shareds\Token;
 use Websyspro\Entity\Shareds\Param;
 use Websyspro\Commons\Collection;
 use Websyspro\Commons\Util;
 use ReflectionFunction;
-use Websyspro\Entity\Core\Database;
-use Websyspro\Entity\Enums\DriverType;
-use Websyspro\Entity\Shareds\PrimaryKey;
+use Websyspro\Entity\Shareds\StructureFile;
 
 class Repository
 {
@@ -26,7 +28,7 @@ class Repository
   public int $page;
   public int $rowsPerPage;
   public EntityStructure $entityStructure;
-  public Structure $structure;
+  public StructureFile $structureFile;
   public OrderByAsc $orderByAsc;
   public OrderByDesc $orderByDesc;
   public Collection $joinsPrimary;
@@ -44,7 +46,7 @@ class Repository
     string $entity
   ){
     $this->entityStructure = Util::callUserClassFN( 
-      $entity, "getAttributes", []
+      $entity, "meta", [ MetaType::Query ]
     );
 
     $this->queryBuilderInitial();
@@ -67,7 +69,7 @@ class Repository
 
   private function queryBuilderApplyWhere(
   ): Repository {
-    $this->structure = new Structure(
+    $this->structureFile = new StructureFile(
       new ReflectionFunction( $this->fn )
     );
 

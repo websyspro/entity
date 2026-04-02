@@ -2,30 +2,30 @@
 
 namespace Websyspro\Entity\Shareds;
 
-use BackedEnum;
 use Websyspro\Entity\Decorations\Columns\Datetime;
-use Websyspro\Entity\Enums\ColumnType;
+use Websyspro\Entity\Decorations\Columns\LongText;
+use Websyspro\Entity\Decorations\Columns\Decimal;
+use Websyspro\Entity\Decorations\Columns\Number;
+use Websyspro\Entity\Decorations\Columns\Date;
+use Websyspro\Entity\Decorations\Columns\Enum;
+use Websyspro\Entity\Decorations\Columns\Flag;
+use Websyspro\Entity\Decorations\Columns\Time;
+use Websyspro\Entity\Decorations\Columns\Text;
 use Websyspro\Entity\Interfaces\Parameter;
 use Websyspro\Entity\Interfaces\UsePath;
+use Websyspro\Entity\Enums\CompareType;
+use Websyspro\Entity\Enums\LogicalType;
+use Websyspro\Entity\Enums\ColumnType;
+use Websyspro\Entity\Interfaces\Join;
 use Websyspro\Entity\Consts\Patterns;
 use Websyspro\Entity\Enums\MultiLine;
+use Websyspro\Entity\Enums\Type;
 use ReflectionNamedType;
 use ReflectionUnionType;
 use ReflectionFunction;
 use ReflectionProperty;
+use BackedEnum;
 use UnitEnum;
-use Websyspro\Entity\Decorations\Columns\Date;
-use Websyspro\Entity\Decorations\Columns\Decimal;
-use Websyspro\Entity\Decorations\Columns\Enum;
-use Websyspro\Entity\Decorations\Columns\Flag;
-use Websyspro\Entity\Decorations\Columns\LongText;
-use Websyspro\Entity\Decorations\Columns\Time;
-use Websyspro\Entity\Decorations\Columns\Text;
-use Websyspro\Entity\Decorations\Columns\Number;
-use Websyspro\Entity\Enums\CompareType;
-use Websyspro\Entity\Enums\LogicalType;
-use Websyspro\Entity\Enums\Type;
-use Websyspro\Entity\Interfaces\Join;
 
 class StructureFile
 {
