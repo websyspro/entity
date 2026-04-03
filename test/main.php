@@ -1,6 +1,6 @@
 <?php
 
-use Websyspro\Entity\Shareds\StructureFile;
+use Websyspro\Entity\Repository;
 use Websyspro\Test\Entitys\BoxEntity;
 use Websyspro\Test\Entitys\DocumentEntity;
 use Websyspro\Test\Entitys\DocumentItemEntity;
@@ -9,7 +9,11 @@ $start = microtime( true );
 
 $staticTest = "THIAGO"; 
 
-$call = fn( BoxEntity $box ) => 
+$repository = new Repository(
+  BoxEntity::class
+);
+
+$repository->where( fn( BoxEntity $box ) => 
   $box->Actived === true &&
   $box->OperatorId === 6 &&
   $box->CreatedAt >= '12/05/2024' &&
@@ -25,28 +29,21 @@ $call = fn( BoxEntity $box ) =>
     )
   ) &&
   $box->Name === 'EMERSON' &&
-  $box->CreatedAt <= '18/05/2024';
-
-$structureFile = new StructureFile(
-  new ReflectionFunction( $call )
+  $box->CreatedAt <= '18/05/2024'
 );
 
-
-// $start = microtime( true );
-
-// for( $x=0; $x < 1; $x++ ){
-//   // BoxEntity::meta( MetaType::Query );
-//   // OperatorEntity::meta( MetaType::Query );
-//   DocumentEntity::meta( MetaType::Query );
-//   // DocumentItemEntity::meta( MetaType::Query );
-//   // ProductEntity::meta( MetaType::Query );
-//   // ProductGroupEntity::meta( MetaType::Query );
-// }
+$repository->queryBuilder();
 
 $leftTimer = number_format((microtime( true ) - $start) * 1000, 6, ",", "." );
 echo "Execute timer: {$leftTimer}(ms)" . PHP_EOL . PHP_EOL;
 
-// print_r( (new Collection($structureFile->tokens))->joinWithSpace() );
-print_r( $structureFile->params );
+print_r( $repository->structureFile->tokens );
 
-// print_r( $structureFile );
+print_r( $repository->columnsPrimary );
+print_r( $repository->columnsSecondary );
+print_r( $repository->joinsSimplesPrimary );
+print_r( $repository->joinsPrimary );
+print_r( $repository->joinsSimplesSecondary );
+print_r( $repository->joinsSecondary );
+print_r( $repository->wheresPrimary );
+print_r( $repository->wheresSecondary );

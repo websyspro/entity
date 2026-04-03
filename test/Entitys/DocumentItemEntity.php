@@ -15,14 +15,12 @@ extends BaseEntity
   #[ForeignKey(DocumentEntity::class)]
   public string $DocumentId;
   
-  #[OneToOne( DocumentEntity::class )]
   public DocumentEntity $Document;
   
   #[Number()]
   #[ForeignKey(ProductEntity::class)]
   public string $ProductId;
 
-  #[OneToOne(ProductEntity::class)]
   public ProductEntity $Product;
 
   #[Decimal(10,2)]

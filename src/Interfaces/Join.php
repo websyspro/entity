@@ -17,11 +17,13 @@ class Join
 
   public function __construct(
     MultiLine $multiLine,
+    MultiLine $multiLineReal,
     Parameter $parameterChild,
     Parameter $parameterParent
   ){
     $this->defineJoin(
-      $multiLine, 
+      $multiLine,
+      $multiLineReal,
       $parameterChild, 
       $parameterParent
     );
@@ -29,6 +31,7 @@ class Join
 
   private function defineJoin(
     MultiLine $multiLine,
+    MultiLine $multiLineReal,
     Parameter $parameterChild,
     Parameter $parameterParent    
   ): void {
@@ -36,7 +39,7 @@ class Join
     $this->entity = $parameterChild->entityStructure->entity;
     $this->tableBase = $parameterChild->entityStructure->entity->table;
 
-    if( $this->multiLine === MultiLine::No ){
+    if( $multiLineReal === MultiLine::No ){
       $existForeignInParent = isset( 
         $parameterParent->entityStructure->foreigns[
           $parameterChild->entityStructure->entity->class

@@ -180,6 +180,7 @@ class StructureFile
   }
 
   private function addJoin(
+    MultiLine $multiLineReal,
     Parameter $parameterBase,
     Parameter $parameterParent,
     Parameter $parameterChild
@@ -187,8 +188,8 @@ class StructureFile
     if( $parameterBase instanceof Parameter ){
       if( $parameterParent instanceof Parameter && $parameterChild instanceof Parameter ){
         $this->joins[] = $parameterBase === $parameterParent && $parameterChild->multiLine === MultiLine::No
-          ? new Join( MultiLine::No, $parameterChild, $parameterParent )
-          : new Join( MultiLine::Yes, $parameterChild, $parameterParent );
+          ? new Join( MultiLine::No, $multiLineReal, $parameterChild, $parameterParent )
+          : new Join( MultiLine::Yes, $multiLineReal, $parameterChild, $parameterParent );
       }
     }
 
@@ -227,7 +228,7 @@ class StructureFile
                           foreach( $this->usePaths as $usePath ){
                             if( $usePath->name === $name ){
                               $paramterNew = $this->addJoin(
-                                $parameterBase, $this->getParameterByName( $parameterParent ), new Parameter( 
+                                MultiLine::Yes, $parameterBase, $this->getParameterByName( $parameterParent ), new Parameter( 
                                   $parameterChild, $usePath->entity, MultiLine::Yes
                                 )
                               );
@@ -238,7 +239,7 @@ class StructureFile
                         }
                       } else {
                         $paramterNew = $this->addJoin(
-                          $parameterBase, $this->getParameterByName( $parameterParent ), new Parameter( 
+                          MultiLine::No, $parameterBase, $this->getParameterByName( $parameterParent ), new Parameter( 
                             $parameterChild, self::getPropertyTypeName( $reflectionProperty ), MultiLine::No
                           )
                         );
@@ -296,10 +297,9 @@ class StructureFile
 
   private function structureFileBuild(
     array $groupMultiLine = [],
-    int $groupStartPos = -1,
-    int $group = 1   
+    array $groupStartPos = [],
+    int $group = 0   
   ): void {
-    /** @var array<int, string|Token> $tokens */
     for( $i = 0; $i < sizeof( $this->tokens ); $i++ ){
       $currType = StructureUtil::getTokenByValue( 
         $this->tokens[ $i + 0 ]
@@ -311,44 +311,42 @@ class StructureFile
 
       if( $hasEntityOrString === false ){
         if( $currType === Type::StartGroup ){
-          $groupMultiLine[ $group ] = [];
-          $groupStartPos = $i;
           $group++;
+          $groupMultiLine[ $group ] = [];
+          $groupStartPos[ $group ] = $i;
         }
         
-        /* Append Tokens Arr */
         $this->tokens[ $i ] = StructureUtil::createToken( 
           $this->tokens[ $i ], $group, $currType, $this
         );
 
         if( $this->tokens[ $i ]->type === Type::EndGroup ){
-          if( $groupStartPos !== -1 ){
-            if( $this->tokens[ $groupStartPos ] instanceof Token ){
-              if( $this->tokens[ $groupStartPos ]->type === Type::StartGroup ){
-                $this->tokens[ $groupStartPos ]->setMultiLine(
+          if( $groupStartPos[ $group ] !== -1 ){
+            if( $this->tokens[ $groupStartPos[ $group ] ] instanceof Token ){
+              if( $this->tokens[ $groupStartPos[ $group ] ]->type === Type::StartGroup ){
+                $this->tokens[ $groupStartPos[ $group ] ]->setMultiLine(
                   in_array( MultiLine::Yes, $groupMultiLine[ $group ] ) 
                     ? MultiLine::Yes
                     : MultiLine::No
                 );
 
-                if( $this->tokens[ $groupStartPos - 1 ] instanceof Token ){
-                  if( $this->tokens[ $groupStartPos - 1 ]->type === Type::Logical ){
-                    $this->tokens[ $groupStartPos - 1 ]->setMultiLine( 
-                      $this->tokens[ $groupStartPos ]->multiLine
+                if( $this->tokens[ $groupStartPos[ $group ] - 1 ] instanceof Token ){
+                  if( $this->tokens[ $groupStartPos[ $group ] - 1 ]->type === Type::Logical ){
+                    $this->tokens[ $groupStartPos[ $group ] - 1 ]->setMultiLine( 
+                      $this->tokens[ $groupStartPos[ $group ] ]->multiLine
                     );
                   }
                 }
                 
                 if( $this->tokens[ $i ] instanceof Token ){
                   $this->tokens[ $i ]->setMultiLine(
-                    $this->tokens[ $groupStartPos ]->multiLine
+                    $this->tokens[ $groupStartPos[ $group ] ]->multiLine
                   );
                 }
               }
             }
           }
 
-          $groupMultiLine[ $group ] = [];
           $group--;
         }
       } else {
@@ -374,7 +372,7 @@ class StructureFile
           $this->tokens[ $i + 2 ] = $nextToken;
         }
 
-        $entityRootRefence = $currToken->multiLine !== $nextToken->multiLine
+        $multiLineRefence = $currToken->multiLine !== $nextToken->multiLine
           ? MultiLine::No : ( 
               $currToken->multiLine === MultiLine::Yes && 
               $nextToken->multiLine === MultiLine::Yes
@@ -382,19 +380,19 @@ class StructureFile
                 : MultiLine::No
             );
 
-        $currToken->setMultiLine( $entityRootRefence );
-        $compToken->setMultiLine( $entityRootRefence );
-        $nextToken->setMultiLine( $entityRootRefence );
+        $currToken->setMultiLine( $multiLineRefence );
+        $compToken->setMultiLine( $multiLineRefence );
+        $nextToken->setMultiLine( $multiLineRefence );
 
         if( $i >= 1 ){
           if( $this->tokens[ $i - 1 ] instanceof Token ){
             if( $this->tokens[ $i - 1 ]->type === Type::Logical ){
-              $this->tokens[ $i - 1 ]->setMultiLine( $entityRootRefence );
+              $this->tokens[ $i - 1 ]->setMultiLine( $multiLineRefence );
             }
           }
         }          
         
-        $groupMultiLine[$group][] = $entityRootRefence;
+        $groupMultiLine[$group][] = $multiLineRefence;
         $i += 2;
       }
     }

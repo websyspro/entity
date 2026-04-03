@@ -60,11 +60,15 @@ class AbstractEntity
    * @return array<string>
    */
   private static function getColumnsBaseStarts(
+    array $columns = []
   ): array {
-    return array_filter(
-      self::$cacheColumnsBase,
-      fn(string $column) => $column === reset(self::$cacheColumnsBase)
-    );
+    foreach( self::$cacheColumnsBase as $column ){
+      if( $column === reset( self::$cacheColumnsBase )){
+        $columns[] = $column;
+      }
+    }
+    
+    return $columns;
   }
 
   /**
@@ -73,11 +77,17 @@ class AbstractEntity
    * @return array<string>
    */
   private static function getColumsCenters(
+    array $columns = []
   ): array {
-    return array_filter(
-      self::$cacheColumns[ static::class ][ AttributeType::column->name ],
-      fn(string $column) => !in_array( $column, self::$cacheColumnsBase )
-    );
+    foreach( self::$cacheColumns[ static::class ][ AttributeType::column->name ] as $column ){
+      if( $column instanceof ReflectionProperty ){
+        if( in_array( $column->name, self::$cacheColumnsBase ) === false ){
+          $columns[] = $column->name;
+        }
+      }
+    }
+
+    return $columns;
   }
 
   /**
@@ -86,11 +96,15 @@ class AbstractEntity
    * @return array<string>
    */
   private static function getColumnsBaseEnds(
+    array $columns = []
   ): array {
-    return array_filter(
-      self::$cacheColumnsBase,
-      fn(string $column) => $column !== reset( self::$cacheColumnsBase )
-    );
+    foreach( self::$cacheColumnsBase as $column ){
+      if( $column !== reset( self::$cacheColumnsBase )){
+        $columns[] = $column;
+      }
+    }
+
+    return $columns;
   }
 
   /**
@@ -105,7 +119,7 @@ class AbstractEntity
    */
   private static function getColumns(
   ): array {
-    if (empty(self::$cacheColumnsBase)) {
+    if( empty( self::$cacheColumnsBase )) {
       self::$cacheColumnsBase = array_map(
         fn(ReflectionProperty $column) => $column->name,
           self::$cacheReflectionClassBase->getProperties(
@@ -114,13 +128,14 @@ class AbstractEntity
       );
     }
 
-    if (empty(self::$cacheColumns[ static::class ][ AttributeType::column->name ])) {
-      self::$cacheColumns[ static::class ][ AttributeType::column->name ] = array_map(
-        fn(ReflectionProperty $column) => $column->name, array_filter(
-          self::$cacheReflectionClass[static::class]->getProperties( ReflectionProperty::IS_PUBLIC ),
-            fn(ReflectionProperty $column) => !empty($column->getAttributes(static::class))
-        )
-      );
+    if( empty( self::$cacheColumns[ static::class ][ AttributeType::column->name ])){
+      foreach( self::$cacheReflectionClass[ static::class ]->getProperties( ReflectionProperty::IS_PUBLIC ) as $property ){
+        if( $property instanceof ReflectionProperty ){
+          if( empty( $property->getAttributes()) === false ){
+            self::$cacheColumns[ static::class ][ AttributeType::column->name ][] = $property;
+          }
+        }
+      }
 
       self::$cacheColumns[ static::class ][ AttributeType::column->name ] = array_merge(
         self::getColumnsBaseStarts(), self::getColumsCenters(), self::getColumnsBaseEnds()

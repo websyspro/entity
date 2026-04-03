@@ -8,7 +8,6 @@ use Websyspro\Entity\Decorations\Columns\Number;
 use Websyspro\Entity\Decorations\Columns\Text;
 use Websyspro\Entity\Core\Bases\BaseEntity;
 use Websyspro\Entity\Decorations\Constraints\ForeignKey;
-use Websyspro\Entity\Decorations\Constraints\OneToOne;
 
 class ProductEntity
 extends BaseEntity

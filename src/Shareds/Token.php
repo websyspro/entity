@@ -3,9 +3,8 @@
 namespace Websyspro\Entity\Shareds;
 
 use Websyspro\Entity\Enums\CompareType;
-use Websyspro\Entity\Enums\Type;
 use Websyspro\Entity\Enums\MultiLine;
-use Websyspro\Commons\Util;
+use Websyspro\Entity\Enums\Type;
 
 class Token
 {
@@ -46,14 +45,14 @@ class Token
     Entity|null $entity
   ): Token {
     $this->entity = $entity;
-    return $this;
+    return $this->defineEntityWithField();
   }
 
   public function setField(
     string|null $field
   ): Token {
     $this->field = $field;
-    return $this;
+    return $this->defineEntityWithField();
   }  
 
   public function setMultiLine(
@@ -104,14 +103,16 @@ class Token
   }  
 
   private function defineEntityWithField(
-  ): void {
+  ): Token {
     if( $this->type === Type::Entity ){
       if( $this->entity !== null ){
-        $this->value = Util::sprintFormat(
-          "%s.%s", [ $this->entity->table, $this->field ]
+        $this->value = sprintf(
+          "%s.%s", $this->entity->table, $this->field
         );
       }
     }
+
+    return $this;
   }
 
   private function defineRemoveSingleQuotes(
