@@ -36,14 +36,3 @@ $repository->queryBuilder();
 
 $leftTimer = number_format((microtime( true ) - $start) * 1000, 6, ",", "." );
 echo "Execute timer: {$leftTimer}(ms)" . PHP_EOL . PHP_EOL;
-
-print_r( $repository->structureFile->tokens );
-
-print_r( $repository->columnsPrimary );
-print_r( $repository->columnsSecondary );
-print_r( $repository->joinsSimplesPrimary );
-print_r( $repository->joinsPrimary );
-print_r( $repository->joinsSimplesSecondary );
-print_r( $repository->joinsSecondary );
-print_r( $repository->wheresPrimary );
-print_r( $repository->wheresSecondary );
