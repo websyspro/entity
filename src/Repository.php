@@ -3,6 +3,8 @@
 namespace Websyspro\Entity;
 
 use ReflectionFunction;
+use Websyspro\Entity\Core\Database;
+use Websyspro\Entity\Enums\DriverType;
 use Websyspro\Entity\Enums\MetaType;
 use Websyspro\Entity\Enums\MultiLine;
 use Websyspro\Entity\Enums\Type;
@@ -223,11 +225,51 @@ class Repository
     return null;    
   }
   
-  private function wheresOrderBy(
-  ): void {}
+  private function orderByPrimary(
+  ): string|null {
+    return null;
+    // if( $this->orderBy->exist() === false ){
+    //   if( $this->entityStructure->primaryKey->exist()){
+    //     $orderByFromPrimaryKeys = $this->entityStructure->primaryKey->mapper(
+    //       fn( PrimaryKey $primaryKey ) => Util::sprintFormat( "%s.%s Asc", [  
+    //         $this->entityStructure->entity->table, $primaryKey->name
+    //       ])
+    //     );
+
+    //     return Util::sprintFormat(
+    //       "Order By %s", [ $orderByFromPrimaryKeys->joinWithComma() ]
+    //     );
+    //   } else {
+    //     $orderByFromColumns = $this->entityStructure->columns->slice(0, 1)->mapper(
+    //       fn( string $primaryKey ) => Util::sprintFormat( "%s.%s Asc", [  
+    //         $this->entityStructure->entity->table, $primaryKey 
+    //       ])
+    //     );
+
+    //     return Util::sprintFormat(
+    //       "Order By %s.%s Asc", [ $orderByFromColumns->joinWithComma() ]
+    //     );        
+    //   }
+    // }
+
+    // return Util::sprintFormat(
+    //   "Order By %s", [ $this->orderBy->joinWithComma() ]
+    // );
+  }
   
   private function pagedPrimary(
-  ): void {}
+  ): string|null {
+    $this->page = isset( $this->page ) === false ? 1 : $this->page;
+    $this->rowsPerPage = isset( $this->rowsPerPage ) === false ? 12 : $this->rowsPerPage;
+
+    return match( DriverType::tryFrom( Database::getDriver())){
+      DriverType::MySql => sprintf( "Limit %s, %s", ( $this->page - 1 ) * $this->rowsPerPage, $this->rowsPerPage ),
+      DriverType::SqlServer => sprintf( "Offset %s Rows Fetch Next %s Rows Only", ( $this->page - 1 ) * $this->rowsPerPage, $this->rowsPerPage ),
+      DriverType::PostgreSQL => sprintf( "Limit %s Offset %s", $this->rowsPerPage, ( $this->page - 1 ) * $this->rowsPerPage ),
+        
+      default => null
+    };    
+  }
 
   private function setReplaceParams(
     array $matches
