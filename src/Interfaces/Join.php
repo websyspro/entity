@@ -3,7 +3,6 @@
 namespace Websyspro\Entity\Interfaces;
 
 use Websyspro\Entity\Enums\MultiLine;
-use Websyspro\Entity\Shareds\Entity;
 
 class Join
 {

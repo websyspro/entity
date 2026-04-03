@@ -4,7 +4,6 @@ namespace Websyspro\Entity\Decorations\Events;
 
 use Attribute;
 use Websyspro\Entity\Enums\AttributeType;
-use Websyspro\Entity\Shareds\AbstractColumn;
 
 /**
  * PHP attribute for defining default value on entity property during DELETE operations (soft delete).
@@ -13,7 +12,6 @@ use Websyspro\Entity\Shareds\AbstractColumn;
  */
 #[Attribute( Attribute::TARGET_PROPERTY )]
 class Delete
-extends AbstractColumn
 {
   public AttributeType $attributeType = AttributeType::delete;
   

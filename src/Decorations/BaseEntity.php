@@ -1,18 +1,18 @@
 <?php
 
-namespace Websyspro\Entity\Core\Bases;
+namespace Websyspro\Entity\Decorations;
 
-use Websyspro\Entity\Core\Commons\Now;
-use Websyspro\Entity\Decorations\Columns\Datetime;
-use Websyspro\Entity\Decorations\Columns\Flag;
-use Websyspro\Entity\Decorations\Columns\Number;
+use Websyspro\Entity\Decorations\Generations\AutoIncrement;
 use Websyspro\Entity\Decorations\Constraints\PrimaryKey;
+use Websyspro\Entity\Decorations\Requireds\NotNull;
+use Websyspro\Entity\Decorations\Columns\Datetime;
+use Websyspro\Entity\Decorations\Columns\Number;
 use Websyspro\Entity\Decorations\Events\Delete;
 use Websyspro\Entity\Decorations\Events\Insert;
 use Websyspro\Entity\Decorations\Events\Update;
-use Websyspro\Entity\Decorations\Generations\AutoIncrement;
-use Websyspro\Entity\Decorations\Requireds\NotNull;
+use Websyspro\Entity\Decorations\Columns\Flag;
 use Websyspro\Entity\Shareds\AbstractEntity;
+use Websyspro\Entity\Core\Commons\Now;
 
 /**
  * Base entity class providing common database columns for all entities.

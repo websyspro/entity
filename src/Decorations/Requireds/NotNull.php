@@ -4,7 +4,6 @@ namespace Websyspro\Entity\Decorations\Requireds;
 
 use Attribute;
 use Websyspro\Entity\Enums\AttributeType;
-use Websyspro\Entity\Shareds\AbstractColumn;
 
 /**
  * PHP attribute for marking property as required (NOT NULL) in entity.
@@ -13,7 +12,6 @@ use Websyspro\Entity\Shareds\AbstractColumn;
  */
 #[Attribute( Attribute::TARGET_PROPERTY )]
 class NotNull
-extends AbstractColumn
 {
   public AttributeType $attributeType = AttributeType::requireds;
 }

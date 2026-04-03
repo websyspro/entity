@@ -18,6 +18,7 @@ use Websyspro\Entity\Shareds\Token;
 
 class Repository
 {
+  public string $sql;
   public mixed $fn;
   public int $page;
   public int $rowsPerPage;
@@ -86,6 +87,11 @@ class Repository
     return $this;
   }
 
+  public function get(
+  ): array {
+    return Database::query( $this->sql, $this->prepareds );
+  }  
+
   private function queryBuilderStructureFile(
   ): void {
     $this->structureFile = new StructureFile(
@@ -96,8 +102,10 @@ class Repository
   private function columnsFromPrimary(
   ): string {
     foreach( $this->entityStructure->columns as $column ){
-      $this->columnsPrimary[] = sprintf(
-        '%1$s.%2$s As %2$s', $this->entityStructure->entity->table, $column, $column
+      $this->columnsPrimary[] = sprintf( '%1$s.%2$s As %3$s', 
+        $this->entityStructure->entity->table, 
+        $this->entityStructure->alias[ $column ] ?? $column,
+        $this->entityStructure->alias[ $column ] ?? $column
       );
     }
     
@@ -108,8 +116,10 @@ class Repository
   ): string {
     foreach( $this->structureFile->parameters as $parameter ){
       foreach( $parameter->entityStructure->columns as $column ){
-        $this->columnsSecondary[] = sprintf( 
-          '%1$s.%2$s As %1$s_%2$s', $parameter->entityStructure->entity->table, $column, $column
+        $this->columnsSecondary[] = sprintf( '%1$s.%3$s As %2$s_%4$s', 
+          $parameter->entityStructure->entity->table,
+          $parameter->entityStructure->entity->alias, 
+          $parameter->entityStructure->alias[ $column ] ?? $column, $column
         );
       }
     }
@@ -285,12 +295,12 @@ class Repository
   
   private function queryBuilderSQLFormat(
   ): string {
-    return "Select %s From ( Select %s From %s %s %s %s ) As %s %s";
+    return "Select %s From ( Select %s From %s %s %s %s ) As %s %s Limit 12";
   }  
 
   private function queryBuilderSQL(
   ): void {
-    $sql = preg_replace_callback( 
+    $this->sql = preg_replace_callback( 
       "#\:param_\d+#", fn( array $matches ) => (
         $this->setReplaceParams( $matches )
       ), 
@@ -307,6 +317,6 @@ class Repository
       )
     );
 
-    print_r( $sql );
+    print_r( $this->sql );
   }
 }

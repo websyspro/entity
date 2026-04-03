@@ -4,6 +4,7 @@ namespace Websyspro\Entity\Consts;
 
 class Patterns
 { 
+  public const string PATTERN_REMOVE_ENTITY_SUFIXO = "#Entity$#";
   public const string PATTERN_REMOVE_COMMENT_LINE = "#^.*//#";
   public const string PATTERN_REMOVE_DEFINED_VAR_KEY = "#^\\$#";
   public const string PATTERN_TOKEN = "#'[^']*'|\"[^\"]*\"|\\S+#";
@@ -55,7 +56,7 @@ class Patterns
   public const string PATTERN_NAMESPACE_ALIAS = "#\s+as\s+#";
   public const array  PATTERN_NAMESPACE_HYDRATE = [ "#^use\s*#", "#;\s*$#" ];
   public const string PATTERN_NAMESPACE_BREAKS = "#\\\#";
-  public const string PATTERN_NAMESPACE_WHERES = "#^.*use\s*#";
+  public const string PATTERN_NAMESPACE_WHERES = "#^use\s*#";
   public const string PATTERN_NAMESPACE_SEPARETOR = "\\";
   public const string PATTERN_HIERARCHY_JOINS_SEPARETOR = "#->#";
   public const string PATTERN_IS_HIERARCHY_JOINS = "#^\\$.*->.*->.*$#";

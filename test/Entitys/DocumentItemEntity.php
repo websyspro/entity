@@ -2,11 +2,10 @@
 
 namespace Websyspro\Test\Entitys;
 
+use Websyspro\Entity\Decorations\Constraints\ForeignKey;
 use Websyspro\Entity\Decorations\Columns\Decimal;
 use Websyspro\Entity\Decorations\Columns\Number;
-use Websyspro\Entity\Core\Bases\BaseEntity;
-use Websyspro\Entity\Decorations\Constraints\ForeignKey;
-use Websyspro\Entity\Decorations\Constraints\OneToOne;
+use Websyspro\Entity\Decorations\BaseEntity;
 
 class DocumentItemEntity
 extends BaseEntity

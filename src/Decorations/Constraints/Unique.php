@@ -12,7 +12,7 @@ use Websyspro\Entity\Shareds\AbstractColumn;
  * Supports composite unique constraints via uniqueGroup parameter.
  */
 #[Attribute( Attribute::TARGET_PROPERTY )]
-class Unique extends AbstractColumn
+class Unique
 {
   public AttributeType $attributeType = AttributeType::uniques;
 

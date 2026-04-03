@@ -8,6 +8,6 @@ use Attribute;
 class EntityName
 {
   public function __construct(
-    public string $entityName
+    public string $name
   ){}
 }

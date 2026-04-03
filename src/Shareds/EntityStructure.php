@@ -2,45 +2,77 @@
 
 namespace Websyspro\Entity\Shareds;
 
+use Websyspro\Entity\Decorations\Constraints\ForeignKey;
 use Websyspro\Entity\Decorations\Constraints\Unique;
 use Websyspro\Entity\Decorations\Statistics\Index;
+use Websyspro\Entity\Decorations\ColumnName;
 use Websyspro\Entity\Enums\AttributeType;
+use Websyspro\Entity\Interfaces\Entity;
+use ReflectionAttribute;
 
 class EntityStructure
 {
+  public Entity $entity;
+  public array $columns = [];
+  public array $alias = [];
   public array $types = [];
   public array $indexes = [];
   public array $uniques = [];  
   public array $foreigns = [];
   public array $primaryKey = [];
   public array $requireds = [];
+  public array $autoIncrements = [];
 
   public function __construct(
-    public Entity $entity,
-    public array $columns = [],
+    Entity $entity,
+    array $columns = [],
     array $types = [],
+    array $alias = [],
     array $indexes = [],
     array $uniques = [],
     array $foreigns = [],
     array $primaryKey = [],
-    array $requireds = []
+    array $requireds = [],
+    array $autoIncrements = []
   ){
+    $this->defineEntity( $entity );
+    $this->defineColumns( $columns );
+    $this->defineAlias( $alias );
     $this->defineTypes( $types );
     $this->definePrimaryKey( $primaryKey );
     $this->defineIndexes( $indexes );
     $this->defineUniques( $uniques );
     $this->defineForeigns( $foreigns );
     $this->defineRequireds( $requireds );
+    $this->defineAutoIncrements( $autoIncrements );
   }
+
+  private function defineEntity(
+    Entity $entity
+  ): void {
+    $this->entity = $entity;
+  }  
+
+  private function defineColumns(
+    array $columns = [],
+  ): void {
+    $this->columns = $columns;
+  }
+
+  private function defineAlias(
+    array $alias = [],
+  ): void {
+    foreach( $alias as $columnName => $alia ){
+      if( $alia instanceof ColumnName ){
+        $this->alias[ $columnName ] = $alia->columnName;
+      }
+    }
+  }  
 
   private function defineTypes(
     array $types = []
   ): void {
-    foreach( $types as $type ){
-      if( $type instanceof Column ){
-        $this->types[ $type->name ] = $type;
-      }
-    }
+    $this->types = $types;
   }
 
   private function getGroupName(
@@ -48,19 +80,17 @@ class EntityStructure
     array $accumulates,
     AttributeType $attributeType
   ): array {
-    if( empty( $columns )){
+    if( sizeof( $columns ) === 0 ){
       return [];
     }
 
-    foreach( $columns as $column ){
-      if( $column instanceof Column ){
-        if( $column->instance instanceof Index || $column->instance instanceof Unique ){
-          if( isset( $column->instance->indexGroup )){
-            $accumulates[ $column->instance->indexGroup ] = $column->name;
-          } else
-          if( isset( $column->instance->uniqueGroup )){
-            $accumulates[ $column->instance->uniqueGroup ] = $column->name;
-          }
+    foreach( $columns as $columnName => $column ){
+      if( $column instanceof Index ){
+        if( isset( $column->indexGroup )){
+          $accumulates[ $column->indexGroup ][] = $columnName;
+        } else
+        if( $column instanceof Unique ){
+          $accumulates[ $column->uniqueGroup ][] = $columnName;
         }
       }
     }
@@ -78,11 +108,11 @@ class EntityStructure
   }
 
   private function definePrimaryKey(
-    array $primaryKey = []
+    array $primaryKeys = []
   ): void {
-    foreach( $primaryKey as $column ){
-      if( $column instanceof Column ){
-        $this->primaryKey[] = $column->name;
+    foreach( $primaryKeys as $columnName => $primaryKey ){
+      if( $primaryKey instanceof ReflectionAttribute ){
+        $this->primaryKey[ $columnName ] = $columnName;
       }
     }
   }
@@ -106,13 +136,9 @@ class EntityStructure
   private function defineForeigns(
     array $foreigns = []
   ): void {
-    foreach( $foreigns as $column ){
-      if( $column instanceof Column ){
-        $foreignNew = new ForeignKey( $column );
-
-        if( $foreignNew instanceof ForeignKey ){
-          $this->foreigns[ $foreignNew->entity->class ] = $foreignNew;
-        }
+    foreach( $foreigns as $columnName => $foreignKey ){
+      if( $foreignKey instanceof ForeignKey ){
+        $this->foreigns[ $columnName ] = $foreignKey->entityReference;
       }
     }
   }
@@ -120,9 +146,19 @@ class EntityStructure
   private function defineRequireds(
     array $requireds = []
   ): void {
-    foreach( $requireds as $column ){
-      if( $column instanceof Column ){
-        $this->requireds[ $column->name ] = $column->name;
+    foreach( $requireds as $columnName => $required ){
+      if( $required instanceof ReflectionAttribute ){
+        $this->requireds[ $columnName ] = $columnName;
+      }
+    }
+  }
+
+  private function defineAutoIncrements(
+    array $autoIncrements = []
+  ): void {
+    foreach( $autoIncrements as $columnName => $autoIncrement ){
+      if( $autoIncrement instanceof ReflectionAttribute ){
+        $this->autoIncrements[ $columnName ] = $columnName;
       }
     }
   }

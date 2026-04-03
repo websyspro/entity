@@ -2,15 +2,6 @@
 
 namespace Websyspro\Entity\Shareds;
 
-use Websyspro\Entity\Decorations\Columns\Datetime;
-use Websyspro\Entity\Decorations\Columns\LongText;
-use Websyspro\Entity\Decorations\Columns\Decimal;
-use Websyspro\Entity\Decorations\Columns\Number;
-use Websyspro\Entity\Decorations\Columns\Date;
-use Websyspro\Entity\Decorations\Columns\Enum;
-use Websyspro\Entity\Decorations\Columns\Flag;
-use Websyspro\Entity\Decorations\Columns\Time;
-use Websyspro\Entity\Decorations\Columns\Text;
 use Websyspro\Entity\Interfaces\Parameter;
 use Websyspro\Entity\Interfaces\UsePath;
 use Websyspro\Entity\Enums\CompareType;
@@ -95,8 +86,10 @@ class StructureFile
   private function structureFileUsePaths(
   ): void {
     foreach( $this->rows as $row ){
-      if( preg_match( Patterns::PATTERN_NAMESPACE_WHERES, $row )){
-        $usePathNew = new UsePath( preg_replace( Patterns::PATTERN_NAMESPACE_HYDRATE, "", $row ));
+      if( preg_match( Patterns::PATTERN_NAMESPACE_WHERES, trim( $row ))){
+        $usePathNew = new UsePath( preg_replace( 
+          Patterns::PATTERN_NAMESPACE_HYDRATE, "", trim( $row )
+        ));
 
         if( $usePathNew instanceof UsePath ){
           $this->usePaths[ $usePathNew->entity ] = $usePathNew;
@@ -214,9 +207,9 @@ class StructureFile
             foreach( $this->parameters as $parameter ){
               if( $parameter instanceof Parameter ){
                 if( $parameter->name === preg_replace( Patterns::PATTERN_REMOVE_DEFINED_VAR_KEY, "", $parameterParent )){
-                  if ( property_exists( $parameter->usePath->entity, $parameterChild )) {
+                  if ( property_exists( $parameter->entityStructure->entity->class, $parameterChild )) {
                     $reflectionProperty = new ReflectionProperty(
-                      $parameter->usePath->entity, $parameterChild
+                      $parameter->entityStructure->entity->class, $parameterChild
                     );
 
                     if( $reflectionProperty->getType() instanceof ReflectionNamedType ){
@@ -275,9 +268,11 @@ class StructureFile
     for( $i=0; $i < sizeof( $this->tokens ); $i++ ){
       if( preg_match( Patterns::PATTERN_IS_HIERARCHY_JOINS_FROM_LIST, $this->tokens[ $i ])){
         $this->tokens[ $i ] = "(";
-        array_splice( $this->tokens, $i + 1, 5 ); 
+        array_splice( $this->tokens, $i + 1, array_search(
+          "=>", array_slice( $this->tokens, $i ))
+        ); 
       }
-
+      
       if( substr_count( $this->tokens[ $i ], "->" ) >= 2 ){
         $pathTokens = preg_split( 
           Patterns::PATTERN_HIERARCHY_JOINS_SEPARETOR, 
@@ -481,7 +476,7 @@ class StructureFile
     if( preg_match( "#^\\\#", $class ) === 0 ){
       foreach( $this->usePaths as $usePath ){
         if( $usePath instanceof UsePath ){
-          if( $usePath->entity === $class ){
+          if( $usePath->name === $class ){
             $classPath = $usePath;
           }
         }
@@ -539,20 +534,7 @@ class StructureFile
     foreach( $this->parameters as $parameter ){
       if( $parameter instanceof Parameter ){
         if( $parameter->entityStructure->entity->class === $token->entity->class ){
-          if( $parameter->entityStructure->types[ $token->field ] instanceof Column ){
-            return match( $parameter->entityStructure->types[ $token->field ]->columnType ){
-              Date::class => ColumnType::date,
-              Datetime::class => ColumnType::datetime,
-              Decimal::class => ColumnType::decimal,
-              Enum::class => ColumnType::enum,
-              Flag::class => ColumnType::flag,
-              LongText::class => ColumnType::longtext,
-              Number::class => ColumnType::number,
-              Text::class => ColumnType::text,
-              Time::class => ColumnType::time,
-                default => ColumnType::text 
-            };
-          }
+          return $parameter->entityStructure->types[ $token->field ]->columnType;
         }
       }
     }
@@ -574,9 +556,10 @@ class StructureFile
     for( $i = 0; $i < sizeof( $this->tokens ); $i++ ){
       $currToken = $this->tokens[ $i + 0 ];
 
+      
       if( $currToken instanceof Token && $currToken->type === Type::String ){
         $tokens = $this->getExplodeValue( $currToken->value );
-
+        
         if( is_array( $tokens ) && sizeof( $tokens ) !== 0 ){
           $columnType = $this->getColumnType( $currToken );
           
@@ -590,10 +573,11 @@ class StructureFile
 
             }
 
+            
             $parseEncodeValue = $columnType->Encode( 
               implode( "", $tokens )
             );
-
+            
             if( is_array( $parseEncodeValue )){
               for( $p=0; $p < sizeof( $parseEncodeValue ); $p++ ){
                 $parseEncodeValue[ $p ] = $this->addParam( $parseEncodeValue[ $p ]);

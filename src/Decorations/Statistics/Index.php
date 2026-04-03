@@ -4,7 +4,6 @@ namespace Websyspro\Entity\Decorations\Statistics;
 
 use Attribute;
 use Websyspro\Entity\Enums\AttributeType;
-use Websyspro\Entity\Shareds\AbstractColumn;
 
 /**
  * PHP attribute for defining database index on entity property.
@@ -12,7 +11,7 @@ use Websyspro\Entity\Shareds\AbstractColumn;
  * Supports composite indexes via indexGroup parameter for multi-column indexes.
  */
 #[Attribute( Attribute::TARGET_PROPERTY )]
-class Index extends AbstractColumn
+class Index
 {
   public AttributeType $attributeType = AttributeType::indexes;
 

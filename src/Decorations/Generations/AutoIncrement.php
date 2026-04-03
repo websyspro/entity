@@ -4,7 +4,6 @@ namespace Websyspro\Entity\Decorations\Generations;
 
 use Attribute;
 use Websyspro\Entity\Enums\AttributeType;
-use Websyspro\Entity\Shareds\AbstractColumn;
 
 /**
  * PHP attribute for marking property as auto-increment in entity.
@@ -13,7 +12,6 @@ use Websyspro\Entity\Shareds\AbstractColumn;
  */
 #[Attribute( Attribute::TARGET_PROPERTY )]
 class AutoIncrement
-extends AbstractColumn
 {
   public AttributeType $attributeType = AttributeType::generations;
 }

@@ -2,7 +2,6 @@
 
 namespace Websyspro\Entity\Core;
 
-use Websyspro\Commons\Collection;
 use PDO;
 
 class Database
@@ -12,7 +11,7 @@ class Database
   public static function connect(
   ): void { 
     if( isset( Database::$connect ) === false ){
-      //Database::$connect = new PDO();
+      Database::$connect = new PDO( "mysql:host=localhost;dbname=edocente;charset=utf8mb4", "root", "qazwsx" );
       Database::$connect->setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION );
     }
   }
@@ -32,12 +31,12 @@ class Database
   public static function query(
     string $sql,
     array $prepareds
-  ): Collection {
+  ): array {
     Database::connect();
 
     $stmt = Database::$connect->prepare( $sql );
     $stmt->execute( $prepareds );
 
-    return new Collection( $stmt->fetchAll( PDO::FETCH_ASSOC ));
+    return $stmt->fetchAll( PDO::FETCH_ASSOC );
   }  
 }

@@ -3,6 +3,7 @@
 namespace Websyspro\Entity\Shareds;
 
 use Websyspro\Entity\Interfaces\Parameter;
+use Websyspro\Entity\Interfaces\Entity;
 use Websyspro\Entity\Interfaces\Join;
 use Websyspro\Entity\Enums\MultiLine;
 use Websyspro\Entity\Enums\Type;
@@ -44,9 +45,9 @@ class StructureUtil
     ]);
 
     if( $isNotTokenString ){
-      [ $entity, $field, $multiLine ] = StructureUtil::getEntityAndRoot( $structureFile, $value );
+      [ $entity, $field, $fieldAlias, $multiLine ] = StructureUtil::getEntityAndRoot( $structureFile, $value );
       $tokenNew = new Token( $value, $group, $type );
-      return $tokenNew->setEntity( $entity )->setField( $field )->setMultiLine( $multiLine );
+      return $tokenNew->setEntity( $entity )->setField( $field )->setFieldAlias( $fieldAlias )->setMultiLine( $multiLine );
     } else return new Token( $value, $group, Type::String );
   }
 
@@ -149,12 +150,13 @@ class StructureUtil
         ->parameters[ $parameter ] ?? null;
       
       if( $parameter instanceof Parameter ){
-        $entity = StructureUtil::getTokenEntityByParameter( $parameter );
-        return [ $entity, $field, StructureUtil::getMultiLinesByJoins( $structureFile, $entity ) ];
+        $entity = $parameter->entityStructure->entity;
+        $fieldAlias = $parameter->entityStructure->alias[ $field ] ?? null;
+        return [ $entity, $field, $fieldAlias, StructureUtil::getMultiLinesByJoins( $structureFile, $entity ) ];
       }
     }
 
-    return [ null, null, null ];
+    return [ null, null, null, null ];
   }
 
   // private static function getFileBody(

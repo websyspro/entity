@@ -4,7 +4,7 @@ namespace Websyspro\Test\Entitys;
 
 use Websyspro\Entity\Decorations\Constraints\Unique;
 use Websyspro\Entity\Decorations\Columns\Text;
-use Websyspro\Entity\Core\Bases\BaseEntity;
+use Websyspro\Entity\Decorations\BaseEntity;
 
 class OperatorEntity
 extends BaseEntity

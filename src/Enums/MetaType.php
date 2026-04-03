@@ -2,8 +2,8 @@
 
 namespace Websyspro\Entity\Enums;
 
-enum MetaType
+enum MetaType:string
 {
-  case Query;
-  case Schema;
+  case Query = "query";
+  case Schema = "schema";
 }

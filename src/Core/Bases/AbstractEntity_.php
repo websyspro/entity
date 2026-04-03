@@ -2,7 +2,6 @@
 
 namespace Websyspro\Entity\Core\Bases;
 
-use Websyspro\Commons\Collection;
 use Websyspro\Entity\Decorations\Constraints\ForeignKey;
 use Websyspro\Entity\Decorations\Constraints\PrimaryKey;
 use Websyspro\Entity\Decorations\Constraints\Unique;

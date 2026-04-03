@@ -4,7 +4,6 @@ namespace Websyspro\Entity\Decorations\Events;
 
 use Attribute;
 use Websyspro\Entity\Enums\AttributeType;
-use Websyspro\Entity\Shareds\AbstractColumn;
 
 /**
  * PHP attribute for defining default value on entity property during UPDATE operations.
@@ -12,7 +11,7 @@ use Websyspro\Entity\Shareds\AbstractColumn;
  * Supports both static values and dynamic values from callable classes.
  */
 #[Attribute( Attribute::TARGET_PROPERTY )]
-class Update extends AbstractColumn
+class Update
 {
   public AttributeType $attributeType = AttributeType::update;
   

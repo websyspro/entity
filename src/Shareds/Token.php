@@ -2,6 +2,7 @@
 
 namespace Websyspro\Entity\Shareds;
 
+use Websyspro\Entity\Interfaces\Entity;
 use Websyspro\Entity\Enums\CompareType;
 use Websyspro\Entity\Enums\MultiLine;
 use Websyspro\Entity\Enums\Type;
@@ -12,6 +13,7 @@ class Token
   public string $value;
   public Type $type;
   public string|null $field = null;
+  public string|null $fieldAlias = null;
   public Entity|null $entity = null;
   public MultiLine|null $multiLine = null; 
 
@@ -52,6 +54,13 @@ class Token
     string|null $field
   ): Token {
     $this->field = $field;
+    return $this->defineEntityWithField();
+  }
+  
+  public function setFieldAlias(
+    string|null $fieldAlias
+  ): Token {
+    $this->fieldAlias = $fieldAlias;
     return $this->defineEntityWithField();
   }  
 
@@ -107,7 +116,7 @@ class Token
     if( $this->type === Type::Entity ){
       if( $this->entity !== null ){
         $this->value = sprintf(
-          "%s.%s", $this->entity->table, $this->field
+          "%s.%s", $this->entity->table, $this->fieldAlias ?? $this->field
         );
       }
     }

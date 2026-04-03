@@ -10,7 +10,6 @@ use Websyspro\Entity\Enums\MultiLine;
 class Parameter
 {
   public string $name;
-  public UsePath $usePath;
   public MultiLine $multiLine;
   public EntityStructure $entityStructure;
 
@@ -31,12 +30,11 @@ class Parameter
     MultiLine $multiLine
   ): void {
     $this->name = preg_replace( Patterns::PATTERN_REMOVE_DEFINED_VAR_KEY, "", $name );
-    $this->usePath = new UsePath( $entity );
     $this->multiLine = $multiLine;
-
-    if( class_exists( $this->usePath->entity )){
+    
+    if( class_exists( $entity )){
       $this->entityStructure = call_user_func_array(
-        [ $this->usePath->entity, "meta" ], [ MetaType::Query ]
+        [ $entity, "meta" ], [ MetaType::Query ]
       );      
     }
   }
