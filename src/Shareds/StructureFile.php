@@ -366,14 +366,9 @@ class StructureFile
           $this->tokens[ $i + 1 ] = $compToken->setMultiLine( $currToken->multiLine );
           $this->tokens[ $i + 2 ] = $nextToken;
         }
-
-        $multiLineRefence = $currToken->multiLine !== $nextToken->multiLine
-          ? MultiLine::No : ( 
-              $currToken->multiLine === MultiLine::Yes && 
-              $nextToken->multiLine === MultiLine::Yes
-                ? MultiLine::Yes
-                : MultiLine::No
-            );
+        
+        $multiLineRefence = $currToken->multiLine === MultiLine::Yes 
+                         || $nextToken->multiLine === MultiLine::Yes ? MultiLine::Yes : MultiLine::No;
 
         $currToken->setMultiLine( $multiLineRefence );
         $compToken->setMultiLine( $multiLineRefence );
