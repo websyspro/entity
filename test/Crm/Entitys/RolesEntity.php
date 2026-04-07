@@ -5,10 +5,12 @@ namespace Websyspro\Test\Crm\Entitys;
 use Websyspro\Entity\Decorations\Constraints\PrimaryKey;
 use Websyspro\Entity\Decorations\Constraints\Unique;
 use Websyspro\Entity\Decorations\Columns\LongText;
-use Websyspro\Entity\Core\Bases\AbstractEntity;
 use Websyspro\Entity\Decorations\Columns\Text;
+use Websyspro\Entity\Decorations\EntityName;
+use Websyspro\Entity\Shareds\AbstractEntity;
 
-class AspNetRolesEntity
+#[EntityName( "AspNetRoles" )]
+class RolesEntity
 extends AbstractEntity
 {
   #[Text(36)]

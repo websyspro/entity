@@ -228,7 +228,8 @@ class Repository
       }
     }
 
-    if( empty( $this->wheresSecondary ) === false ){
+    
+    if( sizeof( $this->wheresSecondary ) !== 0 ){
       return sprintf( "Where %s", implode( " ", $this->wheresSecondary ));
     }
 
@@ -270,7 +271,7 @@ class Repository
   private function pagedPrimary(
   ): string|null {
     $this->page = isset( $this->page ) === false ? 1 : $this->page;
-    $this->rowsPerPage = isset( $this->rowsPerPage ) === false ? 12 : $this->rowsPerPage;
+    $this->rowsPerPage = isset( $this->rowsPerPage ) === false ? 1 : $this->rowsPerPage;
 
     return match( DriverType::tryFrom( Database::getDriver())){
       DriverType::MySql => sprintf( "Limit %s, %s", ( $this->page - 1 ) * $this->rowsPerPage, $this->rowsPerPage ),
@@ -295,7 +296,7 @@ class Repository
   
   private function queryBuilderSQLFormat(
   ): string {
-    return "Select %s From ( Select %s From %s %s %s %s ) As %s %s Limit 12";
+    return "Select %s From ( Select %s From %s %s Order By 1 %s ) As %s %s";
   }  
 
   private function queryBuilderSQL(
@@ -310,10 +311,9 @@ class Repository
         $this->columnsFromPrimary(),
         $this->joinsPrimary(),
         $this->wheresPrimary(),
-        "",
-        "",
+        $this->pagedPrimary(),
         $this->joinsSecondary(),
-        $this->wheresSecondary()
+        $this->wheresSecondary(),
       )
     );
 
