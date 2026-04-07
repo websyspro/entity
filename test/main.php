@@ -1,13 +1,8 @@
 <?php
 
-use Websyspro\Entity\Interfaces\Parameter;
-use Websyspro\Test\Edocente\Entitys\PostMetaEntity;
-use Websyspro\Test\Edocente\Entitys\PostEntity;
-use Websyspro\Test\Edocente\Enums\PostStatus;
-use Websyspro\Entity\Repository;
-use Websyspro\Test\Crm\Entitys\RolesEntity;
 use Websyspro\Test\Crm\Entitys\UserRolesEntity;
 use Websyspro\Test\Crm\Entitys\UsersEntity;
+use Websyspro\Entity\Repository;
 
 $start = microtime( true );
 

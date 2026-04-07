@@ -6,7 +6,6 @@ use Websyspro\Entity\Decorations\Columns\Datetime;
 use Websyspro\Entity\Decorations\Columns\Flag;
 use Websyspro\Entity\Decorations\Columns\LongText;
 use Websyspro\Entity\Decorations\Columns\Text;
-use Websyspro\Entity\Decorations\Constraints\OneToMany;
 use Websyspro\Entity\Decorations\Constraints\PrimaryKey;
 use Websyspro\Entity\Decorations\Constraints\Unique;
 use Websyspro\Entity\Decorations\EntityName;
