@@ -6,6 +6,7 @@ class HierarchyBuilder
 {
   private array $joins;
   private array $identityMap = [];
+  private array $rowsResult = [];
 
   public function __construct(
     array $joins
@@ -13,11 +14,38 @@ class HierarchyBuilder
     $this->joins = $joins;
   }
 
-  public function build(
-    array $rows
+  public function buildRow(
+    array $row,
+    string $alias,
+    array $entityRow = []
   ): array {
-    $result = [];
+    foreach( $row as $key => $value ){
+      if( str_starts_with( $key, $alias )){
+        $entityRow[ str_replace( "{$alias}_", "", $key )] = $value;
+      }
+    }
 
+    return $entityRow;
+  }
+
+  public function build(
+    array $rows   
+  ): array {
+    foreach( $this->joins as $join ){
+      if( isset( $this->identityMap[ $join->entity->alias ]) === false ){
+        $this->identityMap[ $join->entity->alias ] = [];
+      }
+
+      foreach( $rows as $row ){
+        $this->identityMap[ $join->entity->alias ][] = $this->buildRow( 
+          $row, $join->entity->alias
+        );
+      }
+    }
+
+    $result = [];
+    print_r( $this->identityMap );
+    
     foreach( $rows as $row ){
       $rootAlias = $this->getRootAlias();
       $rootIdKey = $rootAlias . '_Id';
@@ -108,8 +136,8 @@ class HierarchyBuilder
     $children = [];
 
     foreach ($this->joins as $join) {
-        $parents[] = $join->entityParent->alias;
-        $children[] = $join->entity->alias;
+      $parents[] = $join->entityParent->alias;
+      $children[] = $join->entity->alias;
     }
 
     $roots = array_diff($parents, $children);
