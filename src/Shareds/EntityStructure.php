@@ -9,6 +9,8 @@ use Websyspro\Entity\Decorations\ColumnName;
 use Websyspro\Entity\Enums\AttributeType;
 use Websyspro\Entity\Interfaces\Entity;
 use ReflectionAttribute;
+use Websyspro\Entity\Enums\MetaType;
+use Websyspro\Entity\Interfaces\ItemForeignKey;
 
 class EntityStructure
 {
@@ -136,9 +138,22 @@ class EntityStructure
   private function defineForeigns(
     array $foreigns = []
   ): void {
-    foreach( $foreigns as $columnName => $foreignKey ){
+    foreach( $foreigns as $key => $foreignKey ){
       if( $foreignKey instanceof ForeignKey ){
-        $this->foreigns[ $columnName ] = $foreignKey->entityReference;
+        if( class_exists( $foreignKey->entityReference )){
+          $entityStructure = call_user_func_array(
+            [ $foreignKey->entityReference, "meta" ], [ MetaType::Query ]
+          );    
+          
+          if( $entityStructure instanceof EntityStructure ){
+            $referenteTable = $entityStructure->entity->table;
+            $referenteKey = reset( $entityStructure->primaryKey );
+
+            $this->foreigns[ $foreignKey->entityReference ] = new ItemForeignKey(
+              $this->entity->table, $key, $referenteTable, $referenteKey
+            );
+          }
+        }        
       }
     }
   }

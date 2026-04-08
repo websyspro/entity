@@ -3,41 +3,56 @@
 namespace Websyspro\Entity\Core;
 
 use PDO;
+use PDOStatement;
+use Websyspro\Entity\Shareds\HierarchyBuilder;
 
 class Database
 {
-  private static PDO $connect;
+  private static PDO $handle;
 
   public static function connect(
-  ): void { 
-    if( isset( Database::$connect ) === false ){
-      // Database::$connect = new PDO( "mysql:host=localhost;dbname=edocente;charset=utf8mb4", "root", "qazwsx" );
-      Database::$connect = new PDO( "sqlsrv:Server=localhost;Database=pnld_crm_api_production", "sa", "@Qazwsx190483" );
-      Database::$connect->setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION );
+  ): PDO { 
+    if( isset( Database::$handle ) === false ){
+      Database::$handle = new PDO( "sqlsrv:Server=localhost;Database=pnld_crm_api_production", "sa", "@Qazwsx190483" );
+      Database::$handle->setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION );
     }
+
+    return Database::$handle;
   }
 
   public static function getDriver(
   ): string|null {
     Database::connect();
-    if( isset( Database::$connect ) === false ){
+    if( isset( Database::$handle ) === false ){
       return null;
     }
     
-    return Database::$connect->getAttribute(
+    return Database::$handle->getAttribute(
       PDO::ATTR_DRIVER_NAME
     );
   }
 
   public static function query(
     string $sql,
-    array $prepareds
+    array $prepareds,
+    array $parameterQuery = []
   ): array {
-    Database::connect();
+    if( sizeof( $prepareds ) === 0 ){
+      return [];
+    }
 
-    $stmt = Database::$connect->prepare( $sql );
-    $stmt->execute( $prepareds );
+    if( Database::connect() instanceof PDO ){
+      $stmt = Database::$handle->prepare( $sql );
 
-    return $stmt->fetchAll( PDO::FETCH_ASSOC );
-  }  
+      if( $stmt instanceof PDOStatement ){
+        $stmt->execute( $prepareds );
+        
+        return ( new HierarchyBuilder( $parameterQuery ))->build(
+          $stmt->fetchAll( PDO::FETCH_ASSOC )
+        );
+      }
+    }
+
+    return [];
+  }
 }

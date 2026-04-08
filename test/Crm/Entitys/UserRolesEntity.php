@@ -22,8 +22,8 @@ extends AbstractEntity
   #[Text(36)]
   #[Unique(1)]
   #[PrimaryKey()]
-  #[ForeignKey( RolesEntity::class )]
+  #[ForeignKey( RoleEntity::class )]
 	public string $RoleId;
 
-  public RolesEntity $Role;
+  public RoleEntity $Role;
 }

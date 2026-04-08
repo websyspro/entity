@@ -2,78 +2,70 @@
 
 namespace Websyspro\Entity\Shareds;
 
-use Websyspro\Commons\Collection;
-use Websyspro\Commons\Util;
+use Websyspro\Entity\Interfaces\Entity;
+use Websyspro\Entity\Enums\MetaType;
 use ReflectionParameter;
 use ReflectionFunction;
 
 class OrderBy
 {
-  public Collection $entitys;
-  public Collection $tokens;
+  public array $entitys;
+  public array $tokens;
 
   public function __construct(
     public ReflectionFunction $reflectionFunction
   ){
-    $this->setCreateList();
     $this->setParametersList();
     $this->setTokensList();
   }
 
-  private function setCreateList(
-  ): void {
-    $this->tokens = new Collection();
-    $this->entitys = new Collection();
-  }  
-
   private function setParametersList(
   ): void {
     foreach( $this->reflectionFunction->getParameters() as $parameter ){
-      if( $parameter instanceof ReflectionParameter ){       
-        $this->entitys->add( 
-          new Entity( StructureUtil::getTypeName( $parameter )
-          ), $parameter->getName()
+      if( $parameter instanceof ReflectionParameter ){ 
+        $entityStructure =  call_user_func_array(
+          [ StructureUtil::getParameterTypeName( $parameter ), "meta" ], [ MetaType::Query ]
         );
+
+        if( $entityStructure instanceof EntityStructure ){
+          $this->entitys[ $parameter->getName() ] = $entityStructure->entity;
+        }
       }
     }
   }  
 
   private function setTokensList(
   ): void {
-    $tokens = preg_replace(
-      "#^\\(|\\)$#", "", StructureUtil::getSourceFile(
+    $tokens = preg_replace( 
+      "#^\\(|\\)$#", "", StructureUtil::structureFileHidrate(
         $this->reflectionFunction
       )
     );
 
-    $this->tokens = $this->setParseToken( 
-      new Collection( explode( ",", $tokens ))
-    );
+    if( sizeof( $tokens ) !== 0 ){
+      [ $token ] = $tokens;
+      $this->setParseToken( 
+        explode( ",", $token )
+      );
+    }
   }
 
   private function setParseToken(
-    Collection $tokens
-  ): Collection {
-    return $tokens->mapper(
-      function( string $token ){
-        $hasTokenFromEntity = str_contains( $token, "->" ) 
-                           && str_starts_with( $token, "$" );
+    array $tokens
+  ): void {
+    foreach( $tokens as $token ){
+      $hasTokenFromEntity = str_contains( $token, "->" ) && str_starts_with( $token, "$" );
+      if( $hasTokenFromEntity ){
+        [ $parameterName, $parameterField ] = explode( 
+          "->", trim( $token, "$" ), 2
+        );
 
-        if( $hasTokenFromEntity ){
-          [ $entity, $field ] = explode( 
-            "->", trim( $token, "$" ), 2
+        if( $this->entitys[ $parameterName ] instanceof Entity ){
+          $this->tokens[] = sprintf( 
+            "%s.%s %s", $this->entitys[ $parameterName ]->table, $parameterField, static::class === OrderByAsc::class ? "Asc" : "Desc"
           );
-
-          $entity = $this->entitys->getOneOrFail( $entity );
-          if( $entity instanceof Entity ){
-            return Util::sprintFormat( "%s.%s %s", [
-              $entity->table, $field, static::class === OrderByAsc::class ? "Asc" : "Desc"
-            ]);
-          }
         }
-
-        return $token;
       }
-    );
+    }
   }
 }

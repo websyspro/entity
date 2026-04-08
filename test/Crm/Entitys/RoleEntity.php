@@ -10,7 +10,7 @@ use Websyspro\Entity\Decorations\EntityName;
 use Websyspro\Entity\Shareds\AbstractEntity;
 
 #[EntityName( "AspNetRoles" )]
-class RolesEntity
+class RoleEntity
 extends AbstractEntity
 {
   #[Text(36)]

@@ -10,31 +10,24 @@ $repository = new Repository(
   UsersEntity::class
 );
 
-// $repository->where( fn( PostEntity $post ) => 
-//   $post->Id === 10181 && 
-//   $post->postStatus === PostStatus::Publish && 
-//   $post->postMetas->where( fn( PostMetaEntity $postMeta ) =>
-//     $postMeta->postId === $post->Id
-//   )
-// );
+$repository->where( 
+  fn( UsersEntity $user ) => 
+    $user->EmailConfirmed === true &&
+    $user->specialSalesConsultant->Id === $user->Id &&
+    $user->specialSalesConsultant->IsActive === true &&
+    $user->specialSalesConsultant->IsDeleted === false &&
+    $user->UserRoles->where( fn( UserRolesEntity $userRoles ) =>
+      $userRoles->UserId === $user->Id &&
+      $userRoles->Role->Id === $userRoles->RoleId
+    )
+  );
+$repository->orderByAsc( fn( UsersEntity $user ) => [ $user->Id ]);
+$repository->paged( 2, 4 );
 
-$repository->where( fn( UsersEntity $user ) => 
-  $user->EmailConfirmed === true &&
-  $user->specialSalesConsultant->Id === $user->Id &&
-  $user->specialSalesConsultant->IsActive === true &&
-  $user->specialSalesConsultant->IsDeleted === false &&
-  $user->UserRoles->where( fn( UserRolesEntity $userRoles ) =>
-    $userRoles->UserId === $user->Id &&
-    $userRoles->Role->Id === $userRoles->RoleId
-  )
-);
-
-$repository->queryBuilder();
 $rows = $repository->get();
 
-print_r( $repository->structureFile->tokens );
-// print_r( $rows );
-
-
 $leftTimer = number_format(( microtime( true ) - $start ) * 1000, 6, ",", "." );
-echo PHP_EOL . PHP_EOL . "Execute timer: {$leftTimer}(ms)" . PHP_EOL;
+echo "Execute timer: {$leftTimer}(ms)" . PHP_EOL . PHP_EOL;
+
+print_r( "ROWS: " . sizeof($rows) . PHP_EOL . PHP_EOL );
+print_r( $rows );

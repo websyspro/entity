@@ -7,7 +7,9 @@ use Websyspro\Entity\Enums\MultiLine;
 class Join
 {
   public Entity $entity;
+  public Entity $entityParent;
   public MultiLine $multiLine;
+  public MultiLine $multiLineReal;
   public string $tableBase;
   public string $table;
   public string $key;
@@ -28,6 +30,38 @@ class Join
     );
   }
 
+  private function isForeignsExist(
+    Parameter $parameterA,
+    Parameter $parameterB
+  ): bool {
+    return isset(
+      $parameterA->entityStructure->foreigns[
+        $parameterB->entityStructure->entity->class
+      ]
+    );
+  }
+
+  private function getForeigns(
+    Parameter $parameterA,
+    Parameter $parameterB
+  ): ItemForeignKey {
+    return $parameterA->entityStructure->foreigns[
+      $parameterB->entityStructure->entity->class
+    ];
+  } 
+  
+  private function setJoinRelationship(
+    Parameter $parameterA,
+    Parameter $parameterB
+  ): array {
+    return [
+      $parameterA->entityStructure->foreigns[ $parameterB->entityStructure->entity->class ]->table,
+      $parameterA->entityStructure->foreigns[ $parameterB->entityStructure->entity->class ]->key,
+      $parameterA->entityStructure->foreigns[ $parameterB->entityStructure->entity->class ]->referenceTable,
+      $parameterA->entityStructure->foreigns[ $parameterB->entityStructure->entity->class ]->referenceKey
+    ];
+  }
+
   private function defineJoin(
     MultiLine $multiLine,
     MultiLine $multiLineReal,
@@ -35,42 +69,24 @@ class Join
     Parameter $parameterParent    
   ): void {
     $this->multiLine = $multiLine;
+    $this->multiLineReal = $multiLineReal;
     $this->entity = $parameterChild->entityStructure->entity;
+    $this->entityParent = $parameterParent->entityStructure->entity;
     $this->tableBase = $parameterChild->entityStructure->entity->table;
 
-    if( $multiLineReal === MultiLine::No ){
-      $existForeignInParent = isset( 
-        $parameterParent->entityStructure->foreigns[
-          $parameterChild->entityStructure->entity->class
-        ]
-      );
+    $foreignChildToParent = $this->isForeignsExist( $parameterChild, $parameterParent );
+    $foreignParentToChild = $this->isForeignsExist( $parameterParent, $parameterChild );
 
-      if( $existForeignInParent ){
-        $this->table = $parameterParent->entityStructure->entity->table;
-        $this->key = $parameterParent->entityStructure->foreigns[
-          $parameterChild->entityStructure->entity->class 
-        ]->name;
+    /** Check exist foreigns de um lado ou outro */
+    if( $foreignChildToParent || $foreignParentToChild ){
+      if( $foreignChildToParent ){
+        [ $this->table, $this->key, $this->referenceTable, $this->referenceKey
+        ] = $this->setJoinRelationship( $parameterChild, $parameterParent );
+      } else 
+      if( $foreignParentToChild ){
+        [ $this->referenceTable, $this->referenceKey, $this->table, $this->key 
+        ] = $this->setJoinRelationship( $parameterParent, $parameterChild );
       }
-
-      $this->referenceTable = $parameterChild->entityStructure->entity->table; 
-      $this->referenceKey = reset( $parameterChild->entityStructure->primaryKey );
-
-    } else {
-      $existForeignInChild = isset( 
-        $parameterChild->entityStructure->foreigns[
-          $parameterParent->entityStructure->entity->class
-        ]
-      );
-
-      if( $existForeignInChild ){
-        $this->referenceTable = $parameterChild->entityStructure->entity->table;
-        $this->referenceKey = $parameterChild->entityStructure->foreigns[
-          $parameterParent->entityStructure->entity->class 
-        ]->name;        
-      }
-
-      $this->table = $parameterParent->entityStructure->entity->table; 
-      $this->key = reset( $parameterParent->entityStructure->primaryKey );      
     }
   }
 }

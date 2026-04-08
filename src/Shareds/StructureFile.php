@@ -178,9 +178,13 @@ class StructureFile
     Parameter $parameterParent,
     Parameter $parameterChild
   ): Parameter {
+    if( isset( $this->joins[ $parameterChild->entityStructure->entity->alias ])){
+      return $parameterChild;
+    }
+
     if( $parameterBase instanceof Parameter ){
       if( $parameterParent instanceof Parameter && $parameterChild instanceof Parameter ){
-        $this->joins[] = $parameterBase === $parameterParent && $parameterChild->multiLine === MultiLine::No
+        $this->joins[ $parameterChild->entityStructure->entity->class ] = $parameterBase === $parameterParent && $parameterChild->multiLine === MultiLine::No
           ? new Join( MultiLine::No, $multiLineReal, $parameterChild, $parameterParent )
           : new Join( MultiLine::Yes, $multiLineReal, $parameterChild, $parameterParent );
       }
@@ -290,6 +294,61 @@ class StructureFile
     }
   }
 
+  private function joinNotDef(
+    Join $join
+  ): bool {
+    return isset( $join->table ) === false
+        && isset( $join->key ) === false
+        && isset( $join->referenceTable ) === false
+        && isset( $join->referenceKey ) === false;
+  }
+
+  private function joinIsPossible(
+    Token $currToken,
+    Token $compToken,
+    Token $nextToken,
+     Join $join    
+  ): bool {
+    return ( $currToken->entity->class === $join->entity->class 
+          || $currToken->entity->class === $join->entityParent->class ) 
+        && ( $nextToken->entity->class === $join->entity->class 
+          || $nextToken->entity->class === $join->entityParent->class )
+          && $compToken->value === CompareType::Equals->value;
+  }
+
+  private function joinUpdate(
+    Token $currToken,
+    Token $compToken,
+    Token $nextToken
+  ): void {
+    foreach( $this->joins as $join ){
+      if( $this->joinNotDef( $join ) === true ){
+        if( $this->joinIsPossible( $currToken, $compToken, $nextToken, $join )){
+          /** definir entity */
+          if( $join->entity->class === $currToken->entity->class ){
+            [ $table, $key ] = explode( ".", $currToken->value );
+          } else
+          if( $join->entity->class === $nextToken->entity->class ){
+            [ $table, $key ] = explode( ".", $nextToken->value );
+          }
+
+          /** definir entityParent */
+          if( $join->entityParent->class === $currToken->entity->class ){
+            [ $referenceTable, $referenceKey ] = explode( ".", $currToken->value );
+          } else
+          if( $join->entityParent->class === $nextToken->entity->class ){
+            [ $referenceTable, $referenceKey ] = explode( ".", $nextToken->value );
+          }
+
+          $join->table = $table;
+          $join->key = $key;
+          $join->referenceTable = $referenceTable;
+          $join->referenceKey = $referenceKey;
+        }
+      }
+    }
+  }
+
   private function structureFileBuild(
     array $groupMultiLine = [],
     array $groupStartPos = [],
@@ -365,6 +424,10 @@ class StructureFile
           $this->tokens[ $i + 0 ] = $currToken;
           $this->tokens[ $i + 1 ] = $compToken->setMultiLine( $currToken->multiLine );
           $this->tokens[ $i + 2 ] = $nextToken;
+        } 
+
+        if( $currToken->type === Type::Entity && $nextToken->type === Type::Entity ){
+          $this->joinUpdate( $currToken, $compToken, $nextToken );
         }
         
         $multiLineRefence = $currToken->multiLine === MultiLine::Yes 

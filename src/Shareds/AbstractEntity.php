@@ -186,7 +186,7 @@ class AbstractEntity
           self::propertiesByAttribute( ColumnName::class, true ),
           [], 
           [], 
-          self::propertiesByAttribute( ForeignKey::class ), 
+          self::propertiesByAttribute( ForeignKey::class, true ), 
           self::propertiesByAttribute( PrimaryKey::class ),
           [],
           self::propertiesByAttribute( AutoIncrement::class )

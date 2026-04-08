@@ -2,6 +2,7 @@
 
 namespace Websyspro\Entity\Shareds;
 
+use ReflectionFunction;
 use Websyspro\Entity\Interfaces\Parameter;
 use Websyspro\Entity\Interfaces\Entity;
 use Websyspro\Entity\Interfaces\Join;
@@ -9,6 +10,7 @@ use Websyspro\Entity\Enums\MultiLine;
 use Websyspro\Entity\Enums\Type;
 use ReflectionNamedType;
 use ReflectionParameter;
+use Websyspro\Entity\Consts\Patterns;
 
 class StructureUtil
 {
@@ -159,64 +161,43 @@ class StructureUtil
     return [ null, null, null, null ];
   }
 
-  // private static function getFileBody(
-  //   ReflectionFunction $reflectionFunction
-  // ): Collection {
-  //   $rowsFromFile = new Collection(
-  //     file( $reflectionFunction->getFileName())
-  //   );
+  private static function structureFileBody(
+    ReflectionFunction $reflectionFunction,
+    array $body = []
+  ): array {
+    $rows = file( $reflectionFunction->getFileName());
+    $body = array_slice( 
+      $rows,
+      $reflectionFunction->getStartLine() - 1, 
+      $reflectionFunction->getEndLine() - 
+      $reflectionFunction->getStartLine() + 1
+    );
 
-  //   return $rowsFromFile->slice(
-  //     $reflectionFunction->getStartLine() - 1, 
-  //     $reflectionFunction->getEndLine() - $reflectionFunction->getStartLine() + 1
-  //   );
-  // }
+    return $body;
+  }
 
-  // public static function getSourceFile(
-  //   ReflectionFunction $reflectionFunction
-  // ): string {
-  //   $rowsFromFile = StructureUtil::getFileBody( $reflectionFunction );
-  //   $rowsFromFile = $rowsFromFile->where( fn( string $row ) => !Util::match( "#^.*//#", $row ));
+  public static function structureFileHidrate(
+    ReflectionFunction $reflectionFunction,
+    array $tokens = []
+  ): array {
+    $body = array_filter(
+      StructureUtil::structureFileBody( $reflectionFunction ), fn( string $row ) => (
+        !preg_match( Patterns::PATTERN_REMOVE_COMMENT_LINE, $row )
+      )
+    );
 
-  //   return preg_replace([
-  //       "#/\*.*?\*/#",
-  //       "#\r#",
-  //       "#\n\s*#",
-  //       "#^.*\\{.*return\s*#",
-  //       "#\s*;\s*\\}\s*#",
-  //       "#^[^(]*(fn|function)\s*\(#",
-  //       "#\s*\);\s*$#",
-  //       "#^.*?\)\s*=>\s*#s",
-  //       "#\\[\s*#s",
-  //       "#\s*\\]#s",
-  //       "#,\s*#s",
-  //       "#\"#s",
-  //       "#&&#",
-  //       "#\|\|#",
-  //       "#(!==|!=)#",
-  //       "#(===|==|=)#",
-  //       "#true#",
-  //       "#false#"
-  //     ], [
-  //       "",     // Remove /* ... */
-  //       "",     // Remove carriage return
-  //       " ",    // Remove quebras de linha
-  //       "",     // Remove abertura de função
-  //       "",     // Remove fechamento de função
-  //       "fn(",  // Normaliza declaração de função
-  //       "",     // Remove fechamento de parênteses
-  //       "",     // Remove arrow function
-  //       "(",    // Converte colchetes em parênteses
-  //       ")",    // Converte colchetes em parênteses
-  //       ",",    // Normaliza vírgulas
-  //       "'",    // Converte aspas duplas em simples
-  //       "And",  // Converte && em And
-  //       "Or",   // Converte || em Or
-  //       "<>",   // Normaliza operador diferente
-  //       "=",    // Normaliza operador igual
-  //       "1",    // Converte true em 1
-  //       "0"     // Converte false em 0
-  //     ], $rowsFromFile->toString()
-  //   );
-  // }
+    [ $hydrateBodyFrom, $hydrateBodyTos 
+    ] = Patterns::PATTERN_HYDRATE_BODY;
+
+    preg_match_all( Patterns::PATTERN_TOKEN, preg_replace(
+      $hydrateBodyFrom, $hydrateBodyTos, implode( "", $body ),
+    ), $matchTokens );
+
+    if( empty( $matchTokens ) === false ){
+      [ $tokens ] = $matchTokens;
+      return $tokens;
+    };
+
+    return [];
+  }  
 }

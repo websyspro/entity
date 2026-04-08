@@ -9,6 +9,8 @@ use Websyspro\Entity\Enums\MetaType;
 use Websyspro\Entity\Enums\MultiLine;
 use Websyspro\Entity\Enums\Type;
 use Websyspro\Entity\Interfaces\Join;
+use Websyspro\Entity\Interfaces\Parameter;
+use Websyspro\Entity\Interfaces\ParameterQuery;
 use Websyspro\Entity\Shareds\OrderByAsc;
 use Websyspro\Entity\Shareds\OrderByDesc;
 use Websyspro\Entity\Shareds\StructureFile;
@@ -31,8 +33,8 @@ class Repository
   public array $wheresPrimary = [];
   public array $wheresSecondary = [];
   public array $prepareds = [];
-  public OrderByAsc $orderByAsc;
-  public OrderByDesc $orderByDesc;  
+  public array $parameterQuery = [];
+  public array $orderBys;  
   public StructureFile $structureFile;
   public EntityStructure $entityStructure;
   
@@ -54,9 +56,15 @@ class Repository
   public function orderByAsc(
     callable $fn
   ): Repository {
-    $this->orderByAsc = new OrderByAsc(
+    $orderBy = new OrderByAsc(
       new ReflectionFunction( $fn )
     );
+
+    if( $orderBy instanceof OrderByAsc ){
+      $this->orderBys = array_merge(
+        $this->orderBys ?? [], $orderBy->tokens
+      );
+    }
 
     return $this;
   }
@@ -64,9 +72,15 @@ class Repository
   public function orderByDesc(
     callable $fn
   ): Repository {
-    $this->orderByDesc = new OrderByDesc(
-      new ReflectionFunction($fn)
+    $orderBy = new OrderByDesc(
+      new ReflectionFunction( $fn )
     );
+
+    if( $orderBy instanceof OrderByDesc ){
+      $this->orderBys = array_merge(
+        $this->orderBys ?? [], $orderBy->tokens
+      );
+    }
 
     return $this;
   }
@@ -87,9 +101,41 @@ class Repository
     return $this;
   }
 
+  public function queryBuilderParameters(
+  ): void {
+    if( $this->entityStructure instanceof EntityStructure ){
+      $this->parameterQuery[ $this->entityStructure->entity->alias ] = new ParameterQuery(
+        $this->entityStructure->primaryKey, $this->entityStructure->entity
+      );
+    }
+
+    foreach( $this->structureFile->parameters as $paramter ){
+      if( $paramter instanceof Parameter ){
+        if( isset( $this->structureFile->joins[ $paramter->entityStructure->entity->alias ])){
+          $this->parameterQuery[ $paramter->entityStructure->entity->alias ] = new ParameterQuery(
+            $paramter->entityStructure->primaryKey, $paramter->entityStructure->entity, $this->structureFile->joins[ 
+              $paramter->entityStructure->entity->alias 
+            ]->entityParent
+          );          
+        }
+        $this->parameterQuery[ $paramter->entityStructure->entity->alias ] = new ParameterQuery(
+          $paramter->entityStructure->primaryKey, $paramter->entityStructure->entity, $this->entityStructure->entity
+        ); 
+      }
+    };
+  }
+
   public function get(
   ): array {
-    return Database::query( $this->sql, $this->prepareds );
+    $this->queryBuilderStructureFile();
+    $this->queryBuilderParameters();
+    $this->queryBuilderSQL();
+
+    return Database::query( 
+      $this->sql, 
+      $this->prepareds,
+      $this->parameterQuery
+    );
   }  
 
   private function queryBuilderStructureFile(
@@ -213,7 +259,7 @@ class Repository
   private function wheresSecondary(
   ): string|null {
     foreach( $this->structureFile->tokens as $i => $token ){
-      if( $token instanceof Token && $token->multiLine === MultiLine::Yes ){
+      if( $token instanceof Token && in_array( $token->multiLine, [ MultiLine::Yes, MultiLine::No ])){
         if( $token->type === Type::Logical ){
           if( $this->structureFile->tokens[ $i - 1 ]->type === Type::StartGroup ){
             continue;
@@ -235,43 +281,31 @@ class Repository
 
     return null;    
   }
-  
+
   private function orderByPrimary(
+    array $orders = []
   ): string|null {
-    return null;
-    // if( $this->orderBy->exist() === false ){
-    //   if( $this->entityStructure->primaryKey->exist()){
-    //     $orderByFromPrimaryKeys = $this->entityStructure->primaryKey->mapper(
-    //       fn( PrimaryKey $primaryKey ) => Util::sprintFormat( "%s.%s Asc", [  
-    //         $this->entityStructure->entity->table, $primaryKey->name
-    //       ])
-    //     );
+    if( sizeof( $this->orderBys ) === 0 ){
+      foreach( $this->entityStructure->primaryKey as $primaryKey ){
+        $orders[] = sprintf( "%s.%s Asc", $this->entityStructure->entity->table, $primaryKey );
+      }
+    } else {
+      $orders = $this->orderBys;
+    }
 
-    //     return Util::sprintFormat(
-    //       "Order By %s", [ $orderByFromPrimaryKeys->joinWithComma() ]
-    //     );
-    //   } else {
-    //     $orderByFromColumns = $this->entityStructure->columns->slice(0, 1)->mapper(
-    //       fn( string $primaryKey ) => Util::sprintFormat( "%s.%s Asc", [  
-    //         $this->entityStructure->entity->table, $primaryKey 
-    //       ])
-    //     );
-
-    //     return Util::sprintFormat(
-    //       "Order By %s.%s Asc", [ $orderByFromColumns->joinWithComma() ]
-    //     );        
-    //   }
-    // }
-
-    // return Util::sprintFormat(
-    //   "Order By %s", [ $this->orderBy->joinWithComma() ]
-    // );
+    if( sizeof( $orders ) === 0 ){
+      return "Order By 1";
+    } 
+    
+    return sprintf( 
+      "Order By %s", implode( ", ", $this->orderBys )
+    );
   }
   
   private function pagedPrimary(
   ): string|null {
     $this->page = isset( $this->page ) === false ? 1 : $this->page;
-    $this->rowsPerPage = isset( $this->rowsPerPage ) === false ? 1 : $this->rowsPerPage;
+    $this->rowsPerPage = isset( $this->rowsPerPage ) === false ? 12 : $this->rowsPerPage;
 
     return match( DriverType::tryFrom( Database::getDriver())){
       DriverType::MySql => sprintf( "Limit %s, %s", ( $this->page - 1 ) * $this->rowsPerPage, $this->rowsPerPage ),
@@ -296,7 +330,7 @@ class Repository
   
   private function queryBuilderSQLFormat(
   ): string {
-    return "Select %s From ( Select %s From %s %s Order By 1 %s ) As %s %s";
+    return "Select %s From ( Select %s From %s %s %s %s ) As %s %s\n\n";
   }  
 
   private function queryBuilderSQL(
@@ -311,12 +345,11 @@ class Repository
         $this->columnsFromPrimary(),
         $this->joinsPrimary(),
         $this->wheresPrimary(),
+        $this->orderByPrimary(),
         $this->pagedPrimary(),
         $this->joinsSecondary(),
         $this->wheresSecondary(),
       )
     );
-
-    print_r( $this->sql );
   }
 }
