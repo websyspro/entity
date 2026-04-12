@@ -162,7 +162,7 @@ class StructureFile
     return null;
   }
 
-  private function getParameterByName(
+  public function getParameterByName(
     string $name
   ): Parameter|null {
     if( empty( $this->parameters )){
@@ -184,7 +184,7 @@ class StructureFile
 
     if( $parameterBase instanceof Parameter ){
       if( $parameterParent instanceof Parameter && $parameterChild instanceof Parameter ){
-        $this->joins[ $parameterChild->entityStructure->entity->class ] = $parameterBase === $parameterParent && $parameterChild->multiLine === MultiLine::No
+        $this->joins[ $parameterChild->entityStructure->entity->alias ] = $parameterBase === $parameterParent && $parameterChild->multiLine === MultiLine::No
           ? new Join( MultiLine::No, $multiLineReal, $parameterChild, $parameterParent )
           : new Join( MultiLine::Yes, $multiLineReal, $parameterChild, $parameterParent );
       }
@@ -292,6 +292,8 @@ class StructureFile
         Patterns::PATTERS_SIMPLE_QUOTATION_MARKS, "", $this->tokens[ $i ]
       );
     }
+
+    print_r( $this->tokens );
   }
 
   private function joinNotDef(

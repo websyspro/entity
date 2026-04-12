@@ -9,6 +9,7 @@ use ReflectionFunction;
 
 class OrderBy
 {
+  public EntityStructure $entityStructure;
   public array $entitys;
   public array $tokens;
 
@@ -23,12 +24,12 @@ class OrderBy
   ): void {
     foreach( $this->reflectionFunction->getParameters() as $parameter ){
       if( $parameter instanceof ReflectionParameter ){ 
-        $entityStructure =  call_user_func_array(
+        $this->entityStructure =  call_user_func_array(
           [ StructureUtil::getParameterTypeName( $parameter ), "meta" ], [ MetaType::Query ]
         );
 
-        if( $entityStructure instanceof EntityStructure ){
-          $this->entitys[ $parameter->getName() ] = $entityStructure->entity;
+        if( $this->entityStructure instanceof EntityStructure ){
+          $this->entitys[ $parameter->getName() ] = $this->entityStructure->entity;
         }
       }
     }
@@ -61,9 +62,15 @@ class OrderBy
         );
 
         if( $this->entitys[ $parameterName ] instanceof Entity ){
-          $this->tokens[] = sprintf( 
-            "%s.%s %s", $this->entitys[ $parameterName ]->table, $parameterField, static::class === OrderByAsc::class ? "Asc" : "Desc"
-          );
+          if( isset( $this->entityStructure->alias[ $parameterField ] )){
+            $this->tokens[] = sprintf( "%s.%s %s", 
+              $this->entitys[ $parameterName ]->table, $this->entityStructure->alias[ $parameterField ], static::class === OrderByAsc::class ? "Asc" : "Desc"
+            );
+          } else {
+            $this->tokens[] = sprintf( "%s.%s %s", 
+              $this->entitys[ $parameterName ]->table, $parameterField, static::class === OrderByAsc::class ? "Asc" : "Desc"
+            );
+          }
         }
       }
     }

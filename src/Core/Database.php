@@ -4,6 +4,7 @@ namespace Websyspro\Entity\Core;
 
 use PDO;
 use PDOStatement;
+use Websyspro\Commons\Collection;
 use Websyspro\Entity\Shareds\HierarchyBuilder;
 
 class Database
@@ -14,6 +15,7 @@ class Database
   ): PDO { 
     if( isset( Database::$handle ) === false ){
       Database::$handle = new PDO( "sqlsrv:Server=localhost;Database=pnld_crm_api_production", "sa", "@Qazwsx190483" );
+      Database::$handle = new PDO( "mysql:host=localhost;dbname=edocente;charset=utf8mb4", "root", "qazwsx" );
       Database::$handle->setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION );
     }
 
@@ -32,22 +34,27 @@ class Database
     );
   }
 
+  private static function hierarchyBuilder(
+    array $joins
+  ): HierarchyBuilder {
+    return new HierarchyBuilder( $joins );
+  }
+
   public static function query(
     string $sql,
     array $prepareds,
-    array $parameterQuery = []
+    array $joins = []
   ): array {
-    if( sizeof( $prepareds ) === 0 ){
-      return [];
-    }
-
     if( Database::connect() instanceof PDO ){
-      $stmt = Database::$handle->prepare( $sql );
+      if( empty( $prepareds ) === false ){
+        $stmt = Database::$handle->prepare( $sql );
+        $stmt->execute( $prepareds );
+      } else {
+        $stmt = Database::$handle->query( $sql );
+      }
 
       if( $stmt instanceof PDOStatement ){
-        $stmt->execute( $prepareds );
-        
-        return ( new HierarchyBuilder( $parameterQuery ))->build(
+        return Database::hierarchyBuilder( $joins )->build(
           $stmt->fetchAll( PDO::FETCH_ASSOC )
         );
       }

@@ -2,11 +2,14 @@
 
 namespace Websyspro\Entity\Shareds;
 
+use Websyspro\Entity\Enums\MultiLine;
+use Websyspro\Entity\Interfaces\Join;
+
 class HierarchyBuilder
 {
   private array $joins;
   private array $identityMap = [];
-  private array $rowsResult = [];
+  private array $identityHierarchyMap = [];
 
   public function __construct(
     array $joins
@@ -14,18 +17,90 @@ class HierarchyBuilder
     $this->joins = $joins;
   }
 
-  public function buildRow(
+  private function isBuildRowSingle(
     array $row,
+    array $identityMap,
+    array $identityMapPrimaryKeys,
+    array $identityMapValids = []
+  ): bool {
+    if( sizeof( $identityMap ) === 0 ){
+      return true;
+    }
+
+    foreach( $identityMap as $identityMapRows ){
+      foreach( $identityMapPrimaryKeys as $primaryKey ){
+        $identityMapValids[$primaryKey] = $identityMapRows[$primaryKey] === $row[$primaryKey];
+      }
+
+      if( in_array( false, $identityMapValids ) === false ){
+        return false;
+      }
+    }
+    
+    return true;
+  }
+
+  private function buildRow(
     string $alias,
+    array $row,
     array $entityRow = []
   ): array {
     foreach( $row as $key => $value ){
       if( str_starts_with( $key, $alias )){
-        $entityRow[ str_replace( "{$alias}_", "", $key )] = $value;
+        $entityRow[ str_replace( "{$alias}_", "", $key ) ] = $value;
       }
     }
 
     return $entityRow;
+  }
+
+  private function buildHierarchy(
+    string $alias,
+    array $identityMapItems
+  ): array {
+    $result = [];
+
+    foreach ($identityMapItems as $item) {
+      $newItem = $item;
+
+      foreach ($this->joins as $join) {
+        if ($join->entityParent->alias !== $alias) {
+          continue;
+        }
+
+        if ($join->entity->alias === $alias) {
+          continue;
+        }
+
+        $children = [];
+
+        foreach ($this->identityMap[$join->entity->alias] as $subItem) {
+          if ($subItem[$join->key] === $item[$join->referenceKey]) {
+
+            $childWithHierarchy = $this->buildHierarchy(
+              $join->entity->alias,
+              [$subItem]
+            );
+
+            $children[] = count($childWithHierarchy) !== 0
+              ? $childWithHierarchy[0]
+              : $subItem;
+          }
+        }
+
+        if($join->multiLineReal=== MultiLine::Yes) {
+          $newItem[$join->entity->alias] = $children;
+        } else {
+          $newItem[$join->entity->alias] = count($children) > 0
+            ? $children[0]
+            : null;
+        }
+      }
+
+      $result[] = $newItem;
+    }
+
+    return $result;
   }
 
   public function build(
@@ -37,111 +112,26 @@ class HierarchyBuilder
       }
 
       foreach( $rows as $row ){
-        $this->identityMap[ $join->entity->alias ][] = $this->buildRow( 
-          $row, $join->entity->alias
+        $rowSingle = $this->buildRow(
+          $join->entity->alias, $row
         );
+
+        if( $this->isBuildRowSingle( $rowSingle, $this->identityMap[ $join->entity->alias ], $join->primaryKey ) === true ){
+          $this->identityMap[ $join->entity->alias ][] = $rowSingle;
+        }
       }
     }
 
-    $result = [];
-    print_r( $this->identityMap );
     
-    foreach( $rows as $row ){
-      $rootAlias = $this->getRootAlias();
-      $rootIdKey = $rootAlias . '_Id';
-      $rootId = $row[$rootIdKey] ?? null;
-
-      if (!$rootId) continue;
-
-      if (!isset($this->identityMap[$rootAlias][$rootId])) {
-        $entity = $this->extractEntity( $row, $rootAlias);
-        $this->identityMap[$rootAlias][$rootId] = $entity;
-        $result[$rootId] = &$this->identityMap[$rootAlias][$rootId];
-      }
-
-      foreach( $this->joins as $join ){
-        $alias = $join->entity->alias;
-        $parentAlias = $join->entityParent->alias;
-        $isMulti = $join->multiLine->name === 'Yes';
-
-        $entityData = $this->extractEntity($row, $alias);
-
-        if (empty(array_filter($entityData))) continue;
-
-        $entityId = $entityData[$join->key] ?? null;
-        if (!$entityId) continue;
-
-        if (!isset($this->identityMap[$alias][$entityId])) {
-          $this->identityMap[$alias][$entityId] = $entityData;
-        }
-
-        $entityRef = &$this->identityMap[$alias][$entityId];
-
-        $parentId = $row[$parentAlias . '_' . $join->referenceKey] ?? null;
-        if (!$parentId) continue;
-
-        if (!isset($this->identityMap[$parentAlias][$parentId])) continue;
-
-        $parentRef = &$this->identityMap[$parentAlias][$parentId];
-
-        if ($isMulti) {
-          if (!isset($parentRef[$alias])) {
-            $parentRef[$alias] = [];
-          }
-
-          if( !$this->inArrayByKey($parentRef[$alias], $entityId, $join->key)) {
-            $parentRef[$alias][] = &$entityRef;
-          }
-        } else {
-          $parentRef[$alias] = &$entityRef;
+    $joinFirst = reset( $this->joins );
+    if( $joinFirst instanceof Join ){
+      foreach( $this->identityMap as $alias => $identityMapItems ){
+        if( $joinFirst->entity->alias === $alias ){
+          $this->identityHierarchyMap = $this->buildHierarchy( $alias, $identityMapItems );
         }
       }
     }
 
-    return array_values( $result );
-  }
-
-  private function extractEntity(
-    array $row, 
-    string $alias
-  ): array {
-    $data = [];
-
-    foreach ($row as $key => $value) {
-      if (strpos($key, $alias . '_') === 0) {
-        $field = substr($key, strlen($alias) + 1);
-        $data[$field] = $value;
-      }
-    }
-
-    return $data;
-  }
-
-  private function inArrayByKey(
-    array $array, $value, 
-    string $key
-  ): bool {
-    foreach ($array as $item) {
-      if (($item[$key] ?? null) === $value) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  private function getRootAlias(
-  ): string {
-    $parents = [];
-    $children = [];
-
-    foreach ($this->joins as $join) {
-      $parents[] = $join->entityParent->alias;
-      $children[] = $join->entity->alias;
-    }
-
-    $roots = array_diff($parents, $children);
-
-    return reset($roots);
+    return $this->identityHierarchyMap;
   }
 }

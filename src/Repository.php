@@ -10,7 +10,6 @@ use Websyspro\Entity\Enums\MultiLine;
 use Websyspro\Entity\Enums\Type;
 use Websyspro\Entity\Interfaces\Join;
 use Websyspro\Entity\Interfaces\Parameter;
-use Websyspro\Entity\Interfaces\ParameterQuery;
 use Websyspro\Entity\Shareds\OrderByAsc;
 use Websyspro\Entity\Shareds\OrderByDesc;
 use Websyspro\Entity\Shareds\StructureFile;
@@ -33,7 +32,8 @@ class Repository
   public array $wheresPrimary = [];
   public array $wheresSecondary = [];
   public array $prepareds = [];
-  public array $parameterQuery = [];
+  public array $columns = [];
+  public array $joins = [];
   public array $orderBys;  
   public StructureFile $structureFile;
   public EntityStructure $entityStructure;
@@ -101,40 +101,30 @@ class Repository
     return $this;
   }
 
-  public function queryBuilderParameters(
+  public function queryBuilderJoins(
   ): void {
-    if( $this->entityStructure instanceof EntityStructure ){
-      $this->parameterQuery[ $this->entityStructure->entity->alias ] = new ParameterQuery(
-        $this->entityStructure->primaryKey, $this->entityStructure->entity
+    $parameterMain = reset( $this->structureFile->parameters );
+    if( $parameterMain instanceof Parameter ){
+      $this->joins = array_merge(
+        [ $this->entityStructure->entity->alias => new Join( 
+          MultiLine::No, MultiLine::No, $parameterMain, $parameterMain ) 
+        ], $this->structureFile->joins 
       );
     }
-
-    foreach( $this->structureFile->parameters as $paramter ){
-      if( $paramter instanceof Parameter ){
-        if( isset( $this->structureFile->joins[ $paramter->entityStructure->entity->alias ])){
-          $this->parameterQuery[ $paramter->entityStructure->entity->alias ] = new ParameterQuery(
-            $paramter->entityStructure->primaryKey, $paramter->entityStructure->entity, $this->structureFile->joins[ 
-              $paramter->entityStructure->entity->alias 
-            ]->entityParent
-          );          
-        }
-        $this->parameterQuery[ $paramter->entityStructure->entity->alias ] = new ParameterQuery(
-          $paramter->entityStructure->primaryKey, $paramter->entityStructure->entity, $this->entityStructure->entity
-        ); 
-      }
-    };
   }
 
   public function get(
   ): array {
     $this->queryBuilderStructureFile();
-    $this->queryBuilderParameters();
+    $this->queryBuilderJoins();
     $this->queryBuilderSQL();
 
-    return Database::query( 
+    print_r( $this->sql );
+
+    return Database::query(
       $this->sql, 
       $this->prepareds,
-      $this->parameterQuery
+      $this->joins
     );
   }  
 
@@ -287,7 +277,7 @@ class Repository
   ): string|null {
     if( sizeof( $this->orderBys ) === 0 ){
       foreach( $this->entityStructure->primaryKey as $primaryKey ){
-        $orders[] = sprintf( "%s.%s Asc", $this->entityStructure->entity->table, $primaryKey );
+        $orders[] = sprintf( "%s.%s Asc", $this->entityStructure->entity->table, $this->entityStructure->alias[ $primaryKey ]);
       }
     } else {
       $orders = $this->orderBys;

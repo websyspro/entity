@@ -10,6 +10,7 @@ class Join
   public Entity $entityParent;
   public MultiLine $multiLine;
   public MultiLine $multiLineReal;
+  public array $primaryKey;
   public string $tableBase;
   public string $table;
   public string $key;
@@ -41,15 +42,6 @@ class Join
     );
   }
 
-  private function getForeigns(
-    Parameter $parameterA,
-    Parameter $parameterB
-  ): ItemForeignKey {
-    return $parameterA->entityStructure->foreigns[
-      $parameterB->entityStructure->entity->class
-    ];
-  } 
-  
   private function setJoinRelationship(
     Parameter $parameterA,
     Parameter $parameterB
@@ -70,6 +62,7 @@ class Join
   ): void {
     $this->multiLine = $multiLine;
     $this->multiLineReal = $multiLineReal;
+    $this->primaryKey = $parameterChild->entityStructure->primaryKey;
     $this->entity = $parameterChild->entityStructure->entity;
     $this->entityParent = $parameterParent->entityStructure->entity;
     $this->tableBase = $parameterChild->entityStructure->entity->table;
