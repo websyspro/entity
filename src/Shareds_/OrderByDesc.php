@@ -1,5 +1,5 @@
 <?php
 
-namespace Websyspro\Entity\Shareds;
+namespace Websyspro\Entity\Shareds_;
 
 class OrderByDesc extends OrderBy {}

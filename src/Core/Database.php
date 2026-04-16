@@ -15,7 +15,7 @@ class Database
   ): PDO { 
     if( isset( Database::$handle ) === false ){
       Database::$handle = new PDO( "sqlsrv:Server=localhost;Database=pnld_crm_api_production", "sa", "@Qazwsx190483" );
-      Database::$handle = new PDO( "mysql:host=localhost;dbname=edocente;charset=utf8mb4", "root", "qazwsx" );
+      // Database::$handle = new PDO( "mysql:host=localhost;dbname=edocente;charset=utf8mb4", "root", "qazwsx" );
       Database::$handle->setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION );
     }
 
@@ -35,14 +35,16 @@ class Database
   }
 
   private static function hierarchyBuilder(
-    array $joins
+    array $colsAlias = [],
+    array $joins = []
   ): HierarchyBuilder {
-    return new HierarchyBuilder( $joins );
+    return new HierarchyBuilder( $colsAlias, $joins );
   }
 
   public static function query(
     string $sql,
     array $prepareds,
+    array $colsAlias = [],
     array $joins = []
   ): array {
     if( Database::connect() instanceof PDO ){
@@ -54,7 +56,7 @@ class Database
       }
 
       if( $stmt instanceof PDOStatement ){
-        return Database::hierarchyBuilder( $joins )->build(
+        return Database::hierarchyBuilder( $colsAlias, $joins )->build(
           $stmt->fetchAll( PDO::FETCH_ASSOC )
         );
       }

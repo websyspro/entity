@@ -27,112 +27,112 @@ extends AbstractEntity
   #[Number()]
   #[NotNull()]
   #[ColumnName( "post_author" )]
-  public int $postAuthor;
+  public int $Author;
 
   #[Datetime()]
   #[NotNull()]
   #[ColumnName( "post_date" )]
-  public string $postDate;
+  public string $Date;
 
   #[Datetime()]
   #[NotNull()]  
   #[ColumnName( "post_date_gmt" )]
-  public string $postDateGmt;
+  public string $DateGmt;
 
   #[NotNull()]
   #[LongText()]
   #[ColumnName( "post_content" )]
-  public string $postContent;
+  public string $Content;
 
   #[NotNull()]
   #[LongText()]
   #[ColumnName( "post_title" )]
-  public string $postTitle;
+  public string $Title;
 
   #[NotNull()]
   #[LongText()]
   #[ColumnName( "post_excerpt" )]
-  public string $postExcerpt;
+  public string $Excerpt;
 
   #[NotNull()]
   #[Text(20)]
   #[ColumnName( "post_status" )]
-  public string $postStatus;
+  public string $Status;
 
   #[NotNull()]
   #[Text(20)]
   #[ColumnName( "comment_status" )]
-  public string $commentStatus;
+  public string $CommentStatus;
 
   #[NotNull()]
   #[Text(20)]
   #[ColumnName( "ping_status" )]
-  public string $pingStatus;
+  public string $PingStatus;
 
   #[NotNull()]
   #[Text(255)]
   #[ColumnName( "post_password" )]
-  public string $postPassword;
+  public string $Password;
 
   #[NotNull()]
   #[Text(200)]
   #[ColumnName( "post_name" )]
-  public string $postName;
+  public string $Name;
 
   #[NotNull()]
   #[LongText()]
   #[ColumnName( "to_ping" )]
-  public string $toPing;
+  public string $ToPing;
 
   #[NotNull()]
   #[LongText()]
   #[ColumnName( "pinged" )]
-  public string $pinged;
+  public string $Pinged;
 
   #[NotNull()]
   #[Datetime()]
   #[ColumnName( "post_modified" )]
-  public string $postModified;
+  public string $Modified;
 
   #[NotNull()]
   #[Datetime()]
   #[ColumnName( "post_modified_gmt" )]
-  public string $postModifiedGmt;
+  public string $ModifiedGmt;
 
   #[NotNull()]
   #[LongText()]
   #[ColumnName( "post_content_filtered" )]
-  public string $postContentFiltered;
+  public string $ContentFiltered;
 
   #[NotNull()]
   #[Number()]
   #[ColumnName( "post_parent" )]
-  public string $postParent;
+  public string $Parent;
 
   #[NotNull()]
   #[Text(255)]
   #[ColumnName( "guid" )]
-  public string $guid;
+  public string $Guid;
 
   #[NotNull()]
   #[Number()]
   #[ColumnName( "menu_order" )]
-  public string $menuOrder;
+  public string $Order;
 
   #[NotNull()]
   #[Text(20)]
   #[ColumnName( "post_type" )]
-  public string $postType;
+  public string $Type;
 
   #[NotNull()]
   #[Text(100)]
   #[ColumnName( "post_mime_type" )]
-  public string $postMimeType;
+  public string $MimeType;
 
   #[NotNull()]
   #[Number]
   #[ColumnName( "comment_count" )]
-  public string $commentCount;
+  public string $CommentCount;
 
-  public EntityList $postMetas;
+  public EntityList $Metas;
 }

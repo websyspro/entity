@@ -1,6 +1,6 @@
 <?php
 
-namespace Websyspro\Entity\Shareds;
+namespace Websyspro\Entity\Shareds_;
 
 use Websyspro\Entity\Interfaces\Parameter;
 use Websyspro\Entity\Interfaces\UsePath;
@@ -291,9 +291,23 @@ class StructureFile
       $this->tokens[ $i ] = preg_replace(
         Patterns::PATTERS_SIMPLE_QUOTATION_MARKS, "", $this->tokens[ $i ]
       );
-    }
 
-    print_r( $this->tokens );
+      if( $i < sizeof( $this->tokens )){
+        if( isset( $this->tokens[ $i ]) && isset( $this->tokens[ $i + 1 ])){
+          if( $this->tokens[ $i ] === "(" && $this->tokens[ $i + 1 ] === "(" ){
+            array_splice( $this->tokens, $i, 1 ); $i += 1;
+          }
+        }
+      }
+    
+      if( $i < sizeof( $this->tokens )){
+        if( isset( $this->tokens[ $i ]) && isset( $this->tokens[ $i + 1 ])){
+          if( $this->tokens[ $i ] === ")" && $this->tokens[ $i + 1 ] === ")" ) {
+            array_splice( $this->tokens, $i, 1 ); $i += 1;
+          }
+        }
+      }
+    }
   }
 
   private function joinNotDef(
@@ -385,12 +399,14 @@ class StructureFile
                     ? MultiLine::Yes
                     : MultiLine::No
                 );
-
-                if( $this->tokens[ $groupStartPos[ $group ] - 1 ] instanceof Token ){
-                  if( $this->tokens[ $groupStartPos[ $group ] - 1 ]->type === Type::Logical ){
-                    $this->tokens[ $groupStartPos[ $group ] - 1 ]->setMultiLine( 
-                      $this->tokens[ $groupStartPos[ $group ] ]->multiLine
-                    );
+                
+                if( $groupStartPos[ $group ] - 1 >= 0 ){
+                  if( $this->tokens[ $groupStartPos[ $group ] - 1 ] instanceof Token ){
+                    if( $this->tokens[ $groupStartPos[ $group ] - 1 ]->type === Type::Logical ){
+                      $this->tokens[ $groupStartPos[ $group ] - 1 ]->setMultiLine( 
+                        $this->tokens[ $groupStartPos[ $group ] ]->multiLine
+                      );
+                    }
                   }
                 }
                 
@@ -454,29 +470,33 @@ class StructureFile
   }
 
   public function isFieldsEquals(
-    Token $currToken,
-    Token $nextToken     
+    Token $currTokenA,
+    Token $nextTokenA,
+    Token $currTokenB,
+    Token $nextTokenB     
   ): bool {
-    return $currToken->entity->table === $nextToken->entity->table 
-        && $currToken->field === $nextToken->field;
+    return $currTokenA->entity->table === $currTokenB->entity->table && $currTokenA->field === $currTokenB->field
+        && $nextTokenA->entity->table === $nextTokenB->entity->table && $nextTokenA->field === $nextTokenB->field;
   }  
 
   private function structureFileGroups(
   ): void {
     for( $i = 0; $i < sizeof($this->tokens); $i++ ){
-      $currToken = $this->tokens[ $i + 0 ];
+      $currTokenA = $this->tokens[ $i + 0 ] ?? null;
+      $nextTokenA = $this->tokens[ $i + 2 ] ?? null;
 
-      if( $currToken instanceof Token && $currToken->type === Type::Entity ) {
+      if( $currTokenA instanceof Token && $nextTokenA instanceof Token && $currTokenA->type === Type::Entity ) {
         for( $j = $i + 3; $j < sizeof( $this->tokens ); $j++ ){
-          $nextToken = $this->tokens[ $j ];
+          $currTokenB = $this->tokens[ $j + 0 ] ?? null;
+          $nextTokenB = $this->tokens[ $j + 2 ] ?? null;
 
-          if( $nextToken instanceof Token ){
-            if( $currToken->group === $nextToken->group ){
-              if( $nextToken->type === Type::Entity ){
+          if( $currTokenB instanceof Token && $nextTokenB instanceof Token ){
+            if( $currTokenA->group === $currTokenB->group ){
+              if( $currTokenA->type === Type::Entity && $currTokenB->type === Type::Entity ){
                 $isTokenGroup = $this->isFieldsEquals(
-                  $currToken, $nextToken
+                  $currTokenA, $nextTokenA, $currTokenB, $nextTokenB
                 );
-
+                
                 if( $isTokenGroup ){
                   $logicalToken = $this->tokens[ $j - 1 ];
                   $isPrevToken = $logicalToken instanceof Token && $logicalToken->type === Type::Logical;

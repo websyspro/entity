@@ -32,7 +32,7 @@ class Repository
   public array $wheresPrimary = [];
   public array $wheresSecondary = [];
   public array $prepareds = [];
-  public array $columns = [];
+  public array $colsAlias = [];
   public array $joins = [];
   public array $orderBys;  
   public StructureFile $structureFile;
@@ -44,6 +44,35 @@ class Repository
     $this->entityStructure = call_user_func_array(
       [ $entity, "meta" ], [ MetaType::Query ]
     );
+  }
+
+  public function include(
+    callable $fn
+  ): Repository {
+    return $this;
+  }
+
+  public function sum(
+    callable $fn
+  ): Repository {
+    return $this;
+  }
+  
+  public function select(
+    callable $fn
+  ): Repository {
+    return $this;
+  } 
+  
+  public function groupBy(
+    callable $fn
+  ): Repository {
+    return $this;
+  }  
+
+  public function firstOrDefault(
+  ): array {
+    return [];
   }
   
   public function where(
@@ -101,6 +130,15 @@ class Repository
     return $this;
   }
 
+  public function queryBuilderColsAlias(
+  ): void {
+    foreach( $this->structureFile->parameters as $parameter ){
+      $this->colsAlias[ $parameter->entityStructure->entity->alias ] = array_flip(
+        $parameter->entityStructure->alias
+      );
+    }
+  }
+
   public function queryBuilderJoins(
   ): void {
     $parameterMain = reset( $this->structureFile->parameters );
@@ -116,14 +154,14 @@ class Repository
   public function get(
   ): array {
     $this->queryBuilderStructureFile();
+    $this->queryBuilderColsAlias();
     $this->queryBuilderJoins();
     $this->queryBuilderSQL();
-
-    print_r( $this->sql );
 
     return Database::query(
       $this->sql, 
       $this->prepareds,
+      $this->colsAlias,
       $this->joins
     );
   }  

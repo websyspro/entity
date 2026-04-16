@@ -1,16 +1,16 @@
 <?php
 
-namespace Websyspro\Entity\Shareds;
+namespace Websyspro\Entity\Shareds_;
 
 use Websyspro\Entity\Decorations\Constraints\ForeignKey;
 use Websyspro\Entity\Decorations\Constraints\Unique;
 use Websyspro\Entity\Decorations\Statistics\Index;
-use Websyspro\Entity\Interfaces\ItemForeignKey;
 use Websyspro\Entity\Decorations\ColumnName;
 use Websyspro\Entity\Enums\AttributeType;
 use Websyspro\Entity\Interfaces\Entity;
-use Websyspro\Entity\Enums\MetaType;
 use ReflectionAttribute;
+use Websyspro\Entity\Enums\MetaType;
+use Websyspro\Entity\Interfaces\ItemForeignKey;
 
 class EntityStructure
 {

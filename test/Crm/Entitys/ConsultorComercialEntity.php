@@ -6,13 +6,14 @@ use Websyspro\Entity\Decorations\Columns\Datetime;
 use Websyspro\Entity\Decorations\Columns\Flag;
 use Websyspro\Entity\Decorations\Columns\LongText;
 use Websyspro\Entity\Decorations\Columns\Text;
+use Websyspro\Entity\Decorations\Constraints\ForeignKey;
 use Websyspro\Entity\Decorations\Constraints\PrimaryKey;
 use Websyspro\Entity\Decorations\EntityName;
 use Websyspro\Entity\Decorations\Requireds\NotNull;
 use Websyspro\Entity\Shareds\AbstractEntity;
 
-#[EntityName( "ConsultorVendasEspeciais" )]
-class SpecialSalesConsultantEntity
+#[EntityName( "ConsultorComercial" )]
+class ConsultorComercialEntity
 extends AbstractEntity
 {
   #[Text(36)]
@@ -53,7 +54,9 @@ extends AbstractEntity
 
   #[Text(36)]
   #[NotNull()]
-  public string $GerenteVendasEspeciaisId;
+  #[ForeignKey( GerenteComercialEntity::class )]
+  public string $GerenteComercialId;
+  public GerenteComercialEntity $GerenteComercial;
 
   #[Flag()]
   #[NotNull()]
@@ -72,8 +75,4 @@ extends AbstractEntity
 
   #[Datetime()]
   public string $UltimaSincronizacao;
-
-  #[Flag()]
-  #[NotNull()]
-  public string $Especialista;
 }

@@ -2,7 +2,6 @@
 
 namespace Websyspro\Test\Crm\Entitys;
 
-use Websyspro\Entity\Core\Bases\AbstractEntity;
 use Websyspro\Entity\Decorations\Constraints\PrimaryKey;
 use Websyspro\Entity\Decorations\Requireds\NotNull;
 use Websyspro\Entity\Decorations\Constraints\Unique;
@@ -10,6 +9,7 @@ use Websyspro\Entity\Decorations\Columns\Datetime;
 use Websyspro\Entity\Decorations\Columns\Number;
 use Websyspro\Entity\Decorations\Columns\Text;
 use Websyspro\Entity\Decorations\Columns\Flag;
+use Websyspro\Entity\Shareds\AbstractEntity;
 
 class ColecaoEntity 
 extends AbstractEntity

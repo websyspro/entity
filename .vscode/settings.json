@@ -13,4 +13,7 @@
   // "intelephense.codeLens.parent.enable": true,
   // "intelephense.codeLens.references.enable": true,
   // "intelephense.codeLens.usages.enable": true
+
+  "intelephense.environment.phpVersion": "8.5.0",
+  "php.validate.executablePath": "D:\\01-Servidor\\php.exe"  
 }

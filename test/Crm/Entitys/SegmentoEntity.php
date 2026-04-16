@@ -1,0 +1,56 @@
+<?php
+
+namespace Websyspro\Test\Crm\Entitys;
+
+use Websyspro\Entity\Decorations\Columns\Datetime;
+use Websyspro\Entity\Decorations\Columns\Flag;
+use Websyspro\Entity\Decorations\Columns\Text;
+use Websyspro\Entity\Decorations\Constraints\PrimaryKey;
+use Websyspro\Entity\Decorations\EntityName;
+use Websyspro\Entity\Decorations\Requireds\NotNull;
+use Websyspro\Entity\Shareds\AbstractEntity;
+
+#[EntityName("Segmento")]
+class SegmentoEntity
+extends AbstractEntity
+{
+  #[Text(36)]
+  #[PrimaryKey()]
+  public string $Id;
+
+  #[Datetime()]
+  #[NotNull()]
+  public string $Created;
+
+  #[Text(36)]
+  #[NotNull()]
+  public string $CreatedById;
+
+  #[Datetime()]
+  public string $Updated;
+
+  #[Text(36)]
+  public string $UpdatedById;
+
+  #[Text(100)]
+  public string $Nome;
+
+  #[Flag()]
+  #[NotNull()]
+  public string $IsActive;
+
+  #[Flag()]
+  #[NotNull()]
+  public string $IsDeleted;
+
+  #[Flag()]
+  #[NotNull()]
+  public string $Sincronizado;
+
+  #[Datetime()]
+  public string $UltimaSincronizacao;
+
+  #[Text(20)]
+  #[NotNull()]
+  public string $ProporcaoLP;
+}

@@ -2,28 +2,29 @@
 
 namespace Websyspro\Test\Crm\Entitys;
 
+use Websyspro\Entity\Decorations\ColumnName;
+use Websyspro\Entity\Decorations\Constraints\ForeignKey;
 use Websyspro\Entity\Decorations\Constraints\PrimaryKey;
 use Websyspro\Entity\Decorations\Constraints\Unique;
-use Websyspro\Entity\Decorations\Columns\LongText;
 use Websyspro\Entity\Decorations\Columns\Text;
 use Websyspro\Entity\Decorations\EntityName;
 use Websyspro\Entity\Shareds\AbstractEntity;
 
-#[EntityName( "AspNetRoles" )]
-class RoleEntity
+#[EntityName( "AspNetUserRoles" )]
+class UsuarioPerfilsEntity
 extends AbstractEntity
 {
   #[Text(36)]
   #[Unique(1)]
   #[PrimaryKey()]
-	public string $Id;
+  #[ForeignKey( UsuarioEntity::class )]
+	public string $UserId;
   
-  #[Text(256)]
-  public string $Name;
+  #[Text(36)]
+  #[Unique(1)]
+  #[PrimaryKey()]
+  #[ForeignKey( PerfilEntity::class )]
+	public string $RoleId;
 
-  #[Text(256)]
-  public string $NormalizedName;
-
-  #[LongText()]
-  public string $ConcurrencyStamp;
+  public PerfilEntity $Perfil;
 }

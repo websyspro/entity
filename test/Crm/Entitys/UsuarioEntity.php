@@ -14,7 +14,7 @@ use Websyspro\Entity\Shareds\AbstractEntity;
 use Websyspro\Entity\Shareds\EntityList;
 
 #[EntityName( "AspNetUsers" )]
-class UsersEntity
+class UsuarioEntity
 extends AbstractEntity
 {
   #[Text(36)]
@@ -70,6 +70,7 @@ extends AbstractEntity
   #[NotNull()]
   public string $AccessFailedCount;
 
-  public EntityList $UserRoles;
-  public SpecialSalesConsultantEntity $specialSalesConsultant;
+  public EntityList $Perfils;
+  public ConsultorVendasEspeciaisEntity $ConsultorVendasEspeciais;
+  public ConsultorComercialEntity $ConsultorComercial;
 }

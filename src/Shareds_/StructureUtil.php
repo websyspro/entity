@@ -1,6 +1,6 @@
 <?php
 
-namespace Websyspro\Entity\Shareds;
+namespace Websyspro\Entity\Shareds_;
 
 use ReflectionFunction;
 use Websyspro\Entity\Interfaces\Parameter;

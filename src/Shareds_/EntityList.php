@@ -1,6 +1,6 @@
 <?php
 
-namespace Websyspro\Entity\Shareds;
+namespace Websyspro\Entity\Shareds_;
 
 use Websyspro\Commons\Collection;
 

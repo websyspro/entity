@@ -1,19 +1,22 @@
 <?php
 
-namespace Websyspro\Entity\Shareds;
+namespace Websyspro\Entity\Shareds_;
 
 use Websyspro\Entity\Enums\MultiLine;
 use Websyspro\Entity\Interfaces\Join;
 
 class HierarchyBuilder
 {
+  private array $colsAlias;
   private array $joins;
   private array $identityMap = [];
   private array $identityHierarchyMap = [];
 
   public function __construct(
-    array $joins
+    array $colsAlias = [],
+    array $joins = []
   ){
+    $this->colsAlias = $colsAlias;
     $this->joins = $joins;
   }
 
@@ -54,6 +57,19 @@ class HierarchyBuilder
     return $entityRow;
   }
 
+  private function columnByAlias(
+    string $aliasTable,
+    string $aliasColumn
+  ): string {
+    if( sizeof( $this->colsAlias ) !== 0 ){
+      if( isset( $this->colsAlias[ $aliasTable ][ $aliasColumn ] ) === true ){
+        return $this->colsAlias[ $aliasTable ][ $aliasColumn ];
+      }
+    }
+
+    return $aliasColumn;
+  }
+
   private function buildHierarchy(
     string $alias,
     array $identityMapItems
@@ -74,9 +90,11 @@ class HierarchyBuilder
 
         $children = [];
 
-        foreach ($this->identityMap[$join->entity->alias] as $subItem) {
-          if ($subItem[$join->key] === $item[$join->referenceKey]) {
+        foreach( $this->identityMap[ $join->entity->alias ] as $subItem ){
+          $itemValue = $item[ $this->columnByAlias( $join->entityParent->alias, $join->referenceKey )];
+          $subItemValue = $subItem[ $this->columnByAlias( $join->entity->alias, $join->key )];
 
+          if( $itemValue === $subItemValue ){
             $childWithHierarchy = $this->buildHierarchy(
               $join->entity->alias,
               [$subItem]
@@ -122,7 +140,6 @@ class HierarchyBuilder
       }
     }
 
-    
     $joinFirst = reset( $this->joins );
     if( $joinFirst instanceof Join ){
       foreach( $this->identityMap as $alias => $identityMapItems ){
