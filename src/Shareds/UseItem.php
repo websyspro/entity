@@ -4,6 +4,7 @@ namespace Websyspro\Entity\Shareds;
 
 use Websyspro\Commons\Collection;
 use Websyspro\Commons\Util;
+use Websyspro\Entity\Enums\MetaType;
 
 class UseItem
 {
@@ -38,5 +39,5 @@ class UseItem
     if( Util::match( "#\sas\s#", $this->entity )){
       [ $this->entity, $this->alias ] = explode( " as ", $this->entity );
     }
-  }  
+  }
 }

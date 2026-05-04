@@ -5,7 +5,7 @@ namespace Websyspro\Entity\Shareds;
 use Websyspro\Entity\Decorations\Constraints\ForeignKey;
 use Websyspro\Entity\Decorations\Constraints\Unique;
 use Websyspro\Entity\Decorations\Statistics\Index;
-use Websyspro\Entity\Interfaces\ItemForeignKey;
+use Websyspro\Entity\Interfaces\ForeignKeyItem;
 use Websyspro\Entity\Decorations\ColumnName;
 use Websyspro\Entity\Enums\AttributeType;
 use Websyspro\Entity\Interfaces\Entity;
@@ -149,7 +149,7 @@ class EntityStructure
             $referenteTable = $entityStructure->entity->table;
             $referenteKey = reset( $entityStructure->primaryKey );
 
-            $this->foreigns[ $foreignKey->entityReference ] = new ItemForeignKey(
+            $this->foreigns[ $foreignKey->entityReference ] = new ForeignKeyItem(
               $this->entity->table, $key, $referenteTable, $referenteKey
             );
           }

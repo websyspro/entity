@@ -2,7 +2,7 @@
 
 namespace Websyspro\Entity\Interfaces;
 
-class ItemForeignKey
+class ForeignKeyItem
 {
   public function __construct(
     public string $table,

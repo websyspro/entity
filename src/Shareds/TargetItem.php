@@ -2,19 +2,17 @@
 
 namespace Websyspro\Entity\Shareds;
 
-use Websyspro\Entity\Decorations\Constraints\ForeignKey;
+use Websyspro\Entity\Interfaces\ForeignKeyItem;
 use Websyspro\Entity\Decorations\EntityList;
+use Websyspro\Entity\Enums\MultiLine;
 use ReflectionAttribute;
 use ReflectionNamedType;
 use ReflectionClass;
-use Websyspro\Entity\Enums\MultiLine;
-use Websyspro\Entity\Interfaces\ItemForeignKey;
 
 class TargetItem
 {
   public UseItem $useItem;
-  public MultiLine $multiLine;
-  public ItemForeignKey $itemForeignKey;
+  public foreignKeyItem $itemForeignKey;
 
   public function __construct(
     AbstractRepository $abstractRepository,
@@ -49,16 +47,13 @@ class TargetItem
             $entity = $attribute->newInstance()->entity;
 
             if( is_string( $entity )){
-              $this->multiLine = MultiLine::Yes;
               $this->useItem = new UseItem( $entity );
-              $this->startupForeigns( $this->useItem, $useItem, $abstractRepository );
+              $this->startupForeigns( $this->useItem, $useItem, MultiLine::Yes, $abstractRepository );
             }
           }
         } else {
-          $this->multiLine = MultiLine::No;
           $this->useItem = new UseItem( $classFromProperty );
-
-          $this->startupForeigns( $useItem, $this->useItem, $abstractRepository );
+          $this->startupForeigns( $useItem, $this->useItem, MultiLine::No, $abstractRepository );
         }
       }
     }
@@ -67,6 +62,7 @@ class TargetItem
   private function startupForeigns(
     UseItem $useItemChild,
     UseItem $useItemParent,
+    MultiLine $multiLine,
     AbstractRepository $abstractRepository
   ): void {
     $entityStructure = $abstractRepository->entityStructure(
@@ -80,17 +76,14 @@ class TargetItem
             $useItemParent->getPath()
           ];
 
-          if( $itemForeignKey instanceof ItemForeignKey ){
-            if( $this->multiLine == MultiLine::Yes ){
-              $this->itemForeignKey = $itemForeignKey;
-            } else {
-              $this->itemForeignKey = new ItemForeignKey(
+          if( $itemForeignKey instanceof ForeignKeyItem ){
+            $this->itemForeignKey = $multiLine == MultiLine::Yes
+              ? $itemForeignKey : new ForeignKeyItem(
                 $itemForeignKey->referenceTable,
                 $itemForeignKey->referenceKey,
                 $itemForeignKey->table,
                 $itemForeignKey->key
               );
-            }
           }
         }
       }

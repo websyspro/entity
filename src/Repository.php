@@ -35,7 +35,6 @@ class Repository
   public array $colsAlias = [];
   public array $joins = [];
   public array $orderBys;  
-  public StructureFile $structureFile;
   public EntityStructure $entityStructure;
   
   public function __construct(

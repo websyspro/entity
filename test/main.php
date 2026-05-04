@@ -69,13 +69,19 @@ $start = microtime( true );
 
 $repo = new AbstractRepository( PropostaEntity::class );
 $repo
-  ->include( fn( PropostaEntity $p ) => $p->itemsProposta
-    ->where( fn( ItemPropostaEntity $i ) => $i->IsActive && !$i->IsDeleted && $i->PropostaId === $p->Id )
+  ->include( fn( PropostaEntity $p ) => $p->itemsProposta->where( fn( ItemPropostaEntity $i ) => $i->IsActive && !$i->IsDeleted )
     ->include( fn( ItemPropostaEntity $i ) => $i->obra
       ->include( fn( ObraEntity $i ) => $i->ValoresObra )
     )
-  ->where( fn( PropostaEntity $i ) => $i->IsActive && !$i->IsDeleted ))
-  ->select( fn( PropostaEntity $i ) => [ 
+  )
+  ->where( fn( PropostaEntity $i ) => 
+      $i->IsActive && 
+     !$i->IsDeleted && (
+      $i->Created >= '01/01/2026' &&
+      $i->IsActive === true && 
+      '01/31/2026' >= $i->Created
+    ) && $i->IsActive === true
+  )->select( fn( PropostaEntity $i ) => [ 
     $i->Id, $i->NomeProposta, $i->itemsProposta->sum(
       fn( ItemPropostaEntity $s ) => $s->ValorUnitario * $s->Quantidade
     ) 
@@ -92,7 +98,7 @@ $repo
 //         $postMeta->metaKey === 'link_do_pdf'
 //       )
 //     )
-//   )
+//   ) 
 // );
 // $repository->orderByAsc( fn( PostEntity $post ) => [ $post->Date ]);
 // $repository->paged( 1, 32 );
@@ -101,7 +107,8 @@ $repo
 $leftTimer = number_format(( microtime( true ) - $start ) * 1000, 6, ",", "." );
 echo "Execute timer: {$leftTimer}(ms)" . PHP_EOL . PHP_EOL;
 
-print_r( $repo->includes );
+print_r( $repo->wheres );
+// print_r( $repo->includes );
 
 // print_r( "ROWS: " . sizeof($rows) . PHP_EOL . PHP_EOL );
 

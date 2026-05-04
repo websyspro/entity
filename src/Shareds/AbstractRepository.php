@@ -13,7 +13,7 @@ extends UtilsRepository
   public Collection $rows;
   public UseList $useList;
   public Collection $includes;
-
+  public Collection $wheres;
   public static Collection $cacheEntityStructure;
 
   public function __construct(
@@ -35,10 +35,7 @@ extends UtilsRepository
 
     if( $reflectionFunction instanceof ReflectionFunction ){
       $includes = $this->normalizedScriptInclude(
-        $this, $this->rows->slice(
-          $reflectionFunction->getStartLine() - 1, 
-          $reflectionFunction->getEndLine() - $reflectionFunction->getStartLine() + 1
-        )->joinWithSpace()
+        $this, $this->readScripByFunc( $this->rows, $reflectionFunction )
       );
 
       if( isset( $this->includes ) === false ){
@@ -54,6 +51,20 @@ extends UtilsRepository
   public function where(
     callable $fn   
   ): AbstractRepository {
+    $reflectionFunction = $this->startup( $fn );
+
+    if( $reflectionFunction instanceof ReflectionFunction ){
+      $wheres = $this->normalizedScriptWhere(
+        $this, $this->readScripByFunc( $this->rows, $reflectionFunction )
+      );
+
+      if( isset( $this->wheres ) === false ){
+        $this->wheres = new Collection();
+      }
+
+      $this->wheres->merge( $wheres );
+    }
+
     return $this;
   }  
 

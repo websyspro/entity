@@ -2,41 +2,38 @@
 
 namespace Websyspro\Entity\Shareds;
 
-class Relationship
+class WhereList
 {
   public UseItem $useItem;
-  public TargetItem $targetItem;
+  public WhereBody $whereBody;
   public string $parameter;
 
   public function __construct(
     AbstractRepository $abstractRepository,
-    string $relationship
+    string $where    
   ){
-    $this->startup( 
-      $abstractRepository, 
-      $relationship
-    );
+    $this->startup( $abstractRepository, $where );
   }
 
   public function startup(
     AbstractRepository $abstractRepository,
-    string $relationship    
+    string $where 
   ): void {
-    [ $parameter, $target ] = explode(
-      "=>", $relationship
+    [ $whereParameter, $whereBody ] = explode(
+      "=>", $where
     );
 
     [ $entity, $parameter ] = $abstractRepository
-      ->entityWithParam( $parameter );
-
+      ->entityWithParam( $whereParameter );
+    
     if( isset( $entity )){
       $useItem = $abstractRepository->useList->getByName( $entity );
 
       if( $useItem instanceof UseItem ){
         $this->useItem = $useItem;
         $this->parameter = $parameter;
-        $this->targetItem = new TargetItem( 
-          $abstractRepository, $useItem, $target
+        $this->whereBody = new WhereBody( 
+          $abstractRepository, $useItem, $whereBody
         );
       }
     }
