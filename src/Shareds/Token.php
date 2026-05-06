@@ -70,7 +70,7 @@ class Token
     } else return Type::String;
   }
   
-  public function invertCompare(
+  public function defineReverseCompare(
   ): Token {
     $this->value = match( CompareType::tryFrom( $this->value ) ){
       CompareType::GreaterEqual => CompareType::LessEqual->value, 
@@ -81,5 +81,54 @@ class Token
     };
 
     return $this;
+  }
+
+  public function getField(): string|null {
+    if( Util::match( "#->#", $this->value ) === false){
+      return null;
+    }
+
+    [ $_, $field ] = explode( "->", $this->value );
+    return $field;
+  }
+  
+  public function setEntity(
+    Entity $entity
+  ): Token {
+    $this->entity = $entity;
+    $this->field = $this->getField();
+
+    $this->value = Util::sprintFormat( "%s.%s", [
+      $this->entity->alias, $this->field
+    ]);
+
+    return $this;
+  }
+
+  public function setEntityForToken(
+    Token $token
+  ): void {
+    $this->entity = $token->entity;
+    $this->field = $token->field;
+  }  
+
+  public function isEntity(): bool {
+    return $this->type === Type::Entity;
+  }
+
+  public function isString(): bool {
+    return $this->type === Type::String;
+  } 
+  
+  public function isEntityOrString(): bool {
+    return $this->type === Type::Entity || $this->type === Type::Entity;
+  }  
+
+  public function isLogical(): bool {
+    return $this->type === Type::Logical;
+  }
+
+  public function isCompare(): bool {
+    return $this->type === Type::Compare;
   }  
 }

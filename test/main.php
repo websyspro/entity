@@ -1,6 +1,7 @@
 <?php
 
 use Websyspro\Entity\Shareds\AbstractRepository;
+use Websyspro\Entity\Shareds\Token;
 use Websyspro\Test\Crm\Entitys\ItemPropostaEntity;
 use Websyspro\Test\Crm\Entitys\ObraEntity;
 use Websyspro\Test\Crm\Entitys\PropostaEntity;
@@ -79,8 +80,9 @@ $repo
      !$i->IsDeleted && (
       $i->Created >= '01/01/2026' &&
       $i->IsActive === true && 
-      '01/31/2026' >= $i->Created
-    ) && $i->IsActive === true
+      '01/31/2026' >= $i->Created && 
+     !$i->IsActive
+    )
   )->select( fn( PropostaEntity $i ) => [ 
     $i->Id, $i->NomeProposta, $i->itemsProposta->sum(
       fn( ItemPropostaEntity $s ) => $s->ValorUnitario * $s->Quantidade
