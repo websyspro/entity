@@ -18,7 +18,7 @@ extends UtilsRepository
   public static Collection $cacheEntityStructure;
 
   public function __construct(
-    string $entity
+    public string $entity
   ){}
   
   public function select(

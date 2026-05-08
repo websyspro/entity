@@ -94,8 +94,9 @@ class WhereBody
   }
   
   public function createSubQueryExists(
+    string $alias
   ): Token {
-    $token = new Token( Type::Exists );
+    $token = new Token( "Exists ( Select 1 From {$alias} Where" );
     return $token->defineType( Type::Exists )->defineScope( $this->scope );
   }
 
@@ -131,10 +132,12 @@ class WhereBody
     );
   }
 
-  private function tokensToString(
-    Collection $tokens
+  public function tokensToString(
+    Collection|null $tokens = null
   ): string {
-    return $tokens->mapper(fn(Token $t) => $t->value)->joinWithSpace();
+    if( $tokens === null ){
+      return $this->tokens->mapper(fn(Token $t) => $t->value)->joinWithSpace();
+    } else return $tokens->mapper(fn(Token $t) => $t->value)->joinWithSpace();
   }
 
   private function startupSubTokens(
@@ -162,13 +165,11 @@ class WhereBody
       ), true
     );
 
-    $tokenQueryEvent = $this->createSubQueryExists();
-    $tokenStartGroup = $this->createStartGroup();
-    $tokenEndGroup = $this->createEndGroup();
+    $alias = $whereList->entityAlias();
 
     $startTokenSubQueryTokens = $tokenLogical instanceof Token && $tokenLogical->type === Type::Logical 
-      ? [ $this->createLogicalAnd(), $tokenQueryEvent, $tokenStartGroup, ...$whereList->whereBody->tokens->toArray(), $tokenEndGroup ]
-      : [ $tokenStartGroup, $tokenQueryEvent, ...$whereList->whereBody->tokens->toArray(), $tokenEndGroup ];
+      ? [ $this->createLogicalAnd(), $this->createSubQueryExists( $alias ), ...$whereList->whereBody->tokens->toArray(), $this->createEndGroup() ]
+      : [ $this->createSubQueryExists( $alias ), ...$whereList->whereBody->tokens->toArray(), $this->createEndGroup() ];
 
     $this->tokens->spliceIn(
       $startTokenSubQuery, 0,

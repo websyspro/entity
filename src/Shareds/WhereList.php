@@ -10,22 +10,18 @@ class WhereList
   public WhereBody $whereBody;
   
   public function __construct(
-    AbstractRepository $abstractRepository,
-    ReflectionFunction $reflectionFunction,
+    public AbstractRepository $abstractRepository,
+    public ReflectionFunction $reflectionFunction,
     string $where,
     bool $delph = false
   ){
     $this->startup( 
-      $abstractRepository, 
-      $reflectionFunction,
       $where,
       $delph
     );
   }
 
   public function startup(
-    AbstractRepository $abstractRepository,
-    ReflectionFunction $reflectionFunction,
     string $where,
     bool $delph
   ): void {
@@ -33,19 +29,25 @@ class WhereList
       "=>", $where, 2
     );
 
-    [ $entity, $parameter ] = $abstractRepository
+    [ $entity, $parameter ] = $this->abstractRepository
       ->entityWithParam( $whereParameter );
     
     if( isset( $entity )){
-      $useItem = $abstractRepository->useList->getByName( $entity );
-      $statics = $abstractRepository->staticsFromFunction( $reflectionFunction );
+      $useItem = $this->abstractRepository->useList->getByName( $entity );
+      $statics = $this->abstractRepository->staticsFromFunction( $this->reflectionFunction );
 
       if( $useItem instanceof UseItem ){
         $this->useItem = $useItem->setParameter( $parameter );
         $this->whereBody = new WhereBody( 
-          $abstractRepository, $reflectionFunction, $useItem, $statics, $whereBody, $delph
+          $this->abstractRepository, $this->reflectionFunction, $useItem, $statics, $whereBody, $delph
         );
       }
     }
+  }
+
+  public function entityAlias(
+  ): string {
+    return $this->abstractRepository
+      ->entityStructure( $this->useItem->getPath() )->entity->alias;
   }
 }

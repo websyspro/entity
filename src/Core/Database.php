@@ -56,9 +56,10 @@ class Database
       }
 
       if( $stmt instanceof PDOStatement ){
-        return Database::hierarchyBuilder( $colsAlias, $joins )->build(
-          $stmt->fetchAll( PDO::FETCH_ASSOC )
-        );
+        return $stmt->fetchAll( PDO::FETCH_ASSOC );
+        // return Database::hierarchyBuilder( $colsAlias, $joins )->build(
+        //   $stmt->fetchAll( PDO::FETCH_ASSOC )
+        // );
       }
     }
 
