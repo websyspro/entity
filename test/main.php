@@ -1,10 +1,10 @@
 <?php
 
-use Websyspro\Entity\Shareds\AbstractRepository;
-use Websyspro\Entity\Shareds\Token;
 use Websyspro\Test\Crm\Entitys\ItemPropostaEntity;
-use Websyspro\Test\Crm\Entitys\ObraEntity;
+use Websyspro\Entity\Shareds\AbstractRepository;
 use Websyspro\Test\Crm\Entitys\PropostaEntity;
+use Websyspro\Test\Crm\Entitys\ObraEntity;
+use Websyspro\Test\Crm\Entitys\ValoresObraEntity;
 
 $start = microtime( true );
 
@@ -77,9 +77,9 @@ $startDate = '01/01/2026';
 
 $repo = new AbstractRepository( PropostaEntity::class );
 $repo
-  ->include( fn( PropostaEntity $p ) => $p->itemsProposta->where( fn( ItemPropostaEntity $i ) => $i->IsActive && !$i->IsDeleted )
+  ->include( fn( PropostaEntity $p ) => $p->itemsProposta->where( fn( ItemPropostaEntity $i ) => $i->IsActive && $i->IsDeleted === true )
     ->include( fn( ItemPropostaEntity $i ) => $i->obra
-      ->include( fn( ObraEntity $i ) => $i->ValoresObra )
+      ->include( fn( ObraEntity $i ) => $i->ValoresObra->where( fn( ValoresObraEntity $v ) => $v->CmvSomosPercentual === 0.78 ))
     )
   )
   ->where( fn( PropostaEntity $i ) => 
@@ -92,8 +92,8 @@ $repo
       $i->itemsProposta->any( fn( ItemPropostaEntity $o ) => 
         $o->Amortizacao === 145.89 && !$o->IsDeleted && $o->PropostaId === $i->Id
       ) && 
-      $i->itemsProposta->sum( fn( ItemPropostaEntity $p ) => 
-        $p->IsActive && !$p->IsDeleted && $p->PropostaId === $i->Id
+      $i->itemsProposta->any( fn( ItemPropostaEntity $o ) => 
+        $o->IsActive && !$o->IsDeleted && $o->PropostaId === $i->Id
       ) && 
       $i->Status === "Ativo" 
     )

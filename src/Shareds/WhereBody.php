@@ -2,98 +2,126 @@
 
 namespace Websyspro\Entity\Shareds;
 
-use ReflectionFunction;
-use UnitEnum;
 use Websyspro\Entity\Decorations\Columns\Flag;
-use Websyspro\Commons\Collection;
-use Websyspro\Entity\Enums\ColumnType;
 use Websyspro\Entity\Enums\CompareType;
+use Websyspro\Entity\Enums\ColumnType;
+use Websyspro\Commons\Collection;
+use Websyspro\Entity\Enums\GroupType;
 use Websyspro\Entity\Enums\LogicalType;
 use Websyspro\Entity\Enums\Type;
 use Websyspro\Commons\Util;
+use ReflectionFunction;
+use UnitEnum;
 
 class WhereBody
 {
-  public AbstractRepository $abstractRepository;
-  public ReflectionFunction $reflectionFunction;
-  public Collection $tokens;
-  public UseItem $useItem;
-  public Collection $statics;
   public Collection $params;
+  public Collection $tokens;
+  public string $scope;
 
   public function __construct(
-    AbstractRepository $abstractRepository,
-    ReflectionFunction $reflectionFunction,
-    UseItem $useItem,
-    Collection $statics,
-    string $whereBody,
+    public AbstractRepository $abstractRepository,
+    public ReflectionFunction $reflectionFunction,
+    public UseItem $useItem,
+    public Collection $statics,
+    public string $whereBody,
+    public bool $delph
   ){
-    $this->startup( $abstractRepository, $reflectionFunction, $useItem, $statics, $whereBody );
+    $this->startup();
     $this->startupAdjustSubQuerysTokens();
     $this->startupAdjustSimplesTokens();
-    $this->startupAdjustGroupsTokens();
     $this->startupAdjustReverseTokens();
     $this->startupAdjustEntityTokens();
     $this->startupAdjustFieldsTokens();
-    // $this->startupAdjustParsesTokens();
-    // $this->startupAdjustBetweensTokens();
+    $this->startupAdjustParsesTokens();
+    $this->startupAdjustBetweensTokens();
     $this->startupEndTokens();
   }
 
   public function startup(
-    AbstractRepository $abstractRepository,
-    ReflectionFunction $reflectionFunction,
-    UseItem $useItem,
-    Collection $statics,
-    string $whereBody    
   ): void {
-    $this->abstractRepository = $abstractRepository;
-    $this->reflectionFunction = $reflectionFunction;
-    $this->useItem = $useItem;
-    $this->statics = $statics;
-    $this->tokens = $abstractRepository
-      ->normalizedScrpitWhereBody( $whereBody );
+    $this->scope = $this->createScope();
+    $this->tokens = $this->abstractRepository
+      ->normalizedScrpitWhereBody( $this->whereBody, $this->scope );
+  }
+
+  private function createScope(
+  ): string {
+    return Util::sprintFormat( "#%s", [
+      substr( str_shuffle( "qazwsxedcrfvttgbyhnujmikolp0123456789" ), 0, 10 )
+    ]);
   }
 
   private function getEntityStructure(
     Token|null $token = null
   ): EntityStructure {
     if( $token instanceof Token ){
-      [ $parameter ] = explode( "->", $token->value );
-      
-      $useLists = $this->abstractRepository->useList->where(
-        fn(UseItem $u) => isset($u->parameter) && $u->parameter === $parameter
-      );
+      if( Util::match( "#->#", $token->value )){
+          if( $token instanceof Token ){
+          [ $parameter ] = explode( "->", $token->value );
+          
+          $useLists = $this->abstractRepository->useList->where(
+            fn(UseItem $u) => isset($u->parameter) && $u->parameter === $parameter
+          );
 
-      if( $useLists->count() !== 0 ){
-        [ $useItem ] = $useLists->toArray();
+          if( $useLists->count() !== 0 ){
+            [ $useItem ] = $useLists->toArray();
 
+            return $this->abstractRepository
+              ->entityStructure( $useItem->getPath() );
+          }
+        }
+      } else if( isset( $token->entity ) === true ){
         return $this->abstractRepository
-          ->entityStructure( $useItem->getPath() );
+          ->entityStructure( $token->entity->class );
       }
     }
 
     return $this->abstractRepository
       ->entityStructure( $this->useItem->getPath() );
-  }  
-
-  private function hasTokenValid(
-    Token|null $token
-  ): bool {
-    return $token instanceof Token && Util::inArray( 
-      $token->type, [ Type::Entity, Type::String ]
-    );
+  } 
+  
+  public function createStartGroup(
+  ): Token {
+    $token = new Token( GroupType::StartGroup->value );
+    return $token->defineType( Type::StartGroup )->defineScope( $this->scope );
+  }
+  
+  public function createEndGroup(
+  ): Token {
+    $token = new Token( GroupType::EndGroup->value );
+    return $token->defineType( Type::EndGroup )->defineScope( $this->scope );
+  }
+  
+  public function createSubQueryExists(
+  ): Token {
+    $token = new Token( Type::Exists );
+    return $token->defineType( Type::Exists )->defineScope( $this->scope );
   }
 
-  public function isFieldsEquals(
-    Token $currTokenA,
-    Token $nextTokenA,
-    Token $currTokenB,
-    Token $nextTokenB     
-  ): bool {
-    return $currTokenA->entity->table === $currTokenB->entity->table && $currTokenA->field === $currTokenB->field
-        && $nextTokenA->entity->table === $nextTokenB->entity->table && $nextTokenA->field === $nextTokenB->field;
+  public function createLogicalAnd(
+  ): Token {
+    $token = new Token( LogicalType::And->value );
+    return $token->defineType( Type::Logical )->defineScope( $this->scope );
   } 
+  
+  public function createCompareEgual(
+  ): Token {
+    $token = new Token( CompareType::Equals->value );
+    return $token->defineType( Type::Compare )->defineScope( $this->scope );
+  } 
+  
+  public function createFlagAtived(
+  ): Token {
+    $token = new Token( 1 );
+    return $token->defineType( Type::String )->defineScope( $this->scope );
+  }  
+
+  public function createFlagInatived(
+  ): Token {
+    $token = new Token( 0 );
+    return $token->defineType( Type::String )->defineScope( $this->scope );
+  }
 
   private function hasSubQuery(
     Token $token
@@ -117,8 +145,8 @@ class WhereBody
       $startTokenSubQuery, $endTokenSubQuery
     );
 
-    $logiToken = $tokensOut->getOneOrFail(0);
-    if( $logiToken instanceof Token && $logiToken->type === Type::Logical ){
+    $tokenLogical = $tokensOut->getOneOrFail(0);
+    if( $tokenLogical instanceof Token && $tokenLogical->type === Type::Logical ){
       $tokensOutSubQuery = $tokensOut->slice( 1, -1 );
     } 
 
@@ -129,14 +157,25 @@ class WhereBody
     $whereList = new WhereList( 
       $this->abstractRepository,
       $this->reflectionFunction,
-      $this->tokensToString( $subQueryTokens ),
+      $this->tokensToString(
+        $subQueryTokens
+      ), true
     );
+
+    $tokenQueryEvent = $this->createSubQueryExists();
+    $tokenStartGroup = $this->createStartGroup();
+    $tokenEndGroup = $this->createEndGroup();
+
+    $startTokenSubQueryTokens = $tokenLogical instanceof Token && $tokenLogical->type === Type::Logical 
+      ? [ $this->createLogicalAnd(), $tokenQueryEvent, $tokenStartGroup, ...$whereList->whereBody->tokens->toArray(), $tokenEndGroup ]
+      : [ $tokenStartGroup, $tokenQueryEvent, ...$whereList->whereBody->tokens->toArray(), $tokenEndGroup ];
 
     $this->tokens->spliceIn(
-      $startTokenSubQuery, 0, $whereList->whereBody->tokens
+      $startTokenSubQuery, 0,
+      $startTokenSubQueryTokens
     );
 
-    return $whereList->whereBody->tokens->count();
+    return Util::sizeArray( $startTokenSubQueryTokens );
   }
 
   private function startupAdjustSubQuerysTokens(
@@ -174,8 +213,9 @@ class WhereBody
             }
             
             if( $group === -1 ){
-              $loop = $this->startupSubTokens( 
-                $startTokenSubQuery, $subLoopB - $startTokenSubQuery
+              $this->startupSubTokens( 
+                $startTokenSubQuery, 
+                $subLoopB - $startTokenSubQuery
               );
 
               break;
@@ -203,10 +243,8 @@ class WhereBody
         if( $currToken->isEntity() && $logiToken->isCompare() === false ){
           if( $this->getEntityStructure()->types[ $currToken->getField() ] instanceof Flag ){
             $this->tokens->spliceIn( ++$loop, 0, [
-              new Token( "=" ), new Token(
-                Util::match( "#^!#", $currToken->value )
-                  ? "0" : "1"
-              )
+              $this->createCompareEgual(), Util::match( "#^!#", $currToken->value ) 
+                ? $this->createFlagInatived() : $this->createFlagAtived()
             ]);
 
             $currToken->value = Util::replace(
@@ -220,42 +258,25 @@ class WhereBody
     }
   }
 
-  private function startupAdjustGroupsTokens(
-    int $group = 0
-  ): void {
-    for( $loop=0; $loop < $this->tokens->count(); $loop++ ){
-      $currToken = $this->tokens->getOneOrFail( $loop );
-
-      if( $currToken instanceof Token ){
-        if( $currToken->type === Type::StartGroup ){
-          $group++;
-        }
-
-        $currToken->group = $group;
-        if( $currToken->type === Type::EndGroup ){
-          $group--;
-        }
-      }
-    }    
-  }
-
   private function startupAdjustReverseTokens(
   ): void {
-    for( $loop=0; $loop < $this->tokens->count(); $loop++ ){
-      $currToken = $this->tokens->getOneOrFail( $loop + 0 );
-      $compToken = $this->tokens->getOneOrFail( $loop + 1 );
-      $nextToken = $this->tokens->getOneOrFail( $loop + 2 );
+    if( $this->delph === false ){
+      for( $loop=0; $loop < $this->tokens->count(); $loop++ ){
+        $currToken = $this->tokens->getOneOrFail( $loop + 0 );
+        $compToken = $this->tokens->getOneOrFail( $loop + 1 );
+        $nextToken = $this->tokens->getOneOrFail( $loop + 2 );
 
-      if( $currToken instanceof Token && $compToken instanceof Token && $nextToken instanceof Token){
-        if( $currToken->isString() && $compToken->isCompare() && $nextToken->isEntity()){
-          $this->tokens->setValue( $loop + 0, $nextToken );
-          $this->tokens->setValue( $loop + 2, $currToken );
-          
-          if( $compToken instanceof Token ){
-            $compToken->defineReverseCompare();
+        if( $currToken instanceof Token && $compToken instanceof Token && $nextToken instanceof Token){
+          if( $currToken->isString() && $compToken->isCompare() && $nextToken->isEntity()){
+            $this->tokens->setValue( $loop + 0, $nextToken );
+            $this->tokens->setValue( $loop + 2, $currToken );
+            
+            if( $compToken instanceof Token ){
+              $compToken->defineReverseCompare();
+            }
+
+            $loop += 2;
           }
-
-          $loop += 2;
         }
       }
     }
@@ -263,21 +284,19 @@ class WhereBody
 
   private function startupAdjustEntityTokens(
   ): void {
-    for( $loop=0; $loop < $this->tokens->count(); $loop++ ){
-      $currToken = $this->tokens->getOneOrFail( $loop + 0 );
-      $nextToken = $this->tokens->getOneOrFail( $loop + 2 );
+    if( $this->delph === false ){
+      for( $loop=0; $loop < $this->tokens->count(); $loop++ ){
+        $currToken = $this->tokens->getOneOrFail( $loop + 0 );
+        $nextToken = $this->tokens->getOneOrFail( $loop + 2 );
 
-      if( $currToken instanceof Token && $nextToken instanceof Token ){
-        if( $currToken->isEntity() ){
-          $currToken->setEntity( $this->getEntityStructure( $currToken )->entity );
-
-          if( $nextToken->isString()){
+        if( $currToken instanceof Token && $nextToken instanceof Token ){
+          if( $currToken->isEntity() ){
             $nextToken->setEntityForToken(
-              $currToken
-            );
-          } else {
-            $nextToken->setEntity( 
-              $this->getEntityStructure( $nextToken )->entity
+              $currToken->setEntity( 
+                $this->getEntityStructure(
+                  $currToken
+                )->entity
+              )
             );
           }
         }
@@ -285,27 +304,48 @@ class WhereBody
     }
   }
 
+  public function isFieldsEquals(
+    Token $currTokenA,
+    Token $nextTokenA,
+    Token $currTokenB,
+    Token $nextTokenB     
+  ): bool {
+    if( isset( $currTokenA->entity->table ) === false || isset( $currTokenB->entity->table ) === false ){
+      return false;
+    }
+    
+    return $currTokenA->entity->table === $currTokenB->entity->table && $currTokenA->field === $currTokenB->field
+        && $nextTokenA->entity->table === $nextTokenB->entity->table && $nextTokenA->field === $nextTokenB->field;
+  }   
+
   private function startupAdjustFieldsTokens(
   ): void {
-    for( $loop=0; $loop < $this->tokens->count(); $loop++ ){
-      $currTokenA = $this->tokens->getOneOrFail( $loop + 0 );
-      $nextTokenA = $this->tokens->getOneOrFail( $loop + 2 );
+    if( $this->delph === false ){
+      for( $loop=0; $loop < $this->tokens->count(); $loop++ ){
+        $currTokenA = $this->tokens->getOneOrFail( $loop + 0 );
+        $nextTokenA = $this->tokens->getOneOrFail( $loop + 2 );
 
-      if( $this->hasTokenValid( $currTokenA ) && $this->hasTokenValid( $nextTokenA )){
-        for( $subLoop = $loop + 3; $subLoop < $this->tokens->count(); $subLoop++ ){
-          $currTokenB = $this->tokens->getOneOrFail( $subLoop + 0 );
-          $nextTokenB = $this->tokens->getOneOrFail( $subLoop + 2 );
+        if( $currTokenA instanceof Token && $nextTokenA instanceof Token ){
+          for( $subLoop = $loop + 3; $subLoop < $this->tokens->count(); $subLoop++ ){
+            $currTokenB = $this->tokens->getOneOrFail( $subLoop + 0 );
+            $nextTokenB = $this->tokens->getOneOrFail( $subLoop + 2 );
+            $logiTokenB = $this->tokens->getOneOrFail( $subLoop - 1 );
 
-          if( $this->hasTokenValid( $currTokenB ) && $this->hasTokenValid( $nextTokenB )){
-            if( $this->isFieldsEquals( $currTokenA, $nextTokenA, $currTokenB, $nextTokenB )){
-              if( $currTokenA->group === $currTokenB->group ){
-                $logiToken = $this->tokens->getOneOrFail( $subLoop - 1 );
+            if( $currTokenB instanceof Token && $nextTokenB instanceof Token ){
+              if( $currTokenA->scope === $currTokenB->scope ){
+                if( $currTokenA->isEntity() && $currTokenB->isEntity() ){
+                  $isTokenGroup = $this->isFieldsEquals(
+                    $currTokenA, $nextTokenA, $currTokenB, $nextTokenB
+                  );
 
-                $this->tokens->spliceIn( $loop + 3, 0, $this->tokens->spliceOut(
-                  $logiToken->isLogical() ? $subLoop - 1 : $subLoop, $logiToken->isLogical() ? 4 : 3
-                ));
+                  if( $isTokenGroup ){
+                    $this->tokens->spliceIn( $loop + 3, 0, $this->tokens->spliceOut(
+                      $logiTokenB->isLogical() ? $subLoop - 1 : $subLoop, $logiTokenB->isLogical() ? 4 : 3
+                    ));
 
-                $loop += 2;
+                    $loop += $logiTokenB->isLogical() ? 4 : 3;
+                  }
+                }
               }
             }
           }
@@ -484,12 +524,14 @@ class WhereBody
 
   private function startupAdjustParsesTokens(
   ): void {
-    for( $loop=0; $loop < $this->tokens->count(); $loop++ ){
-      $token = $this->tokens->getOneOrFail( $loop + 0 );
+    if( $this->delph === false ){
+      for( $loop=0; $loop < $this->tokens->count(); $loop++ ){
+        $token = $this->tokens->getOneOrFail( $loop + 0 );
 
-      if( $token instanceof Token ){
-        if( Util::inArray( $token->type, [ Type::String, Type::Static, Type::Enum ])){
-          $this->parseValue( $token );
+        if( $token instanceof Token ){
+          if( Util::inArray( $token->type, [ Type::String, Type::Static, Type::Enum ])){
+            $this->parseValue( $token );
+          }
         }
       }
     }
@@ -611,9 +653,9 @@ class WhereBody
           ];
 
           if( $nextTokenA instanceof Token && $nextTokenB instanceof Token ){
-            $betWeenToken = new Token( LogicalType::Between->value );
+            $betWeenToken = new Token( Type::Between );
             $betWeenItemToken = new Token( Util::sprintFormat( "%s %s %s", [
-              $nextTokenA->value, LogicalType::And->value, $nextTokenB->value
+              $nextTokenA->value, Type::And->name, $nextTokenB->value
             ]));
 
             $this->tokens->spliceIn( $loop, 0, [

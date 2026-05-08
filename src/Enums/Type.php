@@ -38,5 +38,17 @@ enum Type
   case Range;   
   
   /** Token a ser ignorado no processamento */
-  case Ignore; 
+  case Ignore;
+
+  /** Token Exists */
+  case Exists;
+
+  /** Token Between */
+  case Between;
+
+  /** Token And */
+  case And;
+
+  /** Token Or */
+  case Or;
 }

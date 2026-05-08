@@ -2,10 +2,10 @@
 
 namespace Websyspro\Entity\Shareds;
 
+use Websyspro\Entity\Enums\MetaType;
 use Websyspro\Commons\Collection;
 use Websyspro\Commons\Util;
 use ReflectionFunction;
-use Websyspro\Entity\Enums\MetaType;
 
 class AbstractRepository
 extends UtilsRepository
@@ -13,7 +13,7 @@ extends UtilsRepository
   public Collection $rows;
   public UseList $useList;
   public Collection $includes;
-  public Collection $wheres;
+  public WhereList $whereList;
   public static Collection $cacheEntityStructure;
 
   public function __construct(
@@ -35,8 +35,12 @@ extends UtilsRepository
 
     if( $reflectionFunction instanceof ReflectionFunction ){
       $includes = $this->normalizedScriptInclude(
-        $this, $this->readScripByFunc( $this->rows, $reflectionFunction )
+        $this, $reflectionFunction, $this->readScripByFunc(
+          $this->rows, $reflectionFunction
+        )
       );
+
+      print_r( $includes );
 
       if( isset( $this->includes ) === false ){
         $this->includes = new Collection();
@@ -54,19 +58,15 @@ extends UtilsRepository
     $reflectionFunction = $this->startup( $fn );
 
     if( $reflectionFunction instanceof ReflectionFunction ){
-      $wheres = $this->normalizedScriptWhere(
+      $this->whereList = $this->normalizedScriptWhere(
         $this, $reflectionFunction, $this->readScripByFunc( 
           $this->rows, $reflectionFunction
         )
       );
 
-      if( isset( $this->wheres ) === false ){
-        $this->wheres = new Collection();
-      }
-
-      $this->wheres->merge( $wheres );
-
-      print_r( $wheres->first()->whereBody->tokens );
+      // print_r( $this->useList );
+      // var_dump( $wheres->first()->whereBody->tokens->mapper(fn(Token $t) => $t->value)->joinWithSpace() );
+      print_r( $this->whereList );
     }
 
     return $this;

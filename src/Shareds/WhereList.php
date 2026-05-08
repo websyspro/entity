@@ -13,11 +13,13 @@ class WhereList
     AbstractRepository $abstractRepository,
     ReflectionFunction $reflectionFunction,
     string $where,
+    bool $delph = false
   ){
     $this->startup( 
       $abstractRepository, 
       $reflectionFunction,
-      $where
+      $where,
+      $delph
     );
   }
 
@@ -25,6 +27,7 @@ class WhereList
     AbstractRepository $abstractRepository,
     ReflectionFunction $reflectionFunction,
     string $where,
+    bool $delph
   ): void {
     [ $whereParameter, $whereBody ] = explode(
       "=>", $where, 2
@@ -40,7 +43,7 @@ class WhereList
       if( $useItem instanceof UseItem ){
         $this->useItem = $useItem->setParameter( $parameter );
         $this->whereBody = new WhereBody( 
-          $abstractRepository, $reflectionFunction, $useItem, $statics, $whereBody
+          $abstractRepository, $reflectionFunction, $useItem, $statics, $whereBody, $delph
         );
       }
     }

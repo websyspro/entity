@@ -2,10 +2,10 @@
 
 namespace Websyspro\Entity\Shareds;
 
-use Websyspro\Commons\Util;
 use Websyspro\Entity\Enums\CompareType;
-use Websyspro\Entity\Enums\Type;
 use Websyspro\Entity\Interfaces\Entity;
+use Websyspro\Entity\Enums\Type;
+use Websyspro\Commons\Util;
 
 class Token
 {
@@ -13,28 +13,34 @@ class Token
   public Entity|null $entity = null;
   public string|null $value = null;
   public string|null $field = null;
-  public int $group;
+  public string $scope;
   
   public function __construct(
-    string $value
+    string|Type $valueOrType
   ){
-    $this->startup( $value );
-    $this->startupTypeString( $value );
+    $this->startup( $valueOrType );
+    $this->startupTypeString();
   }
 
   private function startup(
-    string $value
+    string|Type $valueOrType
   ): void {
-    $this->type = $this->getTokenByValue(
-      $this->value = $value
-    );
+    if( $valueOrType instanceof Type ){
+      $this->value = $valueOrType->name;
+      $this->type = $valueOrType;
+    } else {
+      $this->type = $this->getTokenByValue(
+        $this->value = $valueOrType
+      ); 
+    }
   }
 
   private function startupTypeString(
-    string $value
   ): void {
     if( $this->type === Type::String ){
-      $this->value = Util::replace([ "#(^'|'$)#", "#(^\\\"|\\\"$)#" ], $this->value);
+      $this->value = Util::replace(
+        [ "#(^'|'$)#", "#(^\\\"|\\\"$)#" ], $this->value
+      );
     }
   }
 
@@ -69,6 +75,20 @@ class Token
       return Type::EndGroup;
     } else return Type::String;
   }
+
+  public function defineType(
+    Type $type
+  ): Token {
+    $this->type = $type;
+    return $this;
+  }
+
+  public function defineScope(
+    string $scope
+  ): Token {
+    $this->scope = $scope;
+    return $this;
+  }  
   
   public function defineReverseCompare(
   ): Token {
@@ -131,5 +151,5 @@ class Token
 
   public function isCompare(): bool {
     return $this->type === Type::Compare;
-  }  
+  } 
 }

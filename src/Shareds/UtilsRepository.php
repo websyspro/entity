@@ -97,6 +97,7 @@ class UtilsRepository
   
   public function normalizedScriptInclude(
     AbstractRepository $abstractRepository,
+    ReflectionFunction $reflectionFunction,
     string $scriptFull,
     string $type = "include"
   ): Collection {
@@ -105,7 +106,7 @@ class UtilsRepository
     $scriptFull = new Collection( explode( "->{$type}(", $scriptFull ));
     $scriptFull = $scriptFull->mapper(
       fn( string $script ) => new IncludeItem(
-        $abstractRepository, Util::replace( 
+        $abstractRepository, $reflectionFunction, Util::replace( 
           [ "#^\\(#", "#\\)*$#", "#(^\s*)|(\s*$)#" ], $script 
         )
       )
@@ -119,34 +120,30 @@ class UtilsRepository
     ReflectionFunction $reflectionFunction,
     string $scriptFull,
     string $type = "where"
-  ): Collection {
+  ): WhereList {
     $scriptFull = $this->normalizedParenteses( $scriptFull );
     $scriptFull = $this->normalizedScript( $scriptFull, $type );
-
-    $scriptFull = new Collection([ 
-      new WhereList( 
-        $abstractRepository,
-        $reflectionFunction,
-        $scriptFull,
-      )
-    ]);
-
-    return $scriptFull;
+    return new WhereList( $abstractRepository, $reflectionFunction, $scriptFull );
   }
 
   public function whereBodyParse(
-    Collection $tokens
+    string $scope,
+    Collection $tokens,
   ): Collection {
     return $tokens->mapper(
-      fn( string $token ) => new Token( $token ) 
+      function( string $token ) use( $scope ) {
+        $token = new Token($token);
+        return $token->defineScope( $scope );
+      }
     );
   }
 
   public function normalizedScrpitWhereBodyList(
-    string $whereBody    
+    string $whereBody,
+    string $scope 
   ): Collection {
     return $this->whereBodyParse( 
-      new Collection( 
+      $scope, new Collection( 
         Util::matchAll(
           "#'[^']*'|\"[^\"]*\"|\\S+#", preg_replace(
           [ 
@@ -198,9 +195,10 @@ class UtilsRepository
   }  
 
   public function normalizedScrpitWhereBody(
-    string $whereBody    
+    string $whereBody,
+    string $guid
   ): Collection {
-    return $this->normalizedScrpitWhereBodyList( $whereBody );
+    return $this->normalizedScrpitWhereBodyList( $whereBody, $guid );
   }
 
   public function staticsFromFunction(
