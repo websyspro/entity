@@ -13,7 +13,7 @@ extends UtilsRepository
 {
   public Collection $rows;
   public UseList $useList;
-  public Collection $includes;
+  public IncludeList $includeList;
   public WhereList $whereList;
   public static Collection $cacheEntityStructure;
 
@@ -35,7 +35,7 @@ extends UtilsRepository
     $reflectionFunction = $this->startup( $fn );
 
     if( $reflectionFunction instanceof ReflectionFunction ){
-      $this->includes = $this->normalizedScriptInclude(
+      $this->includeList = $this->normalizedScriptInclude(
         $this, $reflectionFunction, $this->readScripByFunc(
           $this->rows, $reflectionFunction
         )
@@ -99,7 +99,7 @@ extends UtilsRepository
   public function getStructure(
   ): RepositoryStructure {
     return new RepositoryStructure(
-      $this->includes, $this->whereList
+      $this->includeList, $this->whereList
     );
   }
 

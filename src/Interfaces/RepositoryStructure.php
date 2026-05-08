@@ -2,13 +2,13 @@
 
 namespace Websyspro\Entity\Interfaces;
 
-use Websyspro\Commons\Collection;
+use Websyspro\Entity\Shareds\IncludeList;
 use Websyspro\Entity\Shareds\WhereList;
 
 class RepositoryStructure
 {
   public function __construct(
-    public Collection $includes,
+    public IncludeList $includeList,
     public WhereList $whereList
   ){}
 }

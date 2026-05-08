@@ -100,10 +100,10 @@ class UtilsRepository
     ReflectionFunction $reflectionFunction,
     string $scriptFull,
     string $type = "include"
-  ): Collection {
+  ): IncludeList {
     $scriptFull = $this->dropBreaksLines( $scriptFull );
     $scriptFull = $this->normalizedScript( $scriptFull, $type );
-    $scriptFull = new Collection( explode( "->{$type}(", $scriptFull ));
+    $scriptFull = new IncludeList( explode( "->{$type}(", $scriptFull ));
     $scriptFull = $scriptFull->mapper(
       fn( string $script ) => new IncludeItem(
         $abstractRepository, $reflectionFunction, Util::replace( 
