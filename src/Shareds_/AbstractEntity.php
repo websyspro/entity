@@ -238,4 +238,10 @@ class AbstractEntity
   ): AbstractEntity {
     return $this;
   }
+
+  public function any(
+    callable|null $fn = null
+  ): AbstractEntity {
+    return $this;
+  }  
 }

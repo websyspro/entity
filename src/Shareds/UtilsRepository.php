@@ -116,13 +116,19 @@ class UtilsRepository
 
   public function normalizedScriptWhere(
     AbstractRepository $abstractRepository,
+    ReflectionFunction $reflectionFunction,
     string $scriptFull,
     string $type = "where"
   ): Collection {
     $scriptFull = $this->normalizedParenteses( $scriptFull );
     $scriptFull = $this->normalizedScript( $scriptFull, $type );
+
     $scriptFull = new Collection([ 
-      new WhereList( $abstractRepository, $scriptFull )
+      new WhereList( 
+        $abstractRepository,
+        $reflectionFunction,
+        $scriptFull,
+      )
     ]);
 
     return $scriptFull;
@@ -151,7 +157,7 @@ class UtilsRepository
             "#\s*;\s*\\}\s*#",
             "#^[^(]*(fn|function)\s*\(#",
             "#\s*\);\s*$#",
-            "#^.*?\)\s*=>\s*#s",
+            // "#^.*?\)\s*=>\s*#s",
             "#\\[\s*#s",
             "#\s*\\]#s",
             "#,\s*#s",
@@ -172,7 +178,7 @@ class UtilsRepository
             "",     // Remove fechamento de função
             "fn(",  // Normaliza declaração de função
             "",     // Remove fechamento de parênteses
-            "",     // Remove arrow function
+            // "",     // Remove arrow function
             "(",    // Converte colchetes em parênteses
             ")",    // Converte colchetes em parênteses
             ",",    // Normaliza vírgulas
@@ -195,5 +201,13 @@ class UtilsRepository
     string $whereBody    
   ): Collection {
     return $this->normalizedScrpitWhereBodyList( $whereBody );
+  }
+
+  public function staticsFromFunction(
+    ReflectionFunction $reflectionFunction
+  ): Collection {
+    return new Collection(
+      $reflectionFunction->getStaticVariables()
+    );
   }
 }

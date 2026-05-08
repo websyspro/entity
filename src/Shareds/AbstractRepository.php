@@ -55,7 +55,9 @@ extends UtilsRepository
 
     if( $reflectionFunction instanceof ReflectionFunction ){
       $wheres = $this->normalizedScriptWhere(
-        $this, $this->readScripByFunc( $this->rows, $reflectionFunction )
+        $this, $reflectionFunction, $this->readScripByFunc( 
+          $this->rows, $reflectionFunction
+        )
       );
 
       if( isset( $this->wheres ) === false ){
@@ -63,6 +65,8 @@ extends UtilsRepository
       }
 
       $this->wheres->merge( $wheres );
+
+      print_r( $wheres->first()->whereBody->tokens );
     }
 
     return $this;

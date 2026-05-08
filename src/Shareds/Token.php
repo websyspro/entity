@@ -41,7 +41,7 @@ class Token
   private function getTokenByValue(
     string $value
   ): Type {
-    if( preg_match( "#(=|==|===|<>|!=|!==|>=|<=)#", $value )){
+    if( preg_match( "#(=|==|===|<>|!=|!==|>=|<=|Between)#", $value )){
       return Type::Compare;
     } else
     if( preg_match( "#^(!)?\\\$.*->.*$#", $value )){
@@ -85,7 +85,7 @@ class Token
 
   public function getField(): string|null {
     if( Util::match( "#->#", $this->value ) === false){
-      return null;
+      return $this->field;
     }
 
     [ $_, $field ] = explode( "->", $this->value );
@@ -107,9 +107,10 @@ class Token
 
   public function setEntityForToken(
     Token $token
-  ): void {
+  ): Token {
     $this->entity = $token->entity;
     $this->field = $token->field;
+    return $this;
   }  
 
   public function isEntity(): bool {

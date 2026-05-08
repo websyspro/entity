@@ -68,6 +68,13 @@ $start = microtime( true );
 //   ])
 //   ->firstOrDefault();
 
+enum FlagType:int {
+  case Actived = 1;
+  case Inactive = 0;
+} 
+
+$startDate = '01/01/2026';
+
 $repo = new AbstractRepository( PropostaEntity::class );
 $repo
   ->include( fn( PropostaEntity $p ) => $p->itemsProposta->where( fn( ItemPropostaEntity $i ) => $i->IsActive && !$i->IsDeleted )
@@ -76,12 +83,19 @@ $repo
     )
   )
   ->where( fn( PropostaEntity $i ) => 
-      $i->IsActive && 
+      $i->IsActive === FlagType::Actived && 
      !$i->IsDeleted && (
-      $i->Created >= '01/01/2026' &&
+      $i->Created >= $startDate &&
       $i->IsActive === true && 
       '01/31/2026' >= $i->Created && 
-     !$i->IsActive
+     !$i->IsActive && 
+      $i->itemsProposta->any( fn( ItemPropostaEntity $o ) => 
+        $o->Amortizacao === 145.89 && !$o->IsDeleted && $o->PropostaId === $i->Id
+      ) && 
+      $i->itemsProposta->sum( fn( ItemPropostaEntity $p ) => 
+        $p->IsActive && !$p->IsDeleted && $p->PropostaId === $i->Id
+      ) && 
+      $i->Status === "Ativo" 
     )
   )->select( fn( PropostaEntity $i ) => [ 
     $i->Id, $i->NomeProposta, $i->itemsProposta->sum(
@@ -106,10 +120,10 @@ $repo
 // $repository->paged( 1, 32 );
 // $rows = $repository->get();
 
-$leftTimer = number_format(( microtime( true ) - $start ) * 1000, 6, ",", "." );
-echo "Execute timer: {$leftTimer}(ms)" . PHP_EOL . PHP_EOL;
+// $leftTimer = number_format(( microtime( true ) - $start ) * 1000, 6, ",", "." );
+// echo "Execute timer: {$leftTimer}(ms)" . PHP_EOL . PHP_EOL;
 
-print_r( $repo->wheres );
+// print_r( $repo->wheres );
 // print_r( $repo->includes );
 
 // print_r( "ROWS: " . sizeof($rows) . PHP_EOL . PHP_EOL );

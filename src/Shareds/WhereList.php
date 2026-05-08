@@ -2,25 +2,32 @@
 
 namespace Websyspro\Entity\Shareds;
 
+use ReflectionFunction;
+
 class WhereList
 {
   public UseItem $useItem;
   public WhereBody $whereBody;
-  public string $parameter;
-
+  
   public function __construct(
     AbstractRepository $abstractRepository,
-    string $where    
+    ReflectionFunction $reflectionFunction,
+    string $where,
   ){
-    $this->startup( $abstractRepository, $where );
+    $this->startup( 
+      $abstractRepository, 
+      $reflectionFunction,
+      $where
+    );
   }
 
   public function startup(
     AbstractRepository $abstractRepository,
-    string $where 
+    ReflectionFunction $reflectionFunction,
+    string $where,
   ): void {
     [ $whereParameter, $whereBody ] = explode(
-      "=>", $where
+      "=>", $where, 2
     );
 
     [ $entity, $parameter ] = $abstractRepository
@@ -28,12 +35,12 @@ class WhereList
     
     if( isset( $entity )){
       $useItem = $abstractRepository->useList->getByName( $entity );
+      $statics = $abstractRepository->staticsFromFunction( $reflectionFunction );
 
       if( $useItem instanceof UseItem ){
-        $this->useItem = $useItem;
-        $this->parameter = $parameter;
+        $this->useItem = $useItem->setParameter( $parameter );
         $this->whereBody = new WhereBody( 
-          $abstractRepository, $useItem, $whereBody
+          $abstractRepository, $reflectionFunction, $useItem, $statics, $whereBody
         );
       }
     }

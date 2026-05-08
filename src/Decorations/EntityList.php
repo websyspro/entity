@@ -33,6 +33,18 @@ class EntityList
   ): EntityList {
     return $this;
   }
+
+  public function any(
+    callable|null $fn = null
+  ): EntityList {
+    return $this;
+  }  
+
+  public function none(
+    callable|null $fn = null
+  ): EntityList {
+    return $this;
+  }  
   
   public function sum(
     callable|null $fn = null
