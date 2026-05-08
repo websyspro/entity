@@ -6,6 +6,7 @@ use Websyspro\Entity\Enums\MetaType;
 use Websyspro\Commons\Collection;
 use Websyspro\Commons\Util;
 use ReflectionFunction;
+use Websyspro\Entity\Interfaces\RepositoryStructure;
 
 class AbstractRepository
 extends UtilsRepository
@@ -34,19 +35,12 @@ extends UtilsRepository
     $reflectionFunction = $this->startup( $fn );
 
     if( $reflectionFunction instanceof ReflectionFunction ){
-      $includes = $this->normalizedScriptInclude(
+      $this->includes = $this->normalizedScriptInclude(
         $this, $reflectionFunction, $this->readScripByFunc(
           $this->rows, $reflectionFunction
         )
       );
 
-      print_r( $includes );
-
-      if( isset( $this->includes ) === false ){
-        $this->includes = new Collection();
-      }
-
-      $this->includes->merge( $includes );
     }
 
     return $this;
@@ -63,10 +57,6 @@ extends UtilsRepository
           $this->rows, $reflectionFunction
         )
       );
-
-      // print_r( $this->useList );
-      // var_dump( $wheres->first()->whereBody->tokens->mapper(fn(Token $t) => $t->value)->joinWithSpace() );
-      // print_r( $this->whereList );
     }
 
     return $this;
@@ -104,6 +94,13 @@ extends UtilsRepository
     }
     
     return null;
+  }
+
+  public function getStructure(
+  ): RepositoryStructure {
+    return new RepositoryStructure(
+      $this->includes, $this->whereList
+    );
   }
 
   private function startupRows(

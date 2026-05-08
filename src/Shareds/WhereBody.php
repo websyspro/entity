@@ -668,7 +668,6 @@ class WhereBody
 
   private function startupEndTokens(
   ): void {
-    // var_dump( $this->tokens->mapper(fn(Token $t) => $t->value)->joinWithSpace() );
     unset( $this->abstractRepository, $this->useItem );
   }
 }
