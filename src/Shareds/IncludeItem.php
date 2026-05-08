@@ -34,7 +34,7 @@ class IncludeItem
         $abstractRepository, $relationship
       );
     }
-      
+    
     if( isset( $whereList )){
       $this->whereList = new WhereList( 
         $abstractRepository, $reflectionFunction, $whereList

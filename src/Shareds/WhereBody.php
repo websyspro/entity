@@ -293,9 +293,8 @@ class WhereBody
           if( $currToken->isEntity() ){
             $nextToken->setEntityForToken(
               $currToken->setEntity( 
-                $this->getEntityStructure(
-                  $currToken
-                )->entity
+                $this->getEntityStructure( $currToken )->entity,
+                $this->getEntityStructure( $currToken )->alias
               )
             );
           }

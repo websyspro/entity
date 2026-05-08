@@ -66,7 +66,7 @@ extends UtilsRepository
 
       // print_r( $this->useList );
       // var_dump( $wheres->first()->whereBody->tokens->mapper(fn(Token $t) => $t->value)->joinWithSpace() );
-      print_r( $this->whereList );
+      // print_r( $this->whereList );
     }
 
     return $this;

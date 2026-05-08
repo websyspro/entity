@@ -113,7 +113,8 @@ class Token
   }
   
   public function setEntity(
-    Entity $entity
+    Entity $entity,
+    array $alias
   ): Token {
     $this->entity = $entity;
     $this->field = $this->getField();
