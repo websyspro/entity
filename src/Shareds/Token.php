@@ -103,6 +103,32 @@ class Token
     return $this;
   }
 
+  public function defineReverseFromValueCompare(
+    Token $token
+  ): Token {
+    $hasLike = Util::match( "#%#", Util::replace( "#\\\%#", $token->value ));
+    $hasList = Util::match( "#(^\(.*\)$)#", Util::replace( "#\\\%#", $token->value ));
+    $hasNull = strtoupper( Util::replace( "#\\\%#", $token->value )) === "NULL";
+    
+    if( $this->value === CompareType::Equals->value && $hasLike ){
+      $this->value = CompareType::Like->value;
+    } else if( $this->value === CompareType::NotEqual->value && $hasLike ){
+      $this->value = CompareType::NotLike->value;
+    } else if( $this->value === CompareType::Equals->value && $hasList ){
+      $this->value = CompareType::In->value;
+      $this->type = Type::Range;
+    } else if( $this->value === CompareType::NotEqual->value && $hasList ){
+      $this->value = CompareType::NotIn->value;
+      $this->type = Type::Range;
+    } else if( $this->value === CompareType::Equals->value && $hasNull ){
+      $this->value = CompareType::Is->value;
+    } else if( $this->value === CompareType::NotEqual->value && $hasNull ){
+      $this->value = CompareType::Not->value;
+    }
+
+    return $this;
+  }  
+
   public function getField(): string|null {
     if( Util::match( "#->#", $this->value ) === false){
       return $this->field;

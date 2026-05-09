@@ -2,11 +2,11 @@
 
 namespace Websyspro\Entity\Shareds;
 
+use Websyspro\Entity\Interfaces\RepositoryStructure;
 use Websyspro\Entity\Enums\MetaType;
 use Websyspro\Commons\Collection;
 use Websyspro\Commons\Util;
 use ReflectionFunction;
-use Websyspro\Entity\Interfaces\RepositoryStructure;
 
 class AbstractRepository
 extends UtilsRepository
@@ -28,7 +28,6 @@ extends UtilsRepository
       
     return $this;
   }
-
   public function include(
     callable $fn   
   ): AbstractRepository {
@@ -124,7 +123,7 @@ extends UtilsRepository
     }
   }
   
-  private function startup(
+  public function startup(
     callable $fn
   ): ReflectionFunction {
     $reflectionFunction = new ReflectionFunction( $fn );

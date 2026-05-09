@@ -29,10 +29,17 @@ class WhereBody
   ){
     $this->startup();
     $this->startupAdjustSubQuerysTokens();
+    
+    if( $this->delph === false ){
+      print_r( $this->tokens );
+      exit();
+    }
+    
     $this->startupAdjustSimplesTokens();
     $this->startupAdjustReverseTokens();
     $this->startupAdjustEntityTokens();
     $this->startupAdjustFieldsTokens();
+    $this->startupAdjustCompareTokens();
     $this->startupAdjustParsesTokens();
     $this->startupAdjustBetweensTokens();
     $this->startupEndTokens();
@@ -176,61 +183,66 @@ class WhereBody
       $startTokenSubQueryTokens
     );
 
-    return Util::sizeArray( $startTokenSubQueryTokens );
+    return Util::sizeArray( $startTokenSubQueryTokens ) + $endTokenSubQuery;
   }
 
   private function startupAdjustSubQuerysTokens(
-    int $startTokenSubQuery = 0,
-    int $group = 0
   ): void {
-    for( $loop = 0; $loop < $this->tokens->count(); $loop++ ){
-      $prevToken = $this->tokens->getOneOrFail( $loop - 1 );
+    for($loop = 0; $loop < $this->tokens->count(); $loop++){
       $token = $this->tokens->getOneOrFail( $loop );
 
       if( $this->hasSubQuery( $token ) === false ){
         continue;
       }
-      
-      $startTokenSubQuery = $loop;
-      if( $prevToken instanceof Token ){
-        if( $prevToken->type === Type::Logical ){
-          $startTokenSubQuery--;
-        }
-      }
 
-      for( $subLoopA = ++$loop; $subLoopA < $this->tokens->count(); $subLoopA++ ){
-        $subTokenA = $this->tokens->getOneOrFail( $subLoopA );
+      var_dump( $loop );
+      for($subLoopA = $loop + 5; $subLoopA < $this->tokens->count(); $subLoopA++){
+        var_dump( $subLoopA );
 
-        if( $subTokenA->type !== Type::EndGroup ){
-          continue;
-        }
-
-        for( $subLoopB = ++$subLoopA; $subLoopB < $this->tokens->count(); $subLoopB++ ){
-          $subTokenB = $this->tokens->getOneOrFail( $subLoopB );
-
-          if( $subTokenB instanceof Token ){
-            if( $subTokenB->type === Type::StartGroup ){
-              $group++;
-            }
-            
-            if( $group === -1 ){
-              $this->startupSubTokens( 
-                $startTokenSubQuery, 
-                $subLoopB - $startTokenSubQuery
-              );
-
-              break;
-            }
-
-            if( $subTokenB->type === Type::EndGroup ){
-              $group--;
-            }
-          }
-        }
-
-        $group = 0;
         break;
       }
+
+      
+      // if( $prevToken instanceof Token ){
+      //   if( $prevToken->type === Type::Logical ){
+      //     $startTokenSubQuery--;
+      //   }
+      // }
+
+      // for( $subLoopA = ++$loop; $subLoopA < $this->tokens->count(); $subLoopA++ ){
+      //   $subTokenA = $this->tokens->getOneOrFail( $subLoopA );
+
+      //   if( $subTokenA->type !== Type::EndGroup ){
+      //     continue;
+      //   }
+
+      //   for( $subLoopB = ++$subLoopA; $subLoopB < $this->tokens->count(); $subLoopB++ ){
+      //     $subTokenB = $this->tokens->getOneOrFail( $subLoopB );
+
+      //     if( $subTokenB instanceof Token ){
+      //       if( $subTokenB->type === Type::StartGroup ){
+      //         $group++;
+      //       }
+            
+      //       if( $group === -1 ){
+      //         var_dump($subLoopB);
+      //         $loop = $this->startupSubTokens( 
+      //           $startTokenSubQuery, 
+      //           $subLoopB - $startTokenSubQuery
+      //         );
+
+      //         break;
+      //       }
+
+      //       if( $subTokenB->type === Type::EndGroup ){
+      //         $group--;
+      //       }
+      //     }
+      //   }
+
+      //   $group = 0;
+      //   break;
+      // }
     }
   }
 
@@ -354,25 +366,23 @@ class WhereBody
     }
   }
 
-  private function enumValue(
-    mixed $enumCaseConstant,
-    string $enumValue
-  ): string {
-    if( $enumCaseConstant instanceof UnitEnum ){
-      if( isset( $property ) && $property === "name" ){
-        return $enumCaseConstant->name;
-      } else
-      if( isset( $property ) && $property === "value" && $enumCaseConstant instanceof BackedEnum ){
-        return $enumCaseConstant->value;
-      } else
-      if( isset( $property ) === false ){
-        return ( $enumCaseConstant instanceof BackedEnum ) 
-          ? $enumCaseConstant->value 
-          : $enumCaseConstant->name;
-      }
-    }
+  private function startupAdjustCompareTokens(
+  ): void {
+    if( $this->delph === false ){
+      for( $loop=0; $loop < $this->tokens->count(); $loop++ ){
+        $currToken = $this->tokens->getOneOrFail( $loop + 0 );
+        $compToken = $this->tokens->getOneOrFail( $loop + 1 );
+        $nextToken = $this->tokens->getOneOrFail( $loop + 2 );
 
-    return $enumValue;
+        if( $currToken instanceof Token && $compToken instanceof Token && $nextToken instanceof Token ){
+          if( $currToken->isEntity() && $compToken->isCompare() ){
+            $compToken->defineReverseFromValueCompare( $nextToken );
+
+            $loop += 2;
+          }
+        }
+      }      
+    }
   }
 
   private function parseEnum(
@@ -396,12 +406,13 @@ class WhereBody
       [ $entity, $case, $property ] = $enumPaths->toArray();
     } else [ $entity, $case ] = $enumPaths->toArray();
 
-    foreach( $this->abstractRepository->useList as $useItem ){
-      if( $useItem instanceof UseItem ){
-        if( $useItem->entity === $entity ){
-          $entity = $useItem->getPath();
-        }
-      }
+    $useItems = $this->abstractRepository->useList->where(
+      fn(UseItem $useItem) => $useItem->entity === $entity
+    );
+
+    if( $useItems->count() !== 0 ){
+      [ $useItem ] = $useItems->toArray();
+      $entity = $useItem->getPath();
     }
 
     $constantName = "{$entity}::{$case}";
@@ -486,7 +497,9 @@ class WhereBody
   private function parseValue(
     Token $token
   ): Token {
-    $tokens = $this->parseValueExplode( $token->value );
+    $tokens = $this->parseValueExplode( 
+      $token->value
+    );
 
     if( Util::isArray( $tokens ) && Util::sizeArray( $tokens ) !== 0 ){
       $columnType = $this->getEntityStructure( $token )

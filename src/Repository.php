@@ -3,6 +3,7 @@
 namespace Websyspro\Entity;
 
 use Websyspro\Entity\Core\Database;
+use Websyspro\Entity\Enums\DriverType;
 use Websyspro\Entity\Enums\WhereType;
 use Websyspro\Entity\Shareds\AbstractRepository;
 use Websyspro\Entity\Shareds\EntityStructure;
@@ -19,11 +20,55 @@ extends AbstractRepository
   private IncludeList $joins;
   private Collection $params;
   private string $wheres;
+  private int $page;
+  private int $rowsPerPage;
+
+  public function select(
+    callable $fn   
+  ): AbstractRepository {
+    return parent::select($fn);
+  }
+
+  public function paged(
+    int $page,
+    int $rowsPerPage
+  ): AbstractRepository {
+    $this->page = $page;
+    $this->rowsPerPage = $rowsPerPage;
+    return $this;
+  }  
+
+  public function include(
+    callable $fn   
+  ): AbstractRepository {
+    return parent::include($fn);
+  }
+
+  public function where(
+    callable $fn   
+  ): AbstractRepository {
+    return parent::where($fn);
+  }  
+
+  public function groupBy(
+    callable $fn   
+  ): AbstractRepository {
+    return parent::groupBy($fn);
+  }  
 
   private function createEntityBase(
   ): void {
     $this->entityStructure = $this
-      ->entityStructure( $this->entity );
+      ->entityStructure($this->entity);
+  }
+
+  private function createSql(
+  ): string {
+    if( $this->getStructure()->includeList->count() !== 0 ){
+      return "Select * From ( Select * From %s %s ) as %s %s Order By 1 %s";
+    }
+
+    return "Select * From %s Order By 1 %s";
   }
 
   private function createParameter(
@@ -90,7 +135,21 @@ extends AbstractRepository
     $this->wheres = $this->createWhereFromList( 
       $this->getStructure()->whereList ?? [], WhereType::Where
     );
-  }  
+  }
+  
+  private function createPaged(
+  ): string|null {
+    $this->page = isset( $this->page ) === false ? 1 : $this->page;
+    $this->rowsPerPage = isset( $this->rowsPerPage ) === false ? 12 : $this->rowsPerPage;
+
+    return match( DriverType::tryFrom( Database::getDriver())){
+      DriverType::MySql => Util::sprintFormat( "Limit %s, %s", [( $this->page - 1 ) * $this->rowsPerPage, $this->rowsPerPage ]),
+      DriverType::SqlServer => Util::sprintFormat( "Offset %s Rows Fetch Next %s Rows Only", [( $this->page - 1 ) * $this->rowsPerPage, $this->rowsPerPage ]),
+      DriverType::PostgreSQL => Util::sprintFormat( "Limit %s Offset %s", [ $this->rowsPerPage, ( $this->page - 1 ) * $this->rowsPerPage ]),
+        
+      default => null
+    };    
+  }
 
   public function all(
   ): mixed {
@@ -98,11 +157,17 @@ extends AbstractRepository
     $this->createWheres();
     $this->createJois();
 
+    $sql = Util::sprintFormat(
+      $this->createSql(), [ 
+      $this->entityStructure->entity->alias, $this->wheres,
+      $this->entityStructure->entity->alias, 
+      $this->joins->joinWithSpace(), $this->createPaged()
+    ]);
+
+    var_dump($sql);
+    
     return Database::query( 
-      Util::sprintFormat( "Select * From ( Select * From %s %s ) as %s %s Order By 1 OffSet 1 Rows Fetch Next 64 Rows Only;", [ 
-        $this->entityStructure->entity->alias, $this->wheres,
-        $this->entityStructure->entity->alias, $this->joins->joinWithSpace()
-      ]), $this->params->toArray()
+      $sql, $this->params->toArray()
     );
   }
 }

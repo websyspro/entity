@@ -123,6 +123,8 @@ class UtilsRepository
   ): WhereList {
     $scriptFull = $this->normalizedParenteses( $scriptFull );
     $scriptFull = $this->normalizedScript( $scriptFull, $type );
+    var_dump($scriptFull);
+    
     return new WhereList( $abstractRepository, $reflectionFunction, $scriptFull );
   }
 
