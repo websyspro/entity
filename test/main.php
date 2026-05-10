@@ -18,7 +18,7 @@ $fn = fn( PropostaEntity $i ) => (
   !$i->IsActive
   && $i->IsDeleted === false 
   && $i->Status === Status::Aprovada
-  && ( $i->PrazoFaturamento === 90 )
+  && $i->PrazoFaturamento === 90
   && $i->Created >= $startDate
   && $i->NomeProposta === "Teste {$test}"
   && $i->IsActive === true 
@@ -318,11 +318,18 @@ class AbstractTokens
   }
 
   public function getToken(
-    int|null $cursor = null
   ): Token|TokenSimple {
-    return $this->tokens->getOneOrFail(
-      $this->cursor + $cursor ?? 0
-    );
+    return $this->tokens->getOneOrFail( $this->cursor );
+  }
+  
+  public function getLeftToken(
+  ): Token|TokenSimple {
+    return $this->tokens->getOneOrFail( $this->cursor - 1 );
+  }
+
+  public function getRightToken(
+  ): Token|TokenSimple {
+    return $this->tokens->getOneOrFail( $this->cursor + 1 );
   }  
 
   public function isEof(
@@ -427,23 +434,23 @@ extends AbstractTokens
 
   private function isGroup(
   ): bool {
-    if( $this->getToken()->isLogical()){
-      return $this->getToken( 1 )->isGroup()
-          && $this->getToken( 2 )->isFN() === false;
-    } 
+    if( $this->getToken()->isLogical() ){
+      return $this->getToken()->isGroup()
+          && $this->getToken()->isFN() === false;
+    }
     
-    return $this->getToken( 0 )->isGroup()
-        && $this->getToken( 1 )->isFN() === false;
+    return $this->getToken()->isGroup()
+        && $this->getToken()->isFN() === false;
   }  
 
   private function isLogical(
   ): bool {
-    return $this->getToken( 0 )->isLogical();
+    return $this->getToken()->isLogical();
   }
 
   private function isFN(
   ): bool {
-    return $this->getToken( 0 )->isFN();
+    return $this->getToken()->isFN();
   }
 
   private function defineParameterList(
@@ -537,16 +544,19 @@ extends AbstractTokens
 
     while( $this->isEof() ){
       if( $this->getToken() instanceof TokenSimple ){
-        if( $this->isGroup() ){
-          var_dump( $this->cursor );
-          $this->defineTokensGroups();
+        if( $this->getToken()->isGroup()){
+          if( $this->getRightToken()->isFN() === false){
+            $this->defineTokensGroups();
+          }
         }
       } else
       if( $this->getToken() instanceof Token ){
-        if( $this->isLogical() ){
-          $this->defineTokensCompare();
+        if( $this->getToken()->isLogical()){
+          $this->getRightToken()->isGroup()
+            ? $this->defineTokensGroups()
+            : $this->defineTokensCompare();
         } else
-        if( $this->isFN()){
+        if( $this->getToken()->isFN()){
           $this->defineTokensCompareFN();
         }
       }
@@ -569,7 +579,6 @@ $WhereTokens = new WhereTokens(
   ExtractScriptFromFN::get( $fn )->tokens
 );
 
-print_r( ExtractScriptFromFN::get( $fn )->tokens );
 
 // print_r( $WhereTokens->parameterList );
-// print_r( $WhereTokens );
+print_r( $WhereTokens );
