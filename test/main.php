@@ -18,7 +18,7 @@ $fn = fn( PropostaEntity $i ) => (
   !$i->IsActive
   && $i->IsDeleted === false 
   && $i->Status === Status::Aprovada
-  && $i->PrazoFaturamento === 90
+  && ( $i->PrazoFaturamento === 9098767 )
   && $i->Created >= $startDate
   && $i->NomeProposta === "Teste {$test}"
   && $i->IsActive === true 
@@ -30,6 +30,11 @@ $fn = fn( PropostaEntity $i ) => (
     $o->IsActive && !$o->IsDeleted && $o->PropostaId === $i->Id
   )
 );
+
+enum WhereTokensType {
+  case Initial;
+  case Group;
+}
 
 class CacheEntityStructure
 {
@@ -92,6 +97,11 @@ class TokenSimple {
   public function isFN(
   ): bool {
     return $this->text === "fn";
+  }
+  
+  public function isNotFN(
+  ): bool {
+    return $this->text !== "fn";
   }  
 }
 
@@ -111,6 +121,11 @@ class Token
   ): bool {
     return $this->type === T_FN;
   }
+
+  public function isNotFN(
+  ): bool {
+    return $this->type !== T_FN;
+  }  
 
   public function isLogical(
   ): bool {
@@ -202,7 +217,7 @@ extends AbstractTokens
     $this->cursorStartNext();
     $this->cursorMove( T_DOUBLE_ARROW );
     $this->cursorNext();
-    $this->cursorMoveToNextCloseFN( 0 );
+    $this->cursorMoveToNextCloseFN();
     $this->updateTokens();
   }
 
@@ -281,9 +296,25 @@ class LogicalExpressionGrupo
   public function __construct(
     Collection $tokens
   ){
+    $this->startups( $tokens);
+  }
+
+  private function startups(
+    Collection $tokens
+  ): void {
     $this->whereTokens = new WhereTokens(
-      $tokens->slice( 1, -1 )
-    );
+      $this->extractParenteses( $tokens )
+    );    
+  }  
+
+  private function extractParenteses(
+    Collection $tokens
+  ): Collection {
+    if( $tokens->getOneOrFail()->isLogical()){
+      $tokens->spliceOut( 1, 1 );
+      $tokens->spliceOut(-1, 1 );
+      return $tokens;
+    } else return $tokens->slice( 1, -1 );
   }
 }
 
@@ -385,7 +416,7 @@ class AbstractTokens
   }
 
   public function cursorMoveToNextCloseFN(
-    int $parenteses = 1
+    int $parenteses = 0
   ): int {
     while( $this->isEof() ){
       if( $this->getToken() instanceof TokenSimple ){
@@ -417,7 +448,8 @@ extends AbstractTokens
   public Collection $tokensList;
 
   public function __construct(
-    public Collection $tokens
+    public Collection $tokens,
+    public WhereTokensType $whereTokensType = WhereTokensType::Initial
   ){
     $this->startups();
     $this->startupsAnalyzeds();
@@ -432,28 +464,13 @@ extends AbstractTokens
     $this->cursor = 0;
   }
 
-  private function isGroup(
+  private function isGroupExist(
   ): bool {
-    if( $this->getToken()->isLogical() ){
-      return $this->getToken()->isGroup()
-          && $this->getToken()->isFN() === false;
-    }
-    
-    return $this->getToken()->isGroup()
-        && $this->getToken()->isFN() === false;
-  }  
-
-  private function isLogical(
-  ): bool {
-    return $this->getToken()->isLogical();
+    return $this->getToken()->isGroup() 
+        && $this->getRightToken()->isNotFN();
   }
 
-  private function isFN(
-  ): bool {
-    return $this->getToken()->isFN();
-  }
-
-  private function defineParameterList(
+  private function createParameters(
   ): void {
     if( $this->getToken() instanceof Token ){
       if( $this->getToken()->type === T_FN ){
@@ -470,7 +487,7 @@ extends AbstractTokens
     }
   }
 
-  private function defineCompareList(
+  private function gotToWheres(
   ): void {
     if( $this->parameterList->exist() ){
       $this->cursorMove( T_DOUBLE_ARROW );
@@ -484,8 +501,12 @@ extends AbstractTokens
   ): void {
     $this->tokensList->add(
       match( $logicalExpressionType ){
-        LogicalExpressionType::Group => new LogicalExpressionGrupo( $this->slice( $this->cursorStart, $this->cursor )),
-        LogicalExpressionType::Compare => new LogicalExpressionCompare( $this->slice( $this->cursorStart, $this->cursor )),
+        LogicalExpressionType::Group => new LogicalExpressionGrupo(
+          $this->slice( $this->cursorStart, $this->cursor )
+        ),
+        LogicalExpressionType::Compare => new LogicalExpressionCompare( 
+          $this->slice( $this->cursorStart, $this->cursor )
+        ),
         LogicalExpressionType::SubQuery => new LogicalExpressionSubQuery( 
           $this->slice( $this->cursorStart, $this->cursor )
         )
@@ -514,23 +535,26 @@ extends AbstractTokens
     );
   }
 
-  private function defineTokensGroups(
+  private function createTokensGroups(
   ): void {
-    $this->cursorStartNext();
-    $this->cursorMoveToNextCloseFN( 0 );
+    $this->cursorMoveToNextCloseFN();
     $this->createTokensGroup();
   }   
 
-  private function defineTokensCompare(
+  private function createTokensCompare(
   ): void {
+    if( $this->cursor === $this->cursorStart ){
+      $this->cursor = $this->tokens->count();
+    }
+
     $this->createTokensCompareGroup();
     $this->cursorStartNext();
   }
 
-  private function defineTokensCompareFN(
+  private function createTokensCompareFN(
   ): void {
     $this->cursorMove( T_DOUBLE_ARROW );
-    $this->cursorNext();
+    $this->cursorPrev();
     $this->cursorMoveToNextCloseFN();
     $this->createTokensCompareSubQuery();
     $this->cursorNext();
@@ -539,25 +563,23 @@ extends AbstractTokens
 
   private function startupsAnalyzeds(
   ): void {
-    $this->defineParameterList();
-    $this->defineCompareList();
+    $this->createParameters();
+    $this->gotToWheres();
 
     while( $this->isEof() ){
       if( $this->getToken() instanceof TokenSimple ){
-        if( $this->getToken()->isGroup()){
-          if( $this->getRightToken()->isFN() === false){
-            $this->defineTokensGroups();
-          }
+        if( $this->isGroupExist()){
+          $this->createTokensGroups();
         }
       } else
       if( $this->getToken() instanceof Token ){
         if( $this->getToken()->isLogical()){
-          $this->getRightToken()->isGroup()
-            ? $this->defineTokensGroups()
-            : $this->defineTokensCompare();
+          $this->isGroupExist() 
+            ? $this->createTokensGroups()
+            : $this->createTokensCompare();
         } else
         if( $this->getToken()->isFN()){
-          $this->defineTokensCompareFN();
+          $this->createTokensCompareFN();
         }
       }
 
@@ -575,10 +597,11 @@ $leftTimer = number_format(( microtime( true ) - $start ) * 1000, 6, ",", "." );
 echo "Execute timer: {$leftTimer}(ms)" . PHP_EOL . PHP_EOL;
 
 
-$WhereTokens = new WhereTokens(
-  ExtractScriptFromFN::get( $fn )->tokens
-);
+// $WhereTokens = new WhereTokens(
+//   ExtractScriptFromFN::get( $fn )->tokens, WhereTokensType::Initial
+// );
 
 
+print_r( ExtractScriptFromFN::get( $fn )->tokens );
 // print_r( $WhereTokens->parameterList );
-print_r( $WhereTokens );
+// print_r( $WhereTokens );
