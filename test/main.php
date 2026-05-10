@@ -4,6 +4,7 @@ use Websyspro\Entity\Enums\MetaType;
 use Websyspro\Entity\Shareds\EntityStructure;
 use Websyspro\Commons\Collection;
 use Websyspro\Commons\Util;
+use Websyspro\Entity\Shareds\ExtractFromFN;
 use Websyspro\Test\Crm\Entitys\ItemPropostaEntity;
 use Websyspro\Test\Crm\Entitys\PropostaEntity;
 use Websyspro\Test\Enums\Status;
@@ -602,6 +603,8 @@ echo "Execute timer: {$leftTimer}(ms)" . PHP_EOL . PHP_EOL;
 // );
 
 
-print_r( ExtractScriptFromFN::get( $fn )->tokens );
+// print_r( ExtractScriptFromFN::get( $fn )->tokens );
 // print_r( $WhereTokens->parameterList );
 // print_r( $WhereTokens );
+
+print_r( ExtractFromFN::get( $fn )->tokens );
