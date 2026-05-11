@@ -7,6 +7,7 @@ use Websyspro\Commons\Collection;
 class ExpressionCompare
 {
   public function __construct(
-    public Collection $tokens
+    public Collection $tokens,
+    public Collection $scopes
   ){}
 }

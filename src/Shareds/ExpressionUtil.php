@@ -162,17 +162,17 @@ class ExpressionUtil
 
   public static function ExpressionTypesValid(
     array|Token $tokens,
-    Collection $parameters
+    Collection $scopes
   ): array|Token|ExpressionLogical|ExpressionGroup|ExpressionSubQuery|ExpressionCompare {
     if( $tokens instanceof Token ){
       return new ExpressionLogical( $tokens );
     } else
     if( ExpressionUtil::isExpressionGroup( Collection::create( $tokens ))){
-      return new ExpressionGroup( Collection::create( $tokens ), $parameters);
+      return new ExpressionGroup( Collection::create( $tokens ), $scopes);
     } else 
     if( ExpressionUtil::isExpressionSubQuery( Collection::create( $tokens ))){
-      return new ExpressionSubQuery( Collection::create( $tokens ), $parameters);
-    } else return new ExpressionCompare( Collection::create( $tokens ));
+      return new ExpressionSubQuery( Collection::create( $tokens ), $scopes);
+    } else return new ExpressionCompare( Collection::create( $tokens ), $scopes );
   }
 
   public static function ExpressionTypes(
