@@ -2,31 +2,42 @@
 
 namespace Websyspro\Entity\Shareds;
 
+use Websyspro\Commons\Collection;
+use Websyspro\Entity\Shareds\ExpressionUtil;
+
 class ExtractToken
 { 
-  public array $tokens;
+  public Collection $tokens;
 
   public function __construct(
     public string $script
   ){
     $this->startups();
-    $this->startupsAnalyzeds();
+    $this->startupsDropWhiteSpace();
+    $this->startupsDropUnnecessaryStartScripts();
+    $this->startupsDropUnnecessaryEndScripts();
   }
 
   private function startups(
   ): void {
-    $this->tokens = array_slice(
-      token_get_all( "<?php {$this->script}" ), 1
+    $this->tokens = ExpressionUtil::createTokens(
+      Collection::create( ExpressionUtil::getTokenAll( $this->script ))
     );
   }
 
-  private function startupsAnalyzeds(
+  private function startupsDropWhiteSpace(
   ): void {
-    $this->tokens = array_filter(
-      $this->tokens, fn( array|string $token ) => (
-        is_string( $token ) || is_array( $token ) && $token[0] !== T_WHITESPACE 
-      )
-    );
+    $this->tokens = ExpressionUtil::dropWhiteSpace( $this->tokens );
+  }
+
+  private function startupsDropUnnecessaryStartScripts(
+  ): void {
+    $this->tokens = ExpressionUtil::dropUnnecessaryStartScript( $this->tokens );
+  }
+
+  private function startupsDropUnnecessaryEndScripts(
+  ): void {
+    $this->tokens = ExpressionUtil::dropUnnecessaryEndScripts( $this->tokens );
   }
 
   public static function get(
