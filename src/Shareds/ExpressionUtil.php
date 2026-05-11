@@ -130,7 +130,7 @@ class ExpressionUtil
     ]);
   }
 
-  public static function createSplitLogical(
+  public static function spliteLogical(
     Collection $tokens,
     array $tokensCurrent = [],
     array $tokensAccumulate = [],
@@ -175,7 +175,7 @@ class ExpressionUtil
     } else return new ExpressionCompare( Collection::create( $tokens ), $scopes );
   }
 
-  public static function ExpressionTypes(
+  public static function expressionTypes(
     Collection $tokensLogical,
     Collection $parameters
   ): Collection {
@@ -192,8 +192,8 @@ class ExpressionUtil
   ): Collection {
     return ExpressionUtil::isExpressionGroup( $tokens )
       ? ExpressionUtil::createExpressionGroup( $tokens, $scopes )
-      : ExpressionUtil::ExpressionTypes(
-        ExpressionUtil::createSplitLogical( $tokens ), $scopes
+      : ExpressionUtil::expressionTypes(
+        ExpressionUtil::spliteLogical( $tokens ), $scopes
       );
   }  
 }

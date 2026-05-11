@@ -5,7 +5,6 @@ use Websyspro\Test\Crm\Entitys\ItemPropostaEntity;
 use Websyspro\Test\Crm\Entitys\PropostaEntity;
 use Websyspro\Entity\Shareds\ExpressionNode;
 use Websyspro\Entity\Shareds\ExtractFromFN;
-use Websyspro\Test\Crm\Entitys\ObraEntity;
 use Websyspro\Test\Enums\Status;
 
 $start = microtime( true );
@@ -18,7 +17,7 @@ $fn = fn( PropostaEntity $i ) => (
   !$i->IsActive
   && $i->IsDeleted === false 
   && $i->Status === Status::Aprovada
-  && ( $i->PrazoFaturamento === 9098767 && ( $i->Status === "teste" ))
+  && ( $i->PrazoFaturamento === 9098767 )
   && $i->Created >= $startDate
   && $i->NomeProposta === "Teste {$test}"
   && $i->IsActive === true 
@@ -39,4 +38,4 @@ $expressoinNode = new ExpressionNode(
   ExtractFromFN::get( $fn )->tokens, new Collection()
 );
 
-// print_r( $expressoinNode );
+print_r( $expressoinNode );

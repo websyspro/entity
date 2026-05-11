@@ -6,23 +6,23 @@ use Websyspro\Commons\Collection;
 
 class ExpressionGroup
 {
-  public ExpressionNode $expressionNode;
-
   public function __construct(
-    Collection $tokens,
-    Collection $scopes
+    public Collection $tokens,
+    public Collection $scopes
   ){
-    $this->startups(
-      $tokens, $scopes
-    );
+    $this->startups();
+    $this->startupsAnalyzed();
   }
 
   private function startups(
-    Collection $tokens,
-    Collection $scopes    
   ): void {
-    $this->expressionNode = new ExpressionNode(
-      ExpressionUtil::extractGroup( $tokens ), $scopes
-    );
+    $this->tokens = ExpressionUtil::extractGroup( $this->tokens );
   }
+
+  private function startupsAnalyzed(
+  ): void {
+    $this->tokens = ExpressionUtil::expressionStructureValid(
+      $this->tokens, $this->scopes
+    );
+  }   
 }
