@@ -2,9 +2,7 @@
 
 namespace Websyspro\Entity\Shareds;
 
-use Stringable;
 use Websyspro\Commons\Collection;
-use Websyspro\Commons\Util;
 use ReflectionFunction;
 
 class ExtractFromFN

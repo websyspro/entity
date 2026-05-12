@@ -2,6 +2,8 @@
 
 namespace Websyspro\Entity\Shareds;
 
+use Closure;
+
 class Scope
 {
   public string $name;

@@ -2,6 +2,7 @@
 
 namespace Websyspro\Entity\Shareds;
 
+use Closure;
 use Websyspro\Commons\Collection;
 use Websyspro\Commons\Util;
 
@@ -90,6 +91,21 @@ class ExpressionUtil
     return $tokens->slice(1, -1);
   }
 
+  public static function isExistsFN(
+    Collection $tokens
+  ): bool {
+    if( $tokens->exist() === false ){
+      return false;
+    }
+
+    $token = $tokens->getOneOrFail(0);
+    if( $token instanceof Token ){
+      return $token->id === T_FN;
+    }
+
+    return false; 
+  }
+
   public static function isLogical(
     Token $token
   ): bool {
@@ -123,10 +139,11 @@ class ExpressionUtil
 
   public static function createExpressionGroup(
     Collection $tokens,
-    Collection $parameters
+    Collection $scopes,
+    Closure $closure
   ): Collection {
     return Collection::create([
-      new ExpressionGroup( $tokens, $parameters )
+      new ExpressionGroup( $tokens, $scopes, $closure )
     ]);
   }
 
@@ -162,38 +179,41 @@ class ExpressionUtil
 
   public static function ExpressionTypesValid(
     array|Token $tokens,
-    Collection $scopes
+    Collection $scopes,
+    Closure $closure
   ): array|Token|ExpressionLogical|ExpressionGroup|ExpressionSubQuery|ExpressionCompare {
     if( $tokens instanceof Token ){
       return new ExpressionLogical( $tokens );
     } else
     if( ExpressionUtil::isExpressionGroup( Collection::create( $tokens ))){
-      return new ExpressionGroup( Collection::create( $tokens ), $scopes);
+      return new ExpressionGroup( Collection::create( $tokens ), $scopes, $closure );
     } else 
     if( ExpressionUtil::isExpressionSubQuery( Collection::create( $tokens ))){
-      return new ExpressionSubQuery( Collection::create( $tokens ), $scopes);
-    } else return new ExpressionCompare( Collection::create( $tokens ), $scopes );
+      return new ExpressionSubQuery( Collection::create( $tokens ), $scopes, $closure );
+    } else return new ExpressionCompare( Collection::create( $tokens ), $scopes, $closure );
   }
 
   public static function expressionTypes(
     Collection $tokensLogical,
-    Collection $parameters
+    Collection $parameters,
+    Closure $closure
   ): Collection {
     return $tokensLogical->mapper(
       fn(array|Token $tokens) => (
-        ExpressionUtil::ExpressionTypesValid( $tokens, $parameters )
+        ExpressionUtil::ExpressionTypesValid( $tokens, $parameters, $closure )
       )
     );
   }
   
   public static function expressionStructureValid(
     Collection $tokens,
-    Collection $scopes
+    Collection $scopes,
+    Closure $closure
   ): Collection {
     return ExpressionUtil::isExpressionGroup( $tokens )
-      ? ExpressionUtil::createExpressionGroup( $tokens, $scopes )
+      ? ExpressionUtil::createExpressionGroup( $tokens, $scopes, $closure )
       : ExpressionUtil::expressionTypes(
-        ExpressionUtil::spliteLogical( $tokens ), $scopes
+        ExpressionUtil::spliteLogical( $tokens ), $scopes, $closure
       );
   }  
 }

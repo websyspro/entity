@@ -2,6 +2,7 @@
 
 namespace Websyspro\Entity\Shareds;
 
+use Closure;
 use Websyspro\Commons\Collection;
 
 class ExpressionSubQuery
@@ -10,19 +11,21 @@ class ExpressionSubQuery
 
   public function __construct(
     Collection $tokens,
-    Collection $scopes
+    Collection $scopes,
+    Closure $closure
   ){
     $this->startups(
-      $tokens, $scopes
+      $tokens, $scopes, $closure
     );
   }
   
   private function startups(
     Collection $tokens,
-    Collection $scopes
+    Collection $scopes,
+    Closure $closure
   ): void {
     $this->expressionNode = new ExpressionNode(
-      $tokens->spliceOut( ExpressionUtil::find( $tokens, T_FN )), $scopes 
+      $tokens->spliceOut( ExpressionUtil::find( $tokens, T_FN )), $scopes, $closure
     );
   }
 }
