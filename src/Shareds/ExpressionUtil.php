@@ -78,17 +78,47 @@ class ExpressionUtil
 
   public static function find(
     Collection $tokens,
-    int|string $find
+    int|string|array $find
   ): int {
+    if( Util::isArray( $find )){
+      return $tokens->indexOf( fn( Token $token ) => Util::inArray(
+        $token->id, $find
+      ));
+    }
+
     return Util::isString( $find ) === false
       ? $tokens->indexOf( fn( Token $token ) => $token->id === $find )
       : $tokens->indexOf( fn( Token $token ) => $token->value === $find );
   }
 
+  public static function findCompare(
+    Collection $tokens
+  ): int {
+    return $tokens->indexOf( fn( Token $token ) => (
+      ExpressionUtil::isCompared( $token )
+    ));
+  }  
+
   public static function extractGroup(
     Collection $tokens
   ): Collection {
-    return $tokens->slice(1, -1);
+    return $tokens->slice( 1, -1 );
+  }
+
+  public static function isField(
+    Collection $tokens
+  ): bool {
+    return ExpressionUtil::find( $tokens, T_VARIABLE ) !== -1
+        && ExpressionUtil::find( $tokens, T_OBJECT_OPERATOR ) !== -1
+        && ExpressionUtil::find( $tokens, T_STRING ) !== -1;
+  }  
+
+  public static function isCompared(
+    Token $token
+  ): bool {
+    return Util::inArray(
+      $token->id, Token::T_COMPARE_LIST
+    );
   }
 
   public static function isExistsFN(
@@ -205,7 +235,7 @@ class ExpressionUtil
     );
   }
   
-  public static function expressionStructureValid(
+  public static function expressionTokenType(
     Collection $tokens,
     Collection $scopes,
     Closure $closure

@@ -27,7 +27,7 @@ class ExpressionNode
       $scopesNew = $this->tokens
         ->slice( ExpressionUtil::find( $this->tokens, T_FN ) + 2, ExpressionUtil::find( $this->tokens, T_DOUBLE_ARROW ) - 3 )
         ->where( fn( Token $token ) => $token->value !== Token::T_COMMA )->chunk(2)
-        ->mapper( fn( Array $tokens ) => new Scope( $tokens ));
+        ->mapper( fn( Array $tokens ) => new Scope( $tokens, $this->closure ));
 
       if( $scopesNew->exist()){
         [ $scope ] = $scopesNew->toArray();
@@ -55,7 +55,7 @@ class ExpressionNode
 
   private function startupsAnalyzedParser(
   ): void {
-    $this->tokens = ExpressionUtil::expressionStructureValid(
+    $this->tokens = ExpressionUtil::expressionTokenType(
       $this->tokens, $this->scopes, $this->closure
     );
   } 

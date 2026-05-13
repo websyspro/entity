@@ -2,6 +2,7 @@
 
 namespace Websyspro\Entity\Shareds;
 
+use Closure;
 use Websyspro\Commons\Collection;
 use ReflectionFunction;
 
@@ -10,7 +11,7 @@ class ExtractFromFN
   public Collection $tokens;
 
   public function __construct(
-    public mixed $fn
+    public Closure $closure
   ){
     $this->startups();
   }
@@ -19,7 +20,9 @@ class ExtractFromFN
   ): void {
     $this->tokens = ExtractToken::get(
       $this->readScripByFunc(
-        new ReflectionFunction( $this->fn )
+        new ReflectionFunction( 
+          $this->closure
+        )
       )
     )->tokens;
   }
@@ -40,8 +43,8 @@ class ExtractFromFN
   }
 
   public static function get(
-    callable $fn
+    Closure $closure
   ): ExtractFromFN {
-    return new static( $fn );
+    return new static( $closure );
   }  
 }

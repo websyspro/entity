@@ -6,35 +6,46 @@ use Closure;
 
 class Scope
 {
-  public string $name;
   public string $alias;
+  public string $variable;
+  public Entity $entity;
 
   public function __construct(
-    array $parameterArr
+    array $parameterArr,
+    Closure $closure
   ){
     $this->startups(
-      $parameterArr
+      $parameterArr, $closure
     );
   }
 
   private function startups(
-    array $parameterArr
+    array $parameterArr,
+    Closure $closure
   ): void {
     [ $tokenName, $tokenAlias ] = $parameterArr;
 
     if( $tokenName instanceof Token ){
-      $this->name = $tokenName->value;
+      $this->alias = $tokenName->value;
+
+      $usesItem = ClosureUtil::getUses( $closure )->getUse( $this->alias );
+      if( $usesItem instanceof UsesItem ){
+        $entityStructure = ClosureUtil::getEntityStructure( $usesItem->path );
+        if( $entityStructure instanceof EntityStructure ){
+          $this->entity = $entityStructure->entity;
+        }
+      }
     }
 
     if( $tokenAlias instanceof Token ){
-      $this->alias = $tokenAlias->value;
+      $this->variable = $tokenAlias->value;
     }
   }
 
   public function isEquals(
     Scope $scope
   ): bool {
-    return $this->name === $scope->name 
-        && $this->alias === $scope->alias;
+    return $this->alias === $scope->alias 
+        && $this->variable === $scope->variable;
   }
 }

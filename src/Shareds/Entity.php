@@ -1,6 +1,6 @@
 <?php
 
-namespace Websyspro\Entity\Interfaces;
+namespace Websyspro\Entity\Shareds;
 
 class Entity
 {

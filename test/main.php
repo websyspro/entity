@@ -9,39 +9,31 @@ use Websyspro\Test\Enums\Status;
 
 $start = microtime( true );
 
-$test = "Escola";
+$escola = "Escola";
 
 $startDate = '01/01/2026';
 
 $closure = fn( PropostaEntity $i ) => (
   !$i->IsActive
-  && $i->IsDeleted === false 
+  && $i->NomeProposta === 'Minha '
   && $i->Status === Status::Aprovada
+  && $i->IsDeleted <= false 
   && ( $i->PrazoFaturamento === 9098767 && ( $i->PrazoFaturamento === 11191 ))
   && $i->Created >= $startDate
-  && $i->NomeProposta === "Teste {$test}"
   && $i->IsActive === true 
   && '01/31/2026' >= $i->Created
   && $i->itemsProposta->any( fn( ItemPropostaEntity $o ) => 
     $o->PropostaId === $i->Id && $o->IsActive === true && $o->IsDeleted === false
   )
-  && $i->itemsProposta->any( fn( ItemPropostaEntity $o ) => 
-    $o->PropostaId === $i->Id && $o->IsActive === true && $o->IsDeleted === false
-  )
-  && $i->itemsProposta->any( fn( ItemPropostaEntity $o ) => 
-    $o->PropostaId === $i->Id && $o->IsActive === true && $o->IsDeleted === false
-  )
-  && $i->itemsProposta->any( fn( ItemPropostaEntity $o ) => 
-    $o->PropostaId === $i->Id && $o->IsActive === true && $o->IsDeleted === false
-  )
 );
 
 
-$leftTimer = number_format(( microtime( true ) - $start ) * 1000, 6, ",", "." );
-echo "Execute timer: {$leftTimer}(ms)" . PHP_EOL . PHP_EOL;
+
 
 $expressoinNode = new ExpressionNode(
   ExtractFromFN::get( $closure )->tokens, new Collection(), $closure
 );
 
+$leftTimer = number_format(( microtime( true ) - $start ) * 1000, 6, ",", "." );
+echo "Execute timer: {$leftTimer}(ms)" . PHP_EOL . PHP_EOL;
 print_r( $expressoinNode );

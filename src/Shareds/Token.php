@@ -11,11 +11,20 @@ class Token
   public string $value;
 
   public const int T_UNKNOWN = -1;
-
+  public const int T_FIELD_AND_FIELD = 1;
+  public const int T_FIELD_AND_VALUE = 2;
+  public const int T_VALUE_AND_FIELD = 3;
+  public const int T_VALUE_AND_VALUE = 4;
   public const string T_PARENTHESES_OPEN = "(";
   public const string T_PARENTHESES_CLOSE = ")";
   public const string T_SEMICOLON = ";";
   public const string T_COMMA = ",";
+
+  public const array T_COMPARE_LIST = [
+    T_IS_EQUAL, T_IS_IDENTICAL,
+    T_IS_NOT_EQUAL, T_IS_NOT_IDENTICAL,
+    T_IS_GREATER_OR_EQUAL, T_IS_SMALLER_OR_EQUAL
+  ];
 
   public function __construct(
     array|string $tokenArr
