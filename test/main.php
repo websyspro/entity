@@ -14,8 +14,9 @@ $escola = "Escola";
 $startDate = '01/01/2026';
 
 $closure = fn( PropostaEntity $i ) => (
-  !$i->IsActive
-  && $i->NomeProposta === 'Minha '
+  $i->NomeProposta === [ 'Item 1', Status::Aprovada, Status::Aprovada, $escola, 12 ]
+  && !$i->IsActive
+  && $i->NomeProposta === "Test EMERSON THIAGOS"
   && $i->Status === Status::Aprovada
   && $i->IsDeleted <= false 
   && ( $i->PrazoFaturamento === 9098767 && ( $i->PrazoFaturamento === 11191 ))

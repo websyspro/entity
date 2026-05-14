@@ -10,20 +10,36 @@ class CompareValue
     public ExpressionCompare $expressionCompare,
     public Collection $tokens  
   ){
-    $this->startups();
     $this->startupsAnalyzed();
-    $this->startupsAnalyzedClear();
-  }
-
-  private function startups(
-  ): void {
-
+    $this->startupsClear();
   }
 
   private function startupsAnalyzed(
-  ): void {}
+  ): void {
+    if( $this->tokens->count() !== 1 ){
+      $this->startupsAnalyzedNotSimples();
+    } else {
+    //   var_dump( "quero dizer que VALUE é simples:" );
+    //   print_r( $this->tokens );
+    }
+  }
+
+  private function isEnumValue(
+  ): bool {
+    return false;
+  }
+
+  private function isVariable(
+  ): bool {
+    return false;
+  }  
+
+  private function startupsAnalyzedNotSimples(
+  ): void {
+    print_r( $this->tokens );
+  }
   
-  private function startupsAnalyzedClear(
+  private function startupsClear(
   ): void {
     unset( $this->expressionCompare );
   }  
