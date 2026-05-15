@@ -6,19 +6,42 @@ use Websyspro\Commons\Collection;
 
 class CompareValue
 {
+  public bool $valueIsList = false;
+  public string $value;
+
   public function __construct(
     public ExpressionCompare $expressionCompare,
     public Collection $tokens  
   ){
+    $this->startupsAnalyzedExtras();
     $this->startupsAnalyzed();
     $this->startupsClear();
   }
 
+  private function startupsAnalyzedExtras(
+  ): void {
+    $this->tokens = $this->tokens
+      ->where( fn( Token $token ) => $token->value !== "." )
+      ->mapper( function( Token $token ){ $token->value = trim( $token->value, "'\"" );
+        return $token;
+      });
+
+    [ $tokenFirst, $tokenLast ] = [
+      ...$this->tokens->slice( 0, 1)->toArray(),
+      ...$this->tokens->slice(-1, 1)->toArray()
+    ]; 
+
+    if( $tokenFirst->id === Token::T_UNKNOWN && $tokenLast->id === Token::T_UNKNOWN ){
+      if( $tokenFirst->value === Token::T_BRACKET_OPEN && $tokenLast->value === Token::T_BRACKET_CLOSE ){
+        $this->valueIsList = true;
+      }
+    }
+  }
+
   private function startupsAnalyzed(
   ): void {
-    if( $this->tokens->count() !== 1 ){
-      $this->startupsAnalyzedNotSimples();
-    }
+    $this->startupsAnalyzedNotSimples();
+    $this->startupsAnalyzedValues();
   }
 
   private function startupsAnalyzedNotSimples(
@@ -34,14 +57,14 @@ class CompareValue
               $this->tokens->spliceOut( $i - 1, 3 );
               $this->tokens->spliceIn( $i - 1, 0, [ $tokenVar ]);
               $i--; continue;
-            } else {
-              $this->tokens->setValue( 
-                $i, $tokenVar->updateVariable(
-                  $this->expressionCompare
-                )
-              );
             }
           }
+
+          $this->tokens->setValue( 
+            $i, $tokenVar->updateVariable(
+              $this->expressionCompare
+            )
+          );          
         }
         if( $tokenVar->isEnumValueWithProperty( $this->tokens->slice( $i, 5 ))){
           $this->tokens->setValue(
@@ -64,9 +87,15 @@ class CompareValue
       $i++;
     }
   }
+
+  private function startupsAnalyzedValues(
+  ): void {
+    $this->value = $this->tokens->mapper( fn( Token $token ) => $token->value )
+      ->joinNotSpace();
+  }
   
   private function startupsClear(
   ): void {
-    unset( $this->expressionCompare );
+    unset( $this->expressionCompare, $this->tokens );
   }  
 }

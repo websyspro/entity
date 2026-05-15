@@ -19,6 +19,8 @@ class Token
   public const int T_VALUE_AND_VALUE = 4;
   public const string T_PARENTHESES_OPEN = "(";
   public const string T_PARENTHESES_CLOSE = ")";
+  public const string T_BRACKET_OPEN = "[";
+  public const string T_BRACKET_CLOSE = "]";
   public const string T_SEMICOLON = ";";
   public const string T_COMMA = ",";
 

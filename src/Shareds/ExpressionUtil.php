@@ -2,9 +2,13 @@
 
 namespace Websyspro\Entity\Shareds;
 
-use Closure;
+use Websyspro\Entity\Enums\SubQueryEvent;
+use Websyspro\Entity\Enums\CompareType;
+use Websyspro\Entity\Enums\ColumnType;
+use Websyspro\Entity\Enums\UnaryNot;
 use Websyspro\Commons\Collection;
 use Websyspro\Commons\Util;
+use Closure;
 
 class ExpressionUtil
 {
@@ -115,6 +119,32 @@ class ExpressionUtil
     return ExpressionUtil::find( $tokens, T_VARIABLE ) !== -1
         && ExpressionUtil::find( $tokens, T_OBJECT_OPERATOR ) !== -1
         && ExpressionUtil::find( $tokens, T_STRING ) !== -1;
+  }
+  
+  public static function isUnaryNot(
+    Collection $tokens
+  ): UnaryNot {
+    [ $tokenIsUnaryNot ] = $tokens->toArray();
+    if( $tokenIsUnaryNot instanceof Token ){
+      return $tokenIsUnaryNot->id !== T_VARIABLE && $tokenIsUnaryNot->value === "!" 
+        ? UnaryNot::Yes : UnaryNot::No;
+    }
+
+    return UnaryNot::No;
+  }
+
+  public static function isSubQuerEvent(
+    Collection $tokens
+  ): SubQueryEvent|null {
+    [ $subQuerEvent ] = $tokens->slice( -2, 1 )->toArray();
+    if( $subQuerEvent instanceof Token ){
+      return match($subQuerEvent->value){
+        strtolower( SubQueryEvent::Any->name ) => SubQueryEvent::Any,
+          default => null
+      };
+    }
+
+    return null;
   }  
 
   public static function isCompared(
@@ -170,6 +200,51 @@ class ExpressionUtil
     return ExpressionUtil::find( $tokens, T_FN ) !== -1
         && ExpressionUtil::find( $tokens, T_DOUBLE_ARROW ) !== -1;
   }  
+
+  public static function isExpressionUnion(
+    Collection $tokens,
+    Closure $closure
+  ): Collection {
+    for( $i = 0; $i < $tokens->count(); $i++ ){
+      $tokenCompareA = $tokens->getOneOrFail( $i );
+      if( $tokenCompareA instanceof ExpressionCompare ){
+        for( $j = ++$i; $j < $tokens->count(); $j++ ){
+          $tokenCompareB = $tokens->getOneOrFail( $j );
+          if( $tokenCompareB instanceof ExpressionCompare ){
+            
+            if( isset( $tokenCompareA->sideLeft ) && isset( $tokenCompareA->sideRight )){
+              if( isset( $tokenCompareB->sideLeft ) && isset( $tokenCompareB->sideRight )){
+                if( $tokenCompareA->sideLeft->field->name === $tokenCompareB->sideLeft->field->name ){
+                  if( $tokenCompareA->sideLeft->entity->table === $tokenCompareB->sideLeft->entity->table ){
+                    if( $tokenCompareA->sideLeft->columnType->name === $tokenCompareB->sideLeft->columnType->name ){
+                      if( $tokenCompareA->sideRight instanceof CompareValue && $tokenCompareB->sideRight instanceof CompareValue ){
+                        $tokens->spliceIn( $i, 0, 
+                          $tokens->spliceOut( $j - 1, 2 )
+                        );
+                        
+                        /* It is an equivalent between */
+                        if( $tokenCompareA->sideLeft->columnType === ColumnType::datetime ){
+                          if( $tokenCompareA->equal->value === CompareType::GreaterEqual->value && $tokenCompareB->equal->value === CompareType::LessEqual->value ){
+                            $tokens->spliceIn( $i - 1, 0, [ new ExpressionCompareBetween(
+                              $tokenCompareA->sideLeft, $tokenCompareA->sideRight, $tokenCompareB->sideRight, $closure
+                            )])->spliceOut( $i, 3 );
+                          }
+                        }  
+
+                        break;
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    return $tokens;
+  }
 
   public static function createExpressionGroup(
     Collection $tokens,

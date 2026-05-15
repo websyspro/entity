@@ -29,7 +29,9 @@ class CompareUtil
           if( $tokenField instanceof Token ){
             $entityStructure = ClosureUtil::getEntityStructure( $scope->entity->class );
             if( Util::inArray( $tokenField->value, $entityStructure->columns )){
-              return [ $scope->entity, new Field( $tokenField->value, $entityStructure->alias[ $tokenField->value ] ?? $tokenField->value )];
+              return [ $scope->entity, new Field( $tokenField->value, $entityStructure->alias[ $tokenField->value ] ?? $tokenField->value ),
+                $entityStructure->types[ $tokenField->value ]->columnType
+              ];
             }
           }
         }

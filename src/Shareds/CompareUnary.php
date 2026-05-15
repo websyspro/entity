@@ -3,12 +3,13 @@
 namespace Websyspro\Entity\Shareds;
 
 use Websyspro\Commons\Collection;
+use Websyspro\Entity\Enums\UnaryNot;
 
 class CompareUnary
 {
   public Entity $entity;
   public Field $field;
-  public bool $isUnaryNot;
+  public UnaryNot $unaryNot;
 
   public function __construct(
     public ExpressionCompare $expressionCompare,
@@ -28,10 +29,7 @@ class CompareUnary
 
   private function startupsIsNot(
   ): void {
-    [ $tokenIsUnaryNot ] = $this->tokens->toArray();
-    if( $tokenIsUnaryNot instanceof Token ){
-      $this->isUnaryNot = $tokenIsUnaryNot->id !== T_VARIABLE && $tokenIsUnaryNot->value === "!";
-    }
+    $this->unaryNot = ExpressionUtil::isUnaryNot( $this->tokens );
   }
 
   private function startupsClear(

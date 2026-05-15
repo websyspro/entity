@@ -3,11 +3,13 @@
 namespace Websyspro\Entity\Shareds;
 
 use Websyspro\Commons\Collection;
+use Websyspro\Entity\Enums\ColumnType;
 
 class CompareField
 {
   public Entity $entity;
   public Field $field;
+  public ColumnType $columnType;
 
   public function __construct(
     public ExpressionCompare $expressionCompare,
@@ -19,7 +21,7 @@ class CompareField
 
   private function startups(
   ): void {
-    [ $this->entity, $this->field ] = CompareUtil::analyzed(
+    [ $this->entity, $this->field, $this->columnType ] = CompareUtil::analyzed(
       $this->expressionCompare, $this->tokens
     );
   }

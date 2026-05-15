@@ -2,8 +2,10 @@
 
 namespace Websyspro\Entity\Shareds;
 
+use Dba\Connection;
 use Websyspro\Commons\Collection;
 use Closure;
+use Websyspro\Commons\Util;
 
 class ExpressionCompare
 {
@@ -22,6 +24,7 @@ class ExpressionCompare
   ){
     $this->startups();
     $this->startupsAnalyzed();
+    $this->startupsAnalyzedParsers();
     $this->startupsAnalyzedClear();
   }
 
@@ -48,6 +51,28 @@ class ExpressionCompare
           default => [ $this->addCompareEqual( $this->sideRight )]
       });
     } else $this->createCompareUnary();
+  }
+
+  private function startupsAnalyzedParsers(
+  ): void {
+    if( isset( $this->sideLeft ) && isset( $this->sideRight )){
+      if( $this->sideLeft instanceof CompareValue ){
+        // TO DO
+      }
+    }
+    if( isset( $this->sideRight ) && isset( $this->sideLeft )){
+      if( $this->sideRight instanceof CompareValue ){
+        $this->sideRight->value = $this->sideRight->valueIsList === false
+          ? $this->sideLeft->columnType->Encode( ClosureUtil::createParam( $this->closure, $this->sideRight->value ) )
+          : $this->sideLeft->columnType->Encode(
+              Util::sprintFormat( "(%s)", [
+                Collection::create( explode( ",", trim( $this->sideRight->value, "[]" )))
+                  ->mapper( fn( string $value ) => ( $this->sideLeft->columnType->Encode( ClosureUtil::createParam( $this->closure, $value ) ) ))
+                    ->joinWithComma()
+              ])
+          );
+      }
+    }
   }
 
   private function isField(

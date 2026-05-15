@@ -11,30 +11,31 @@ use Closure;
 class ClosureUtil
 {
   public static Collection $cacheEntityStructure;
-  public static Collection $reflectionFunction;
+  public static Collection $cacheReflectionFunction;
   public static Collection $cacheUses;
   public static Collection $cacheStatics;
+  public static Collection $cacheParams;
 
   public static function getReflectFunction(
     Closure $closure
   ): ReflectionFunction {
-    if( isset( ClosureUtil::$reflectionFunction ) === false ){
-      ClosureUtil::$reflectionFunction = new Collection();
+    if( isset( ClosureUtil::$cacheReflectionFunction ) === false ){
+      ClosureUtil::$cacheReflectionFunction = new Collection();
     }
 
-    if( ClosureUtil::$reflectionFunction->getOneOrFail( spl_object_id( $closure )) instanceof ReflectionFunction ){
-      return ClosureUtil::$reflectionFunction->getOneOrFail( spl_object_id( $closure ));
+    if( ClosureUtil::$cacheReflectionFunction->getOneOrFail( spl_object_id( $closure )) instanceof ReflectionFunction ){
+      return ClosureUtil::$cacheReflectionFunction->getOneOrFail( spl_object_id( $closure ));
     }
 
-    ClosureUtil::$reflectionFunction->add( new ReflectionFunction( $closure ), spl_object_id( $closure ));
-    return ClosureUtil::$reflectionFunction->getOneOrFail( spl_object_id( $closure ));
+    ClosureUtil::$cacheReflectionFunction->add( new ReflectionFunction( $closure ), spl_object_id( $closure ));
+    return ClosureUtil::$cacheReflectionFunction->getOneOrFail( spl_object_id( $closure ));
   }
 
   public static function getRowsFromClosure(
-    ReflectionFunction $reflectionFunction  
+    ReflectionFunction $cacheReflectionFunction  
   ): Collection {
     $getRowsFromClosure = new Collection(
-      file( $reflectionFunction->getFileName())
+      file( $cacheReflectionFunction->getFileName())
     );
 
     return $getRowsFromClosure->where(
@@ -122,5 +123,34 @@ class ClosureUtil
     }
 
     return null;
+  }
+
+  public static function createParam(
+    Closure $closure,
+    string $value
+  ): string {
+    if( isset( ClosureUtil::$cacheParams ) === false ){
+      ClosureUtil::$cacheParams = new Collection();
+    }
+
+    $paramsList = ClosureUtil::$cacheParams->getOneOrFail(
+      spl_object_id( $closure )
+    );
+
+    if( $paramsList === null ){
+      ClosureUtil::$cacheParams->add(
+        Collection::create(), spl_object_id( $closure )
+      );
+    }
+
+    $paramsList = ClosureUtil::$cacheParams->getOneOrFail( spl_object_id( $closure ));
+    if( $paramsList instanceof Collection ){
+      $paramKey = Util::sprintFormat(
+        ":param_%s", [ $paramsList->count() ]
+      );
+
+      $paramsList->add( $value, $paramKey );
+      return $paramKey;
+    } else return $value;
   }
 }

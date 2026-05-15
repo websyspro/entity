@@ -16,6 +16,8 @@ class ExpressionNode
     $this->startupsAnalyzedParameters();
     $this->startupsAnalyzedContents();
     $this->startupsAnalyzedParser();
+    $this->startupsAnalyzedUnios();
+    $this->startupsAnalyzedClear();
   }
 
   private function startups(
@@ -45,18 +47,23 @@ class ExpressionNode
     }
   }
 
-  private function startupsAnalyzedContents(
-  ): void {
+  private function startupsAnalyzedContents(): void {
     if( ExpressionUtil::isExistsFN( $this->tokens )){
-      $this->tokens = $this->tokens
-        ->slice( ExpressionUtil::find( $this->tokens, T_DOUBLE_ARROW ) + 1 );
+      $this->tokens = $this->tokens->slice( ExpressionUtil::find( $this->tokens, T_DOUBLE_ARROW ) + 1);
     }
   }
 
-  private function startupsAnalyzedParser(
-  ): void {
+  private function startupsAnalyzedParser(): void {
     $this->tokens = ExpressionUtil::expressionTokenType(
       $this->tokens, $this->scopes, $this->closure
     );
-  } 
+  }
+
+  private function startupsAnalyzedUnios(): void {
+    $this->tokens = ExpressionUtil::isExpressionUnion( $this->tokens, $this->closure );
+  }  
+  
+  private function startupsAnalyzedClear(): void {
+    unset( $this->scopes, $this->closure );
+  }
 }
