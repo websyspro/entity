@@ -60,7 +60,7 @@ class ExpressionNode
   }
 
   private function startupsAnalyzedUnios(): void {
-    $this->tokens = ExpressionUtil::isExpressionUnion( $this->tokens, $this->closure );
+    $this->tokens = ExpressionUtil::isExpressionUnion( $this->tokens );
   }  
   
   private function startupsAnalyzedClear(): void {

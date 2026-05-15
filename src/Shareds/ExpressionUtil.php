@@ -202,8 +202,7 @@ class ExpressionUtil
   }  
 
   public static function isExpressionUnion(
-    Collection $tokens,
-    Closure $closure
+    Collection $tokens
   ): Collection {
     for( $i = 0; $i < $tokens->count(); $i++ ){
       $tokenCompareA = $tokens->getOneOrFail( $i );
@@ -226,7 +225,7 @@ class ExpressionUtil
                         if( $tokenCompareA->sideLeft->columnType === ColumnType::datetime ){
                           if( $tokenCompareA->equal->value === CompareType::GreaterEqual->value && $tokenCompareB->equal->value === CompareType::LessEqual->value ){
                             $tokens->spliceIn( $i - 1, 0, [ new ExpressionCompareBetween(
-                              $tokenCompareA->sideLeft, $tokenCompareA->sideRight, $tokenCompareB->sideRight, $closure
+                              $tokenCompareA->sideLeft, $tokenCompareA->sideRight, $tokenCompareB->sideRight
                             )])->spliceOut( $i, 3 );
                           }
                         }  

@@ -1,6 +1,7 @@
 <?php
 
 use Websyspro\Commons\Collection;
+use Websyspro\Entity\Shareds\ClosureUtil;
 use Websyspro\Test\Crm\Entitys\ItemPropostaEntity;
 use Websyspro\Test\Crm\Entitys\PropostaEntity;
 use Websyspro\Entity\Shareds\ExpressionNode;
@@ -31,14 +32,6 @@ $closure = fn( PropostaEntity $i ) => (
   && $i->IsActive === false 
 );
 
-// $closure = fn( PropostaEntity $i ) => (
-//   $i->Created >= $startDate
-//   && $i->IsActive === true
-//   && '31/12/2026' >= $i->Created 
-// );
-
-
-
 
 $expressoinNode = new ExpressionNode(
   ExtractFromFN::get( $closure )->tokens, new Collection(), $closure
@@ -46,4 +39,5 @@ $expressoinNode = new ExpressionNode(
 
 $leftTimer = number_format(( microtime( true ) - $start ) * 1000, 6, ",", "." );
 echo "Execute timer: {$leftTimer}(ms)" . PHP_EOL . PHP_EOL;
+print_r( ClosureUtil::$cacheParams );
 print_r( $expressoinNode );

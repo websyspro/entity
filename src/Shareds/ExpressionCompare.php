@@ -16,6 +16,7 @@ class ExpressionCompare
   public const int T_FIELD_X_FIELD = 1;
   public const int T_FIELD_X_VALUE = 2;
   public const int T_VALUE_X_FIELD = 3;
+  public const int T_VALUE_X_VALUE = 4;
 
   public function __construct(
     public Collection $tokens,
@@ -30,7 +31,22 @@ class ExpressionCompare
 
   public function get(
   ): string {
-    return "";
+    if( $this->sideLeft instanceof CompareUnary ){
+      return "";
+    }
+
+    return match( $this->compareType()){
+      ExpressionCompare::T_FIELD_X_FIELD => 
+        Util::sprintFormat( "%s.%s = %s.%s", [
+          $this->sideLeft->entity->alias, $this->sideLeft->field->alias,
+          $this->sideRight->entity->alias, $this->sideRight->field->alias,
+        ]),      
+      ExpressionCompare::T_FIELD_X_VALUE => 
+        Util::sprintFormat( "%s.%s = %s", [
+          $this->sideLeft->entity->alias, $this->sideLeft->field->alias,
+          $this->sideRight->value
+        ])
+    };
   }
 
   private function startups(

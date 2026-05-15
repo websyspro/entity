@@ -2,30 +2,21 @@
 
 namespace Websyspro\Entity\Shareds;
 
-use Closure;
+use Websyspro\Commons\Util;
 
 class ExpressionCompareBetween
 {
   public function __construct(
     public CompareField|CompareValue|CompareUnary $sideLeft,
     public CompareField|CompareValue $valueStart,
-    public CompareField|CompareValue $valueEnd,
-    public Closure $closure
-  ){
-    $this->startupsParsers();
-    $this->startupsClear();
-  }
+    public CompareField|CompareValue $valueEnd
+  ){}
 
-  private function startupsParsers(
-  ): void {
-    $this->valueStart->value = $this->sideLeft->columnType
-      ->Encode( ClosureUtil::createParam( $this->closure, $this->valueEnd->value ));
-    $this->valueEnd->value = $this->sideLeft->columnType
-      ->Encode( ClosureUtil::createParam( $this->closure, $this->valueEnd->value ));
-  } 
-  
-  private function startupsClear(
-  ): void {
-    unset( $this->closure );
-  }
+  public function get(
+  ): string {
+    return Util::sprintFormat( "%s.%s Between %s And %s", [
+      $this->sideLeft->entity->alias, $this->sideLeft->field->alias,
+      $this->valueStart, $this->valueEnd,
+    ]);
+  }  
 }
