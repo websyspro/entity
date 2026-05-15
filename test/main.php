@@ -1,7 +1,6 @@
 <?php
 
 use Websyspro\Commons\Collection;
-use Websyspro\Entity\Shareds\ClosureUtil;
 use Websyspro\Test\Crm\Entitys\ItemPropostaEntity;
 use Websyspro\Test\Crm\Entitys\PropostaEntity;
 use Websyspro\Entity\Shareds\ExpressionNode;
