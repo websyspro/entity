@@ -2,7 +2,9 @@
 
 namespace Websyspro\Entity\Shareds;
 
+use Websyspro\Commons\Collection;
 use Websyspro\Commons\Util;
+use Websyspro\Entity\Decorations\Columns\Enum;
 
 class Token
 {
@@ -34,10 +36,120 @@ class Token
     );
   }
 
-  public function isWhiteSpace(): bool {
+  public function isWhiteSpace(
+  ): bool {
     return $this->id === T_WHITESPACE;
   }
 
+  public function isVariable(
+  ): bool {
+    return $this->id === T_VARIABLE;
+  }
+
+  public function updateVariable(
+    ExpressionCompare $expressionCompare
+  ): Token {
+    $statics = ClosureUtil::getStatics(
+      $expressionCompare->closure
+    );
+
+    if( $statics->exist() ){
+      $this->id = T_STRING;
+      $this->type = token_name( T_STRING ); 
+      $this->value = $statics->getOneOrFail(
+        ltrim( $this->value, "$" )
+      );
+    }
+
+    return $this;
+  }
+
+  public function isEnumValue(
+    Collection $tokensEnum
+  ): bool {
+    if( $tokensEnum->count() < 3 ){
+      return false;
+    }
+
+    if( $tokensEnum->count() === 3 ){
+      [ $enum, $doubleColon, $case ] = $tokensEnum->toArray();
+      if( $enum instanceof Token && $doubleColon instanceof Token && $case instanceof Token ){
+        return $enum->id === T_STRING && $doubleColon->id === T_DOUBLE_COLON && $case->id === T_STRING;
+      }
+    }
+
+    return false;
+  }
+
+  public function isEnumValueWithProperty(
+    Collection $tokensEnum
+  ): bool {
+    if( $tokensEnum->count() < 5 ){
+      return false;
+    }
+
+    if( $tokensEnum->count() === 5 ){
+      [ $enum, $doubleColon, $case, $objectOperator, $property ] = $tokensEnum->toArray();
+      if( $enum instanceof Token && $doubleColon instanceof Token && $case instanceof Token && $property instanceof Token ){
+        return $enum->id === T_STRING 
+            && $doubleColon->id === T_DOUBLE_COLON 
+            && $case->id === T_STRING 
+            && $objectOperator->id === T_OBJECT_OPERATOR 
+            && $enum->id === T_STRING;        
+      } 
+    }
+
+    return false;
+  } 
+
+  public function updateEnumValue(
+    ExpressionCompare $expressionCompare,
+    Collection $tokensEnum   
+  ): Token {
+    if( $tokensEnum->exist() === false ){
+      return $this;
+    }
+
+    if( $tokensEnum->count() === 5 ){
+      [ $alias, $_, $case, $_, $property ] = $tokensEnum->toArray();
+    } else if( $tokensEnum->count() === 3 ){
+      [ $alias, $_, $case ] = $tokensEnum->toArray();
+    }
+
+    $uses = ClosureUtil::getUses( $expressionCompare->closure );
+    if( $uses instanceof Uses ){
+      $useslist = $uses->list->where( 
+        fn( UsesItem $usesItem ) => $usesItem->alias === $alias->value 
+      );
+
+      if( $useslist->exist()){
+        [ $useslist ] = $useslist->toArray();
+
+        $constanteEnum = Util::sprintFormat( "%s::%s", [
+          $useslist->path, $case->value 
+        ]);
+
+        
+        if( defined( $constanteEnum )){
+          $enumCase = constant( $constanteEnum );
+          if( isset( $enumCase )){
+            if( isset( $property )){
+              if( $property->value === "name" ){
+                $this->value = $enumCase->name;
+              } else if( $property->value === "value" ){
+                $this->value = $enumCase->value;
+              }
+            } else {
+              $this->value = $enumCase->value;
+            };
+          }
+        }
+      }
+    }
+
+    return $this;
+  }
+  
   private function startups(
     array|string $tokenArr
   ): void {

@@ -108,6 +108,10 @@ class ExpressionUtil
   public static function isField(
     Collection $tokens
   ): bool {
+    $tokens = $tokens->slice( 
+      ExpressionUtil::find( $tokens, T_VARIABLE ), 3
+    );
+
     return ExpressionUtil::find( $tokens, T_VARIABLE ) !== -1
         && ExpressionUtil::find( $tokens, T_OBJECT_OPERATOR ) !== -1
         && ExpressionUtil::find( $tokens, T_STRING ) !== -1;

@@ -9,12 +9,14 @@ use Websyspro\Test\Enums\Status;
 
 $start = microtime( true );
 
-$escola = "Escola";
+$escolaA = "Minha Escola A";
+$escolaB = "Minha Escola B";
 
 $startDate = '01/01/2026';
+$concate = "JOIN";
 
 $closure = fn( PropostaEntity $i ) => (
-  $i->NomeProposta === [ 'Item 1', "{$escola}", Status::Aprovada, Status::Aprovada, $escola, 12 ]
+  $i->NomeProposta === [ 'Item 1' . $concate, "{$escolaA}", Status::Aprovada->value, Status::RevisaoGerentePendente, $escolaB, 12 ]
   && !$i->IsActive
   && $i->NomeProposta === "Test EMERSON THIAGOS"
   && $i->Status === Status::Aprovada

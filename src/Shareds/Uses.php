@@ -17,7 +17,7 @@ class Uses
     string $alias
   ): UsesItem|null {
     $uses = $this->list->where( 
-      fn(UsesItem $usesItem ) => (
+      fn( UsesItem $usesItem ) => (
         $usesItem->alias === $alias
       )
     );

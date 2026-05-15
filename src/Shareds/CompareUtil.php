@@ -14,7 +14,7 @@ class CompareUtil
     $tokenVariable = $tokens->getOneOrFail(
       ExpressionUtil::find( $tokens, T_VARIABLE )
     );
-    
+
     if( $tokenVariable instanceof Token ){
       $scope = ClosureUtil::scopeByVariable( 
         $expressionCompare->scopes, $tokenVariable->value

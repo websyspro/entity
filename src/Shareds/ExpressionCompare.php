@@ -42,7 +42,7 @@ class ExpressionCompare
           default => [ $this->addCompareLeft(), $this->addCompareRight()],
       });
 
-      $this->createEqual(match( $this->compareType()){
+      $this->createEqual( match( $this->compareType()){
         ExpressionCompare::T_FIELD_X_VALUE => [ $this->addCompareEqual( $this->sideRight ) ],
         ExpressionCompare::T_VALUE_X_FIELD => [ $this->addCompareEqual( $this->sideLeft ) ],
           default => [ $this->addCompareEqual( $this->sideRight )]
