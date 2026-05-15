@@ -16,6 +16,12 @@ class ExtractFromFN
     $this->startups();
   }
 
+  public static function get(
+    Closure $closure
+  ): ExtractFromFN {
+    return new static( $closure );
+  }  
+
   private function startups(
   ): void {
     $this->tokens = ExtractToken::get(
@@ -40,11 +46,5 @@ class ExtractFromFN
       $reflectionFunction->getStartLine() - 1, 
       $reflectionFunction->getEndLine() - $reflectionFunction->getStartLine() + 1
     )->where(fn( string $row ) => !str_starts_with( trim( $row ), "//" ))->joinWithSpace();
-  }
-
-  public static function get(
-    Closure $closure
-  ): ExtractFromFN {
-    return new static( $closure );
   }  
 }

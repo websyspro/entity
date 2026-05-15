@@ -22,40 +22,50 @@ class ExpressionSubQuery
     $this->startups();
     $this->startupsAnalyzedIsNot();
     $this->startupsAnalyzedSubQueryEvent();
-    $this->startupsAnalyzedClear();
   }
 
   public function get(
   ): string {
-    return Util::sprintFormat( "%s %s (%s)", [
-      $this->defineUnaryNot( $this->unaryNot ),
-      $this->defineSubQueryEvent( $this->subQueryEvent ),
-      $this->defineBuildScript( $this->expressionNode )
-    ]);
+    return $this->unaryNot === UnaryNot::Yes 
+      ? Util::sprintFormat( "%s %s (Select 1 from %s Where %s)", [
+          $this->defineUnaryNot(), $this->defineSubQueryEvent(), $this->defineEntityFromScope(), $this->defineBuildScript()
+        ]) 
+      : Util::sprintFormat( "%s (Select 1 from %s Where %s)", [
+          $this->defineSubQueryEvent(), $this->defineEntityFromScope(), $this->defineBuildScript()
+        ]);
   }  
 
-  public static function defineUnaryNot(
-    UnaryNot $unaryNot
+  public function defineUnaryNot(
   ): string {
-    return match( $unaryNot ){
+    return match( $this->unaryNot ){
       UnaryNot::Yes => "Not",
         default => ""
     };
   }
   
-  public static function defineSubQueryEvent(
-    SubQueryEvent $subQuerEvent
+  public function defineSubQueryEvent(
   ): string {
-    return match( $subQuerEvent ){
+    return match( $this->subQueryEvent ){
       SubQueryEvent::Any => "Exists",
         default => ""
     };
   }
 
+  private function defineEntityFromScope(
+  ): string|null {
+    [ $scope ] = $this->expressionNode->scopes
+      ->slice( -1, 1)->toArray();
+      
+    if( $scope instanceof Scope ){
+      return $scope->entity->alias;
+    }
+    
+    return null; 
+  }
+
   public function defineBuildScript(
-    ExpressionNode $expressionNode
   ): string {
-    return ExpressionUtil::expressionBuildScript( $expressionNode );
+    return ExpressionUtil::expressionBuildScript( $this->expressionNode );
   }
   
   private function startups(
@@ -75,10 +85,5 @@ class ExpressionSubQuery
   private function startupsAnalyzedSubQueryEvent(
   ): void {
     $this->subQueryEvent = ExpressionUtil::isSubQuerEvent( $this->tokens );
-  }  
-
-  private function startupsAnalyzedClear(
-  ): void {
-    unset( $this->tokens, $this->scopes, $this->closure );
   }
 }

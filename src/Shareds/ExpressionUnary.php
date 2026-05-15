@@ -17,7 +17,6 @@ class ExpressionUnary
   ){
     $this->startups();
     $this->startupsIsNot();
-    $this->startupsClear();
   }
 
   private function startups(
@@ -30,10 +29,5 @@ class ExpressionUnary
   private function startupsIsNot(
   ): void {
     $this->unaryNot = ExpressionUtil::isUnaryNot( $this->tokens );
-  }
-
-  private function startupsClear(
-  ): void {
-    unset( $this->expressionCompare, $this->tokens );
-  }   
+  } 
 }

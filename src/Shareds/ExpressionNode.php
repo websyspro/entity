@@ -16,7 +16,6 @@ class ExpressionNode
     $this->startupsAnalyzedContents();
     $this->startupsAnalyzedParser();
     $this->startupsAnalyzedUnios();
-    $this->startupsAnalyzedClear();
   }
 
   public function get(
@@ -62,9 +61,5 @@ class ExpressionNode
 
   private function startupsAnalyzedUnios(): void {
     $this->tokens = ExpressionUtil::isExpressionUnion( $this->tokens );
-  }  
-  
-  private function startupsAnalyzedClear(): void {
-    unset( $this->scopes, $this->closure );
   }
 }
