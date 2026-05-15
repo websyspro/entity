@@ -2,16 +2,16 @@
 
 namespace Websyspro\Entity\Shareds;
 
-use Dba\Connection;
 use Websyspro\Commons\Collection;
-use Closure;
 use Websyspro\Commons\Util;
+use Closure;
 
 class ExpressionCompare
 {
   public CompareField|CompareValue|CompareUnary $sideLeft;
   public CompareField|CompareValue $sideRight;
   public CompareEqual $equal;
+  public int $compareType;
 
   public const int T_FIELD_X_FIELD = 1;
   public const int T_FIELD_X_VALUE = 2;
@@ -23,7 +23,6 @@ class ExpressionCompare
     public Collection $scopes,
     public Closure $closure
   ){
-    $this->startups();
     $this->startupsAnalyzed();
     $this->startupsAnalyzedParsers();
     $this->startupsAnalyzedClear();
@@ -35,7 +34,7 @@ class ExpressionCompare
       return "";
     }
 
-    return match( $this->compareType()){
+    return match( $this->getCompareType()){
       ExpressionCompare::T_FIELD_X_FIELD => 
         Util::sprintFormat( "%s.%s = %s.%s", [
           $this->sideLeft->entity->alias, $this->sideLeft->field->alias,
@@ -49,19 +48,16 @@ class ExpressionCompare
     };
   }
 
-  private function startups(
-  ): void {}
-
   private function startupsAnalyzed(
   ): void { 
     if( $this->comparePos() !== -1 ){
-      $this->createSideLeftAndRight( match( $this->compareType()){
+      $this->createSideLeftAndRight( match( $this->getCompareType()){
         ExpressionCompare::T_FIELD_X_VALUE => [ $this->addCompareLeft(), $this->addCompareRight()],
         ExpressionCompare::T_VALUE_X_FIELD => [ $this->addCompareRight(), $this->addCompareLeft()],
           default => [ $this->addCompareLeft(), $this->addCompareRight()],
       });
 
-      $this->createEqual( match( $this->compareType()){
+      $this->createEqual( match( $this->getCompareType()){
         ExpressionCompare::T_FIELD_X_VALUE => [ $this->addCompareEqual( $this->sideRight ) ],
         ExpressionCompare::T_VALUE_X_FIELD => [ $this->addCompareEqual( $this->sideLeft ) ],
           default => [ $this->addCompareEqual( $this->sideRight )]
@@ -112,15 +108,19 @@ class ExpressionCompare
     return $this->isField( $this->compareLeft()) === false && $this->isField( $this->compareRight());
   } 
   
-  private function compareType(
+  private function getCompareType(
   ): int {
-    if( $this->isFieldAndField()){
-      return ExpressionCompare::T_FIELD_X_FIELD;
-    } else if( $this->isFieldAndValue()){
-      return ExpressionCompare::T_FIELD_X_VALUE;
-    } else if( $this->isValueAndField()){
-      return ExpressionCompare::T_VALUE_X_FIELD;
-    } else return -1;
+    if( isset( $this->compareType ) === false ){
+      if( $this->isFieldAndField()){
+        $this->compareType = ExpressionCompare::T_FIELD_X_FIELD;
+      } else if( $this->isFieldAndValue()){
+        $this->compareType = ExpressionCompare::T_FIELD_X_VALUE;
+      } else if( $this->isValueAndField()){
+        $this->compareType = ExpressionCompare::T_VALUE_X_FIELD;
+      } else $this->compareType = -1;
+    }
+
+    return $this->compareType;
   } 
 
   private function comparePos(
@@ -155,7 +155,7 @@ class ExpressionCompare
   private function addCompareEqual(
     CompareField|CompareValue $compare
   ): CompareEqual {
-    return new CompareEqual( $compare, $this->compareEqual(), $this->compareType()); 
+    return new CompareEqual( $compare, $this->compareEqual(), $this->getCompareType()); 
   }  
 
   private function addCompareRight(

@@ -323,5 +323,31 @@ class ExpressionUtil
       : ExpressionUtil::expressionTypes(
         ExpressionUtil::spliteLogical( $tokens ), $scopes, $closure
       );
-  }  
+  }
+
+  public static function expressionBuildScript(
+    ExpressionNode $expressionNode
+  ): string {
+    $buildScript = $expressionNode->tokens->mapper(
+      function( mixed $token ){
+        if( $token instanceof ExpressionGroup ){
+          return $token->get();
+        } else 
+        if( $token instanceof ExpressionCompare ){
+          return $token->get();
+        } else 
+        if( $token instanceof ExpressionLogical ){
+          return $token->get();
+        } else 
+        if( $token instanceof ExpressionCompareBetween ){
+          return $token->get();
+        } else 
+        if( $token instanceof ExpressionSubQuery ){
+          return $token->get();
+        }
+      }
+    );
+
+    return $buildScript->joinWithSpace();
+  }
 }

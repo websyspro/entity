@@ -16,7 +16,7 @@ class ExpressionCompareBetween
   ): string {
     return Util::sprintFormat( "%s.%s Between %s And %s", [
       $this->sideLeft->entity->alias, $this->sideLeft->field->alias,
-      $this->valueStart, $this->valueEnd,
+      $this->valueStart->value, $this->valueEnd->value,
     ]);
   }  
 }

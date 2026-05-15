@@ -12,7 +12,6 @@ class ExpressionNode
     public Collection $scopes,
     public Closure $closure
   ){
-    $this->startups();
     $this->startupsAnalyzedParameters();
     $this->startupsAnalyzedContents();
     $this->startupsAnalyzedParser();
@@ -20,8 +19,10 @@ class ExpressionNode
     $this->startupsAnalyzedClear();
   }
 
-  private function startups(
-  ): void {}
+  public function get(
+  ): string {
+    return ExpressionUtil::expressionBuildScript( $this );
+  }
 
   private function startupsAnalyzedParameters(
   ): void {

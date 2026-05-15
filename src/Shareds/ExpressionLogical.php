@@ -13,6 +13,11 @@ class ExpressionLogical
     $this->startups();
     $this->startupsClear();
   }
+
+  public function get(
+  ): string {
+    return $this->value;
+  }  
   
   private function startups(
   ): void {

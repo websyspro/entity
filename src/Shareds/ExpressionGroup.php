@@ -4,6 +4,7 @@ namespace Websyspro\Entity\Shareds;
 
 use Closure;
 use Websyspro\Commons\Collection;
+use Websyspro\Commons\Util;
 
 class ExpressionGroup
 {
@@ -16,6 +17,15 @@ class ExpressionGroup
   ){
     $this->startups();
     $this->startupsClear();
+  }
+
+  public function get(
+  ): string {
+    return Util::sprintFormat( "(%s)", [
+      ExpressionUtil::expressionBuildScript(
+        $this->expressionNode
+      )
+    ]);
   }
 
   private function startups(

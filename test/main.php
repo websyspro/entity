@@ -39,5 +39,5 @@ $expressoinNode = new ExpressionNode(
 
 $leftTimer = number_format(( microtime( true ) - $start ) * 1000, 6, ",", "." );
 echo "Execute timer: {$leftTimer}(ms)" . PHP_EOL . PHP_EOL;
-print_r( ClosureUtil::$cacheParams );
-print_r( $expressoinNode );
+// print_r( ClosureUtil::$cacheParams );
+print_r( $expressoinNode->get() );

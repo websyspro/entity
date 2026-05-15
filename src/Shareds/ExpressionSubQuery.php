@@ -2,6 +2,7 @@
 
 namespace Websyspro\Entity\Shareds;
 
+use Websyspro\Commons\Util;
 use Websyspro\Entity\Enums\SubQueryEvent;
 use Websyspro\Entity\Enums\UnaryNot;
 use Websyspro\Commons\Collection;
@@ -22,6 +23,39 @@ class ExpressionSubQuery
     $this->startupsAnalyzedIsNot();
     $this->startupsAnalyzedSubQueryEvent();
     $this->startupsAnalyzedClear();
+  }
+
+  public function get(
+  ): string {
+    return Util::sprintFormat( "%s %s (%s)", [
+      $this->defineUnaryNot( $this->unaryNot ),
+      $this->defineSubQueryEvent( $this->subQueryEvent ),
+      $this->defineBuildScript( $this->expressionNode )
+    ]);
+  }  
+
+  public static function defineUnaryNot(
+    UnaryNot $unaryNot
+  ): string {
+    return match( $unaryNot ){
+      UnaryNot::Yes => "Not",
+        default => ""
+    };
+  }
+  
+  public static function defineSubQueryEvent(
+    SubQueryEvent $subQuerEvent
+  ): string {
+    return match( $subQuerEvent ){
+      SubQueryEvent::Any => "Exists",
+        default => ""
+    };
+  }
+
+  public function defineBuildScript(
+    ExpressionNode $expressionNode
+  ): string {
+    return ExpressionUtil::expressionBuildScript( $expressionNode );
   }
   
   private function startups(
