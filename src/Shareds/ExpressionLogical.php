@@ -8,10 +8,9 @@ class ExpressionLogical
 {
   public string $value;
   public function __construct(
-    public Token $token
+    Token $token
   ){
-    $this->startups();
-    $this->startupsClear();
+    $this->startups( $token );
   }
 
   public function get(
@@ -20,18 +19,14 @@ class ExpressionLogical
   }  
   
   private function startups(
+    Token $token
   ): void {
-    $this->value = match( $this->token->id ){
+    $this->value = match( $token->id ){
       T_BOOLEAN_AND => LogicalType::And->value,
       T_LOGICAL_AND => LogicalType::And->value,
        T_BOOLEAN_OR => LogicalType::Or->value,
        T_LOGICAL_OR => LogicalType::Or->value,
-            default => $this->token->value,
+            default => $token->value,
     };
-  } 
-  
-  private function startupsClear(
-  ): void {
-    unset( $this->token );
-  }  
+  }
 }

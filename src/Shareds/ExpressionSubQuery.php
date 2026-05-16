@@ -27,12 +27,8 @@ class ExpressionSubQuery
   public function get(
   ): string {
     return $this->unaryNot === UnaryNot::Yes 
-      ? Util::sprintFormat( "%s %s (Select 1 from %s Where %s)", [
-          $this->defineUnaryNot(), $this->defineSubQueryEvent(), $this->defineEntityFromScope(), $this->defineBuildScript()
-        ]) 
-      : Util::sprintFormat( "%s (Select 1 from %s Where %s)", [
-          $this->defineSubQueryEvent(), $this->defineEntityFromScope(), $this->defineBuildScript()
-        ]);
+      ? Util::sprintFormat( "%s %s (Select 1 from %s Where %s)", [ $this->defineUnaryNot(), $this->defineSubQueryEvent(), $this->defineEntityFromScope(), $this->defineBuildScript() ]) 
+      : Util::sprintFormat( "%s (Select 1 from %s Where %s)", [ $this->defineSubQueryEvent(), $this->defineEntityFromScope(), $this->defineBuildScript() ]);
   }  
 
   public function defineUnaryNot(

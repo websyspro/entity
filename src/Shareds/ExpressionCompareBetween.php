@@ -7,7 +7,7 @@ use Websyspro\Commons\Util;
 class ExpressionCompareBetween
 {
   public function __construct(
-    public CompareField|CompareValue|CompareUnary $sideLeft,
+    public CompareField|CompareValue $sideLeft,
     public CompareField|CompareValue $valueStart,
     public CompareField|CompareValue $valueEnd
   ){}
