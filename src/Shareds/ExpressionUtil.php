@@ -95,12 +95,12 @@ class ExpressionUtil
       : $tokens->indexOf( fn( Token $token ) => $token->value === $find );
   }
 
-  public static function findCompare(
+  public static function isExpressionUnary(
     Collection $tokens
   ): int {
     return $tokens->indexOf( fn( Token $token ) => (
       ExpressionUtil::isCompared( $token )
-    ));
+    )) === -1;
   }  
 
   public static function extractGroup(
@@ -289,7 +289,7 @@ class ExpressionUtil
     array|Token $tokens,
     Collection $scopes,
     Closure $closure
-  ): array|Token|ExpressionLogical|ExpressionGroup|ExpressionSubQuery|ExpressionCompare {
+  ): array|Token|ExpressionLogical|ExpressionGroup|ExpressionSubQuery|ExpressionCompare|ExpressionUnary {
     if( $tokens instanceof Token ){
       return new ExpressionLogical( $tokens );
     } else
@@ -298,6 +298,9 @@ class ExpressionUtil
     } else 
     if( ExpressionUtil::isExpressionSubQuery( Collection::create( $tokens ))){
       return new ExpressionSubQuery( Collection::create( $tokens ), $scopes, $closure );
+    } else
+    if( ExpressionUtil::isExpressionUnary( Collection::create( $tokens ) )){
+      return new ExpressionUnary( Collection::create( $tokens ), $scopes, $closure );
     } else return new ExpressionCompare( Collection::create( $tokens ), $scopes, $closure );
   }
 
@@ -320,9 +323,7 @@ class ExpressionUtil
   ): Collection {
     return ExpressionUtil::isExpressionGroup( $tokens )
       ? ExpressionUtil::createExpressionGroup( $tokens, $scopes, $closure )
-      : ExpressionUtil::expressionTypes(
-        ExpressionUtil::spliteLogical( $tokens ), $scopes, $closure
-      );
+      : ExpressionUtil::expressionTypes( ExpressionUtil::spliteLogical( $tokens ), $scopes, $closure );
   }
 
   public static function expressionBuildScript(
