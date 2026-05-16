@@ -16,13 +16,12 @@ class CompareEqual
   ){
     $this->startups();
     $this->startupsReverse();
-    $this->startupsClear();
   }
 
   private function startups(
   ): void {
-    [ $tokenCompare ] = $this->tokens->toArray();
-    $this->value = $tokenCompare->value;
+    [ $token ] = $this->tokens->toArray();
+    $this->value = $token->value;
   }
 
   private function startupsReverse(
@@ -36,10 +35,5 @@ class CompareEqual
           default => $this->value
       };
     }
-  }  
-  
-  private function startupsClear(
-  ): void {
-    unset( $this->compare, $this->tokens, $this->compareType );
-  }  
+  }
 }

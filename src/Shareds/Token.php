@@ -2,6 +2,7 @@
 
 namespace Websyspro\Entity\Shareds;
 
+use Closure;
 use Websyspro\Commons\Collection;
 use Websyspro\Commons\Util;
 use Websyspro\Entity\Decorations\Columns\Enum;
@@ -49,10 +50,10 @@ class Token
   }
 
   public function updateVariable(
-    ExpressionCompare $expressionCompare
+    Closure $closure,
   ): Token {
     $statics = ClosureUtil::getStatics(
-      $expressionCompare->closure
+      $closure
     );
 
     if( $statics->exist() ){
@@ -105,7 +106,7 @@ class Token
   } 
 
   public function updateEnumValue(
-    ExpressionCompare $expressionCompare,
+    Closure $closure,
     Collection $tokensEnum   
   ): Token {
     if( $tokensEnum->exist() === false ){
@@ -118,7 +119,7 @@ class Token
       [ $alias, $_, $case ] = $tokensEnum->toArray();
     }
 
-    $uses = ClosureUtil::getUses( $expressionCompare->closure );
+    $uses = ClosureUtil::getUses( $closure );
     if( $uses instanceof Uses ){
       $useslist = $uses->list->where( 
         fn( UsesItem $usesItem ) => $usesItem->alias === $alias->value 

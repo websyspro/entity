@@ -2,6 +2,7 @@
 
 namespace Websyspro\Entity\Shareds;
 
+use Closure;
 use Websyspro\Commons\Collection;
 use Websyspro\Entity\Enums\UnaryNot;
 
@@ -12,7 +13,7 @@ class CompareUnary
   public UnaryNot $unaryNot;
 
   public function __construct(
-    public ExpressionCompare $expressionCompare,
+    public Collection $closure,
     public Collection $tokens
   ){
     $this->startups();
@@ -23,7 +24,7 @@ class CompareUnary
   private function startups(
   ): void {
     [ $this->entity, $this->field ] = CompareUtil::analyzed(
-      $this->expressionCompare, $this->tokens
+      $this->closure, $this->tokens
     );    
   }
 

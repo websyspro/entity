@@ -2,6 +2,7 @@
 
 namespace Websyspro\Entity\Shareds;
 
+use Closure;
 use Websyspro\Commons\Collection;
 
 class CompareValue
@@ -10,7 +11,7 @@ class CompareValue
   public string $value;
 
   public function __construct(
-    public ExpressionCompare $expressionCompare,
+    public Closure $closure,
     public Collection $tokens  
   ){
     $this->startupsAnalyzedExtras();
@@ -25,6 +26,7 @@ class CompareValue
       ->mapper( function( Token $token ){ $token->value = trim( $token->value, "'\"" );
         return $token;
       });
+
 
     [ $tokenFirst, $tokenLast ] = [
       ...$this->tokens->slice( 0, 1)->toArray(),
@@ -62,23 +64,21 @@ class CompareValue
 
           $this->tokens->setValue( 
             $i, $tokenVar->updateVariable(
-              $this->expressionCompare
+              $this->closure
             )
           );          
         }
         if( $tokenVar->isEnumValueWithProperty( $this->tokens->slice( $i, 5 ))){
           $this->tokens->setValue(
             $i, $tokenVar->updateEnumValue(
-              $this->expressionCompare, 
-              $this->tokens->slice( $i, 5 )
+              $this->closure, $this->tokens->slice( $i, 5 )
             ) 
           )->spliceOut( $i + 1, 4 );
         } else 
         if( $tokenVar->isEnumValue( $this->tokens->slice( $i, 3 ))){
           $this->tokens->setValue(
             $i, $tokenVar->updateEnumValue(
-              $this->expressionCompare, 
-              $this->tokens->slice( $i, 3 )
+              $this->closure, $this->tokens->slice( $i, 3 )
             ) 
           )->spliceOut( $i + 1, 2 );
         }         
@@ -90,8 +90,9 @@ class CompareValue
 
   private function startupsAnalyzedValues(
   ): void {
-    $this->value = $this->tokens->mapper( fn( Token $token ) => $token->value )
-      ->joinNotSpace();
+    $this->value = $this->tokens
+      ->mapper( fn( Token $token ) => $token->value )
+        ->joinNotSpace();
   }
   
   private function startupsClear(

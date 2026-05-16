@@ -12,22 +12,19 @@ class CompareField
   public ColumnType $columnType;
 
   public function __construct(
-    public Collection $scopes,
-    public Collection $tokens
+    Collection $scopes,
+    Collection $tokens
   ){
-    $this->startups();
-    $this->startupsClear();
-  }
-
-  private function startups(
-  ): void {
-    [ $this->entity, $this->field, $this->columnType ] = CompareUtil::analyzed(
-      $this->scopes, $this->tokens
+    $this->startups(
+      $scopes, $tokens
     );
   }
 
-  private function startupsClear(
+  private function startups(
+    Collection $scopes,
+    Collection $tokens    
   ): void {
-    unset( $this->expressionCompare, $this->tokens );
-  }  
+    [ $this->entity, $this->field, $this->columnType
+    ] = CompareUtil::analyzed( $scopes, $tokens );
+  }
 }

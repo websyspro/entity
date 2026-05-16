@@ -95,12 +95,18 @@ class ExpressionUtil
       : $tokens->indexOf( fn( Token $token ) => $token->value === $find );
   }
 
-  public static function isExpressionUnary(
-    Collection $tokens
+  public static function comparePos(
+    Collection $tokens    
   ): int {
     return $tokens->indexOf( fn( Token $token ) => (
       ExpressionUtil::isCompared( $token )
-    )) === -1;
+    ));
+  }
+
+  public static function isExpressionUnary(
+    Collection $tokens
+  ): bool {
+    return ExpressionUtil::comparePos($tokens) === -1;
   }  
 
   public static function extractGroup(
@@ -300,7 +306,7 @@ class ExpressionUtil
       return new ExpressionSubQuery( Collection::create( $tokens ), $scopes, $closure );
     } else
     if( ExpressionUtil::isExpressionUnary( Collection::create( $tokens ) )){
-      return new ExpressionUnary( Collection::create( $tokens ), $scopes, $closure );
+      return new ExpressionUnary( Collection::create( $tokens ), $scopes );
     } else return new ExpressionCompare( Collection::create( $tokens ), $scopes, $closure );
   }
 
@@ -329,26 +335,15 @@ class ExpressionUtil
   public static function expressionBuildScript(
     ExpressionNode $expressionNode
   ): string {
-    $buildScript = $expressionNode->tokens->mapper(
-      function( mixed $token ){
-        if( $token instanceof ExpressionGroup ){
-          return $token->get();
-        } else 
-        if( $token instanceof ExpressionCompare ){
-          return $token->get();
-        } else 
-        if( $token instanceof ExpressionLogical ){
-          return $token->get();
-        } else 
-        if( $token instanceof ExpressionCompareBetween ){
-          return $token->get();
-        } else 
-        if( $token instanceof ExpressionSubQuery ){
-          return $token->get();
-        }
+    return $expressionNode->tokens->mapper(
+      fn( mixed $token ) => match( get_class( $token )){
+        ExpressionGroup::class => $token->get(),
+        ExpressionSubQuery::class => $token->get(),
+        ExpressionLogical::class => $token->get(),
+        ExpressionCompare::class => $token->get(),
+        ExpressionUnary::class => $token->get(),
+        ExpressionCompareBetween::class => $token->get()
       }
-    );
-
-    return $buildScript->joinWithSpace();
+    )->joinWithSpace();
   }
 }

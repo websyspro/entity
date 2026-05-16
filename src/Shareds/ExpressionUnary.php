@@ -2,9 +2,9 @@
 
 namespace Websyspro\Entity\Shareds;
 
-use Closure;
-use Websyspro\Commons\Collection;
+use Websyspro\Commons\Util;
 use Websyspro\Entity\Enums\UnaryNot;
+use Websyspro\Commons\Collection;
 
 class ExpressionUnary
 {
@@ -13,23 +13,26 @@ class ExpressionUnary
   public UnaryNot $unaryNot;
 
   public function __construct(
-    public Collection $tokens,
-    public Collection $scopes,
-    public Closure $closure
+    Collection $tokens,
+    Collection $scopes
   ){
-    $this->startups();
-    $this->startupsIsNot();
-  }
-
-  private function startups(
-  ): void {
-    [ $this->entity, $this->field ] = CompareUtil::analyzed(
-      $this->scopes, $this->tokens
+    $this->startups(
+      $tokens, $scopes
     );
   }
 
-  private function startupsIsNot(
+  private function startups(
+    Collection $tokens,
+    Collection $scopes
   ): void {
-    $this->unaryNot = ExpressionUtil::isUnaryNot( $this->tokens );
-  } 
+    [ $this->entity, $this->field ] = CompareUtil::analyzed( $scopes, $tokens );
+    $this->unaryNot = ExpressionUtil::isUnaryNot( $tokens );
+  }
+
+  public function get(
+  ): string {
+    return $this->unaryNot 
+      ? Util::sprintFormat( "%s.%s = 0", [ $this->entity->alias, $this->field->alias ])
+      : Util::sprintFormat( "%s.%s = 1", [ $this->entity->alias, $this->field->alias ]);
+  }  
 }

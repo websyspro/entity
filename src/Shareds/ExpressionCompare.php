@@ -30,10 +30,6 @@ class ExpressionCompare
 
   public function get(
   ): string {
-    if( $this->sideLeft instanceof CompareUnary ){
-      return "";
-    }
-
     return match( $this->getCompareType()){
       ExpressionCompare::T_FIELD_X_FIELD => 
         Util::sprintFormat( "%s.%s = %s.%s", [
@@ -50,19 +46,17 @@ class ExpressionCompare
 
   private function startupsAnalyzed(
   ): void { 
-    if( $this->comparePos() !== -1 ){
-      $this->createSideLeftAndRight( match( $this->getCompareType()){
-        ExpressionCompare::T_FIELD_X_VALUE => [ $this->addCompareLeft(), $this->addCompareRight()],
-        ExpressionCompare::T_VALUE_X_FIELD => [ $this->addCompareRight(), $this->addCompareLeft()],
-          default => [ $this->addCompareLeft(), $this->addCompareRight()],
-      });
+    $this->createSideLeftAndRight( match( $this->getCompareType()){
+      ExpressionCompare::T_FIELD_X_VALUE => [ $this->addCompareLeft(), $this->addCompareRight()],
+      ExpressionCompare::T_VALUE_X_FIELD => [ $this->addCompareRight(), $this->addCompareLeft()],
+        default => [ $this->addCompareLeft(), $this->addCompareRight()],
+    });
 
-      $this->createEqual( match( $this->getCompareType()){
-        ExpressionCompare::T_FIELD_X_VALUE => [ $this->addCompareEqual( $this->sideRight ) ],
-        ExpressionCompare::T_VALUE_X_FIELD => [ $this->addCompareEqual( $this->sideLeft ) ],
-          default => [ $this->addCompareEqual( $this->sideRight )]
-      });
-    } else $this->createCompareUnary();
+    $this->createEqual( match( $this->getCompareType()){
+      ExpressionCompare::T_FIELD_X_VALUE => [ $this->addCompareEqual( $this->sideRight ) ],
+      ExpressionCompare::T_VALUE_X_FIELD => [ $this->addCompareEqual( $this->sideLeft ) ],
+        default => [ $this->addCompareEqual( $this->sideRight )]
+    });
   }
 
   private function startupsAnalyzedParsers(
@@ -125,7 +119,7 @@ class ExpressionCompare
 
   private function comparePos(
   ): int {
-    return ExpressionUtil::isExpressionUnary( $this->tokens );
+    return ExpressionUtil::comparePos( $this->tokens );
   }
 
   private function compareLeft(
@@ -148,8 +142,8 @@ class ExpressionCompare
   private function addCompareLeft(
   ): CompareField|CompareValue {
     return $this->isField( $this->compareLeft()) 
-      ? new CompareField( $this, $this->compareLeft()) 
-      : new CompareValue( $this, $this->compareLeft()); 
+      ? new CompareField( $this->scopes, $this->compareLeft()) 
+      : new CompareValue( $this->closure, $this->compareLeft()); 
   }
 
   private function addCompareEqual(
@@ -160,15 +154,17 @@ class ExpressionCompare
 
   private function addCompareRight(
   ): CompareField|CompareValue {
-    return $this->isField( $this->compareRight())
-      ? new CompareField( $this, $this->compareRight() )
-      : new CompareValue( $this, $this->compareRight()); 
+    return $this->isField( $this->compareRight() )
+      ? new CompareField( $this->scopes, $this->compareRight() )
+      : new CompareValue( $this->closure, $this->compareRight()); 
   }  
 
   private function createCompareUnary(
     array $unaryArr = []
   ): void {
-    [ $this->sideLeft ] = [ new CompareUnary( $this, $this->compareLeft()) ]; 
+    [ $this->sideLeft ] = [ new CompareUnary( 
+      new Collection([$this->closure]), $this->compareLeft()
+    )]; 
   } 
 
   private function createSideLeftAndRight(
