@@ -10,23 +10,25 @@ class CompareEqual
   public string $value;
   
   public function __construct(
-    public CompareField|CompareValue $compare,
-    public Collection $tokens,
-    public int $compareType,
+    CompareField|CompareValue $compare,
+    Collection $tokens, 
+    int $compareType
   ){
-    $this->startups();
-    $this->startupsReverse();
+    $this->startups( $tokens );
+    $this->startupsReverse( $compareType );
   }
 
   private function startups(
+    Collection $tokens
   ): void {
-    [ $token ] = $this->tokens->toArray();
+    [ $token ] = $tokens->toArray();
     $this->value = $token->value;
   }
 
   private function startupsReverse(
+    int $compareType
   ): void {
-    if( $this->compareType === ExpressionCompare::T_VALUE_X_FIELD ){
+    if( $compareType === ExpressionCompare::T_VALUE_X_FIELD ){
       $this->value = match( CompareType::tryFrom( $this->value ) ){
         CompareType::GreaterEqual => CompareType::LessEqual->value, 
         CompareType::LessEqual => CompareType::GreaterEqual->value, 

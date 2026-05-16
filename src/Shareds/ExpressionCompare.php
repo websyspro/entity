@@ -8,7 +8,7 @@ use Closure;
 
 class ExpressionCompare
 {
-  public CompareField|CompareValue|CompareUnary $sideLeft;
+  public CompareField|CompareValue $sideLeft;
   public CompareField|CompareValue $sideRight;
   public CompareEqual $equal;
   public int $compareType;
@@ -158,14 +158,6 @@ class ExpressionCompare
       ? new CompareField( $this->scopes, $this->compareRight() )
       : new CompareValue( $this->closure, $this->compareRight()); 
   }  
-
-  private function createCompareUnary(
-    array $unaryArr = []
-  ): void {
-    [ $this->sideLeft ] = [ new CompareUnary( 
-      new Collection([$this->closure]), $this->compareLeft()
-    )]; 
-  } 
 
   private function createSideLeftAndRight(
     array $sideLeftAndRightArr = []
