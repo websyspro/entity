@@ -12,7 +12,7 @@ class CompareField
   public ColumnType $columnType;
 
   public function __construct(
-    public ExpressionCompare $expressionCompare,
+    public Collection $scopes,
     public Collection $tokens
   ){
     $this->startups();
@@ -22,7 +22,7 @@ class CompareField
   private function startups(
   ): void {
     [ $this->entity, $this->field, $this->columnType ] = CompareUtil::analyzed(
-      $this->expressionCompare, $this->tokens
+      $this->scopes, $this->tokens
     );
   }
 

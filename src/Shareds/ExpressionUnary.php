@@ -13,10 +13,9 @@ class ExpressionUnary
   public UnaryNot $unaryNot;
 
   public function __construct(
-    // public ExpressionCompare $expressionCompare,
     public Collection $tokens,
-    Collection $scopes,
-    Closure $closure
+    public Collection $scopes,
+    public Closure $closure
   ){
     $this->startups();
     $this->startupsIsNot();
@@ -24,9 +23,9 @@ class ExpressionUnary
 
   private function startups(
   ): void {
-    // [ $this->entity, $this->field ] = CompareUtil::analyzed(
-    //   $this->expressionCompare, $this->tokens
-    // );    
+    [ $this->entity, $this->field ] = CompareUtil::analyzed(
+      $this->scopes, $this->tokens
+    );
   }
 
   private function startupsIsNot(

@@ -125,7 +125,7 @@ class ExpressionCompare
 
   private function comparePos(
   ): int {
-    return ExpressionUtil::findCompare( $this->tokens );
+    return ExpressionUtil::isExpressionUnary( $this->tokens );
   }
 
   private function compareLeft(

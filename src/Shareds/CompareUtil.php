@@ -8,7 +8,7 @@ use Websyspro\Commons\Util;
 class CompareUtil
 {
   public static function analyzed(
-    ExpressionCompare $expressionCompare,
+    Collection $scopes,
     Collection $tokens
   ): array {
     $tokenVariable = $tokens->getOneOrFail(
@@ -17,7 +17,7 @@ class CompareUtil
 
     if( $tokenVariable instanceof Token ){
       $scope = ClosureUtil::scopeByVariable( 
-        $expressionCompare->scopes, $tokenVariable->value
+        $scopes, $tokenVariable->value
       );
 
       if( $scope instanceof Scope ){
