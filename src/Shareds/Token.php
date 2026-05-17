@@ -2,10 +2,25 @@
 
 namespace Websyspro\Entity\Shareds;
 
-use Closure;
-use Websyspro\Commons\Collection;
-use Websyspro\Commons\Util;
-use Websyspro\Entity\Decorations\Columns\Enum;
+define( "T_START_PARENTESES", 40 );
+define( "T_END_PARENTESES", 41 );
+define( "T_START_BRACKET", 91 );
+define( "T_END_BRACKET", 93 );
+define( "T_START_BRACE", 123 );
+define( "T_END_BRACE", 125 );
+define( "T_DOT", 46 );
+define( "T_COMMA", 44 );
+define( "T_SEMICOLON", 59 );
+define( "T_COLON", 58 );
+define( "T_QUESTION", 63 );
+define( "T_PLUS", 43 );
+define( "T_MINUS", 45 );
+define( "T_MULTIPLY", 42 );
+define( "T_DIVIDE", 47 );
+define( "T_EQUAL", 61 );
+define( "T_GREATER_THAN", 62 );
+define( "T_LESS_THAN", 60 );
+define( "T_NOT", 33 );
 
 class Token
 {
@@ -13,172 +28,45 @@ class Token
   public string $type;
   public string $value;
 
-  public const int T_UNKNOWN = -1;
-  public const int T_FIELD_AND_FIELD = 1;
-  public const int T_FIELD_AND_VALUE = 2;
-  public const int T_VALUE_AND_FIELD = 3;
-  public const int T_VALUE_AND_VALUE = 4;
-  public const string T_PARENTHESES_OPEN = "(";
-  public const string T_PARENTHESES_CLOSE = ")";
-  public const string T_BRACKET_OPEN = "[";
-  public const string T_BRACKET_CLOSE = "]";
-  public const string T_SEMICOLON = ";";
-  public const string T_COMMA = ",";
-
-  public const array T_COMPARE_LIST = [
-    T_IS_EQUAL, T_IS_IDENTICAL,
-    T_IS_NOT_EQUAL, T_IS_NOT_IDENTICAL,
-    T_IS_GREATER_OR_EQUAL, T_IS_SMALLER_OR_EQUAL
-  ];
-
   public function __construct(
-    array|string $tokenArr
+    array|string $tokenAll
   ){
-    $this->startups(
-      $tokenArr
-    );
+    $this->startupsAnalyzed( $tokenAll );
   }
 
-  public function isWhiteSpace(
-  ): bool {
-    return $this->id === T_WHITESPACE;
-  }
-
-  public function isVariable(
-  ): bool {
-    return $this->id === T_VARIABLE;
-  }
-
-  public function updateVariable(
-    Closure $closure,
-  ): Token {
-    $statics = ClosureUtil::getStatics(
-      $closure
-    );
-
-    if( $statics->exist() ){
-      $this->id = T_STRING;
-      $this->type = token_name( T_STRING ); 
-      $this->value = $statics->getOneOrFail(
-        ltrim( $this->value, "$" )
-      );
-    }
-
-    return $this;
-  }
-
-  public function isEnumValue(
-    Collection $tokensEnum
-  ): bool {
-    if( $tokensEnum->count() < 3 ){
-      return false;
-    }
-
-    if( $tokensEnum->count() === 3 ){
-      [ $enum, $doubleColon, $case ] = $tokensEnum->toArray();
-      if( $enum instanceof Token && $doubleColon instanceof Token && $case instanceof Token ){
-        return $enum->id === T_STRING && $doubleColon->id === T_DOUBLE_COLON && $case->id === T_STRING;
-      }
-    }
-
-    return false;
-  }
-
-  public function isEnumValueWithProperty(
-    Collection $tokensEnum
-  ): bool {
-    if( $tokensEnum->count() < 5 ){
-      return false;
-    }
-
-    if( $tokensEnum->count() === 5 ){
-      [ $enum, $doubleColon, $case, $objectOperator, $property ] = $tokensEnum->toArray();
-      if( $enum instanceof Token && $doubleColon instanceof Token && $case instanceof Token && $property instanceof Token ){
-        return $enum->id === T_STRING 
-            && $doubleColon->id === T_DOUBLE_COLON 
-            && $case->id === T_STRING 
-            && $objectOperator->id === T_OBJECT_OPERATOR 
-            && $enum->id === T_STRING;        
-      } 
-    }
-
-    return false;
-  } 
-
-  public function updateEnumValue(
-    Closure $closure,
-    Collection $tokensEnum   
-  ): Token {
-    if( $tokensEnum->exist() === false ){
-      return $this;
-    }
-
-    if( $tokensEnum->count() === 5 ){
-      [ $alias, $_, $case, $_, $property ] = $tokensEnum->toArray();
-    } else if( $tokensEnum->count() === 3 ){
-      [ $alias, $_, $case ] = $tokensEnum->toArray();
-    }
-
-    $uses = ClosureUtil::getUses( $closure );
-    if( $uses instanceof Uses ){
-      $useslist = $uses->list->where( 
-        fn( UsesItem $usesItem ) => $usesItem->alias === $alias->value 
-      );
-
-      if( $useslist->exist()){
-        [ $useslist ] = $useslist->toArray();
-
-        $constanteEnum = Util::sprintFormat( "%s::%s", [
-          $useslist->path, $case->value 
-        ]);
-
-        
-        if( defined( $constanteEnum )){
-          $enumCase = constant( $constanteEnum );
-          if( isset( $enumCase )){
-            if( isset( $property )){
-              if( $property->value === "name" ){
-                $this->value = $enumCase->name;
-              } else if( $property->value === "value" ){
-                $this->value = $enumCase->value;
-              }
-            } else {
-              $this->value = $enumCase->value;
-            };
-          }
-        }
-      }
-    }
-
-    return $this;
-  }
-  
-  private function startups(
-    array|string $tokenArr
-  ): void {
-    Util::isArray( $tokenArr )
-      ? $this->defineToken( $tokenArr )
-      : $this->defineTokenStr( $tokenArr );
-  }
-
-  private function defineTokenName(
-    int $id
+  private function tokenNameById(
+    int $tokenId
   ): string {
-    return $id !== static::T_UNKNOWN
-      ? token_name( $this->id ) : "T_UNKNOWN";
+    return match( $tokenId ){
+      40 => "T_START_PARENTESES",
+      41 => "T_END_PARENTESES",
+      91 => "T_START_BRACKET",
+      93 => "T_END_BRACKET",
+      46 => "T_DOT",
+      44 => "T_COMMA",
+      59 => "T_SEMICOLON",
+      58 => "T_COLON",
+      63 => "T_QUESTION",
+      43 => "T_PLUS",
+      45 => "T_MINUS",
+      42 => "T_MULTIPLY",
+      47 => "T_DIVIDE",
+      61 => "T_EQUAL",
+      62 => "T_GREATER_THAN",
+      60 => "T_LESS_THAN",
+      33 => "T_NOT",
+      123 => "T_START_BRACE",
+      125 => "T_END_BRACE",
+        default => token_name( $tokenId )
+    };
   }
 
-  private function defineToken(
-    array|string $tokenArr
+  private function startupsAnalyzed(
+    array|string $tokenAll
   ): void {
-    [ $this->id, $this->value ] = $tokenArr;
-    $this->type = $this->defineTokenName( $this->id );
-  }
+    [ $this->id, $this->value ] = is_countable( $tokenAll )
+      ? $tokenAll : [ ord( $tokenAll ), $tokenAll ];
 
-  private function defineTokenStr(
-    string $tokenArr
-  ): void {
-    [ $this->id, $this->value ] = [ static::T_UNKNOWN, $tokenArr ];
-    $this->type = $this->defineTokenName( $this->id );
+    $this->type = $this->tokenNameById( $this->id );
   }
 }

@@ -2,9 +2,9 @@
 
 namespace Websyspro\Entity\Shareds;
 
-use Closure;
 use Websyspro\Commons\Collection;
 use ReflectionFunction;
+use Closure;
 
 class ExtractFromFN
 {
@@ -15,12 +15,6 @@ class ExtractFromFN
   ){
     $this->startups();
   }
-
-  public static function get(
-    Closure $closure
-  ): ExtractFromFN {
-    return new static( $closure );
-  }  
 
   private function startups(
   ): void {
@@ -45,6 +39,12 @@ class ExtractFromFN
     return $this->rows( $reflectionFunction )->slice(
       $reflectionFunction->getStartLine() - 1, 
       $reflectionFunction->getEndLine() - $reflectionFunction->getStartLine() + 1
-    )->where(fn( string $row ) => !str_starts_with( trim( $row ), "//" ))->joinWithSpace();
+    )->where( fn( string $row ) => !str_starts_with( trim( $row ), "//" ))->joinWithSpace();
+  }
+  
+  public static function get(
+    Closure $closure
+  ): ExtractFromFN {
+    return new static( $closure );
   }  
 }

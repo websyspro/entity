@@ -2,7 +2,7 @@
 
 namespace Websyspro\Entity\Shareds;
 
-class ExpressionGroup
+class ExpressionNegative
 {
   public ExpressionNodes $expressionNodes;
 
@@ -10,17 +10,15 @@ class ExpressionGroup
     array $scopes,
     array $tokens    
   ){
-    $this->startupsAnalyzed(
-      $scopes, $tokens
-    );
+    $this->startups( $scopes, $tokens );
   }
 
-  private function startupsAnalyzed(
+  private function startups(
     array $scopes,
-    array $tokens    
+    array $tokens
   ): void {
     $this->expressionNodes = new ExpressionNodes(
-      $scopes, ExpressionUtil::slice( $tokens, 1, -1 )
-    );
+      $scopes, ExpressionUtil::slice( $tokens, 1 )
+    );    
   }  
 }

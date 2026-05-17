@@ -13,7 +13,7 @@ class ExpressionLogical
     $this->startups( $token );
   }
 
-  public function build(
+  public function get(
   ): string {
     return $this->value;
   }  

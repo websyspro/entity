@@ -16,6 +16,7 @@ class CompareEqual
   ){
     $this->startups( $tokens );
     $this->startupsReverse( $compareType );
+    $this->startupsReverseAdjustment( $compare );
   }
 
   private function startups(
@@ -37,5 +38,11 @@ class CompareEqual
           default => $this->value
       };
     }
+  }
+
+  private function startupsReverseAdjustment(
+    CompareField|CompareValue $compare
+  ): void {
+    // preg_match('/(?<!\\\\)%/', $text)
   }
 }
