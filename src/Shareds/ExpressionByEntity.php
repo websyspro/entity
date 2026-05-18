@@ -144,7 +144,7 @@ class ExpressionByEntity
     array $expressoinNode = []    
   ): array {
     $createExpressionType = $this->createExpressionType( T_EXPRESSION_NODE, $scopes, $expressoinNode );
-    return $this->expressionLoop( $createExpressionType );
+    return $this->expressionLoop( $scopes, $createExpressionType );
   }  
 
   private function createExpressionTypeUnary(
@@ -153,7 +153,7 @@ class ExpressionByEntity
   ): array {
     $explodeLogicalTokens = $this->explodeLogicalTokens( array_slice( $tokes, 1 ));
     $createExpressionType = $this->createExpressionType( T_EXPRESSION_UNARY, $scopes, $explodeLogicalTokens );
-    return $this->expressionLoop( $createExpressionType );
+    return $this->expressionLoop( $scopes, $createExpressionType );
   }
 
   private function createExpressionTypeGroup(
@@ -162,7 +162,7 @@ class ExpressionByEntity
   ): array {
     $explodeLogicalTokens = $this->explodeLogicalTokens( $this->dropUnnecessaryParenteses( $tokes ));
     $createExpressionType = $this->createExpressionType( T_EXPRESSION_GROUP, $scopes, $explodeLogicalTokens );
-    return $this->expressionLoop( $createExpressionType );
+    return $this->expressionLoop( $scopes, $createExpressionType );
   } 
   
   private function createExpressionTypeSubQuery(
@@ -272,14 +272,13 @@ class ExpressionByEntity
     array $scopes = [],   
     array $tokens = []
   ): array {
-    return [];
-    // [ $instance, $variable ] = $tokens;
-    // return array_merge( 
-    //   $scopes, [[
-    //     "instance" => $instance[ "value" ],
-    //     "variable" => $variable[ "value" ]
-    //   ]]
-    // );
+    [ $instance, $variable ] = $tokens;
+    return array_merge( 
+      $scopes, [[
+        "instance" => $instance[ "value" ],
+        "variable" => $variable[ "value" ]
+      ]]
+    );
   }
 
   private function dropUnnecessaryParenteses(
@@ -396,23 +395,24 @@ class ExpressionByEntity
   }  
 
   private function expressionLoop(
+    array $scopes = [],
     array $expressionNode = []    
   ): array {
     for( $i = 0; $i < count( $expressionNode[ "tokens" ] ); $i++ ){
       if( $this->isExpressionUnary( $expressionNode[ "tokens" ][ $i ])){
         $expressionNode[ "tokens" ][ $i ] = $this->createExpressionTypeUnary( 
-          [], $expressionNode[ "tokens" ][ $i ]
+          $scopes, $expressionNode[ "tokens" ][ $i ]
         );
       } else 
       if( $this->isExpressionGroup( $expressionNode["tokens"][ $i ])){
         $expressionNode ["tokens" ][ $i ] = $this->createExpressionTypeGroup( 
-          [], $expressionNode[ "tokens" ][ $i ]
+          $scopes, $expressionNode[ "tokens" ][ $i ]
         );
       } 
       else 
       if( $this->isExpressionSubQuery( $expressionNode[ "tokens" ][ $i ])){
         $expressionNode[ "tokens" ][ $i ] = $this->createExpressionTypeSubQuery( 
-          [], $expressionNode[ "tokens" ][ $i ]
+          $scopes, $expressionNode[ "tokens" ][ $i ]
         );
       }
     }

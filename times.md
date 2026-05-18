@@ -12,3 +12,6 @@ Somente para ajustar FN e final
 
 Somente para fazer o split de tokens 
  |-> Execute timer: 0,853062(ms)
+
+Somente para fazer estruturação dos grupos
+ |-> Execute timer: 1,093864(ms)
