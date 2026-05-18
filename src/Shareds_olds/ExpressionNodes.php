@@ -13,7 +13,7 @@ class ExpressionNodes
 
   private function startupsAnalyzed(
   ): void {
-    $this->tokens = ExpressionUtil::readTokensFromNodes( 
+    $this->tokens = ExpressionUtil::readExpressionsLoop( 
       $this->scopes, $this->tokens
     );
 

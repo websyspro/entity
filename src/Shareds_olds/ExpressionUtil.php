@@ -3,10 +3,9 @@
 namespace Websyspro\Entity\Shareds;
 
 use Closure;
-use Reflection;
-use ReflectionNamedType;
-use ReflectionParameter;
-use Websyspro\Entity\Shareds_\Column;
+use function 
+  count, 
+  array_slice;
 
 class ExpressionUtil
 {
@@ -37,7 +36,7 @@ class ExpressionUtil
     int $tokemId,
     int $i = -1
   ): int {
-    while( $i < sizeof( $tokens )){
+    while( $i < count( $tokens )){
       if( isset( $tokens[ $i ] )){
         if( $tokens[ $i ] instanceof Token ){
           if( $tokens[ $i ]->id === $tokemId ){
@@ -98,32 +97,6 @@ class ExpressionUtil
     ));
   }  
 
-  public static function getScopeFromTokens(
-    array $tokens,
-    Closure $closure
-  ): array {
-    return ExpressionUtil::mapper(
-      array_chunk(
-        ExpressionUtil::where(
-        ExpressionUtil::slice( $tokens, 
-          ExpressionUtil::findByToken( $tokens, T_START_PARENTESES ) + 1,
-          ExpressionUtil::findByToken( $tokens, T_END_PARENTESES ) - 2, 
-        ), fn( Token $token ) => $token->id !== T_COMMA ), 2
-      ), function( array $scopeArr ) use( $closure ) {
-        [ $variableType, $variable ] = $scopeArr;
-        return new Scope( $variable->value, $variableType->value, $closure );
-      }
-    );
-  }
-  
-  public static function getContentsFromTokens(
-    array $tokens
-  ): array {
-    return ExpressionUtil::slice( $tokens, 
-      ExpressionUtil::findByToken( $tokens, T_DOUBLE_ARROW ) + 1
-    );
-  }  
-
   public static function dropUnnecessaryEndScripts(
     array $tokens,
     int $parenteses = 0
@@ -167,6 +140,23 @@ class ExpressionUtil
         || $token->id === T_BOOLEAN_AND
         || $token->id === T_BOOLEAN_OR;
   }  
+
+  public static function dropParentesesInitiais(
+    array $tokens,
+    int $i = 0   
+  ): array {
+    if( empty( $tokens )){
+      return [];
+    }
+    
+    while( $i < count( $tokens )){
+      if( $tokens[ $i ]->id === T_START_PARENTESES ){
+        $tokens = ExpressionUtil::slice( $tokens, 1, -1 ); $i++;
+      } else break;
+    }
+
+    return $tokens;
+  }
 
   public static function explodeTokensByLogical(
     array $tokens,
@@ -216,6 +206,35 @@ class ExpressionUtil
     }
 
     return -1;
+  }
+
+    public static function getScopeFromTokens(
+    array $tokens,
+    Closure $closure
+  ): array {
+    return ExpressionUtil::mapper(
+      array_chunk(
+        ExpressionUtil::where(
+        ExpressionUtil::slice( $tokens, 
+          ExpressionUtil::findByToken( $tokens, T_START_PARENTESES ) + 1,
+          ExpressionUtil::findByToken( $tokens, T_END_PARENTESES ) - 2, 
+        ), fn( Token $token ) => $token->id !== T_COMMA ), 2
+      ), function( array $scopeArr ) use( $closure ) {
+        [ $variableType, $variable ] = $scopeArr;
+        return new Scope( $variable->value, $variableType->value, $closure );
+      }
+    );
+  }
+  
+  public static function getBodyFromTokens(
+    array $tokens
+  ): array {
+    return ExpressionUtil::explodeTokensByLogical(
+        ExpressionUtil::dropParentesesInitiais(
+          ExpressionUtil::slice( $tokens, ExpressionUtil::findByToken( $tokens, T_DOUBLE_ARROW ) + 1
+        )
+       )
+    );
   }
 
   public static function readIsField(
@@ -300,7 +319,7 @@ class ExpressionUtil
 
   public static function readExpression(
     array $scopes,
-    Token|array $tokens
+    mixed $tokens
   ): mixed {
     if( $tokens instanceof Token ){
       return new ExpressionLogical( $tokens );

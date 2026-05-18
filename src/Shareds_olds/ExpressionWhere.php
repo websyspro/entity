@@ -19,7 +19,7 @@ class ExpressionWhere
   ): void {
     $this->expressionNodes = new ExpressionNodes(
       ExpressionUtil::getScopeFromTokens( ClosureUtil::getTokensFromClosure( $closure ), $closure ),
-      ExpressionUtil::getContentsFromTokens( ClosureUtil::getTokensFromClosure( $closure ))
+      ExpressionUtil::getBodyFromTokens( ClosureUtil::getTokensFromClosure( $closure ))
     );
   }  
 }

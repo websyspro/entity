@@ -1,0 +1,428 @@
+<?php
+
+namespace Websyspro\Entity\Shareds;
+
+use Closure;
+use ReflectionFunction;
+use function ord, count, array_slice, array_filter, sprintf, is_array, is_string;
+
+/**
+ * Define Contants for Tokens
+ * **/
+define( "T_START_PARENTESES", 40 );
+define( "T_END_PARENTESES", 41 );
+define( "T_START_BRACKET", 91 );
+define( "T_END_BRACKET", 93 );
+define( "T_START_BRACE", 123 );
+define( "T_END_BRACE", 125 );
+define( "T_DOT", 46 );
+define( "T_COMMA", 44 );
+define( "T_SEMICOLON", 59 );
+define( "T_COLON", 58 );
+define( "T_QUESTION", 63 );
+define( "T_PLUS", 43 );
+define( "T_MINUS", 45 );
+define( "T_MULTIPLY", 42 );
+define( "T_DIVIDE", 47 );
+define( "T_EQUAL", 61 );
+define( "T_GREATER_THAN", 62 );
+define( "T_LESS_THAN", 60 );
+define( "T_NOT", 33 );
+
+define( "T_EXPRESSION_NODE", "expressionNode" );
+define( "T_EXPRESSION_UNARY", "expressionUnary" );
+define( "T_EXPRESSION_GROUP", "expressionGroup" );
+define( "T_EXPRESSION_LOGICAL", "expressionLogical" );
+define( "T_EXPRESSION_SUBQUERY", "expressionSubQuery" );
+
+class ExpressionByEntity
+{
+  private array $expressionNode = [];
+  private ReflectionFunction $reflectionFunction;
+
+  public function __construct(
+    public Closure $closure
+  ){
+    $this->startups();
+    $this->startupsPreparedsTokens();
+    $this->startupsAdjustTokens();
+    $this->startupsWhereTokens();
+  }
+
+  private function find(
+    array $tokens,
+    int $number
+  ): int {
+    foreach( $tokens as $key => $token ){
+      if( isset( $token[ "number" ])){
+        if( $token[ "number" ] === $number ){
+          return $key;
+        }        
+      }
+    }
+
+    return -1;
+  }  
+
+  private function startups(
+  ): void {
+    if( is_callable( $this->closure )){
+      $this->reflectionFunction = (
+        new ReflectionFunction(
+          $this->closure
+        )
+      );
+
+      if( $this->reflectionFunction instanceof ReflectionFunction ){
+        $this->extractScriptFromClosure();
+        $this->extractTokensFromScript();
+      }
+    }
+  }
+
+  private function extractScriptFromClosure(
+  ): string {
+    return implode( " ", array_filter(
+      array_slice( file( $this->reflectionFunction->getFileName()), 
+        $this->reflectionFunction->getStartLine() - 1,
+        $this->reflectionFunction->getEndLine() - 
+        $this->reflectionFunction->getStartLine() + 1
+      ), fn( string $closureLine ) => !str_starts_with( trim( $closureLine ), "//" )
+    ));
+  }
+
+  private function extractTokensFromScript(
+  ): void {
+    $this->expressionNode = array_slice( 
+      token_get_all( sprintf( "<?php %s", $this->extractScriptFromClosure())), 1 
+    );
+  }
+
+  private function namberToken(
+    int $namberToken
+  ): string {
+    return match( $namberToken ){
+      40 => "T_START_PARENTESES",
+      41 => "T_END_PARENTESES",
+      91 => "T_START_BRACKET",
+      93 => "T_END_BRACKET",
+      46 => "T_DOT",
+      44 => "T_COMMA",
+      59 => "T_SEMICOLON",
+      58 => "T_COLON",
+      63 => "T_QUESTION",
+      43 => "T_PLUS",
+      45 => "T_MINUS",
+      42 => "T_MULTIPLY",
+      47 => "T_DIVIDE",
+      61 => "T_EQUAL",
+      62 => "T_GREATER_THAN",
+      60 => "T_LESS_THAN",
+      33 => "T_NOT",
+      123 => "T_START_BRACE",
+      125 => "T_END_BRACE",
+        default => token_name( $namberToken )
+    };
+  }
+
+  private function createExpressionType(
+    string $type,
+    array $scopes = [],
+    array $tokens = []
+  ): array {
+    return [ "type" => $type, "scopes" => $scopes, "tokens" => $tokens ];
+  }
+
+  private function createExpressionTypeLogical(
+    array $tokens = []    
+  ): array {
+    return [ "type" => T_EXPRESSION_LOGICAL, "tokens" => $tokens ];
+  } 
+  
+  private function createExpressionTypeNode(
+    array $scopes = [],
+    array $expressoinNode = []    
+  ): array {
+    $createExpressionType = $this->createExpressionType( T_EXPRESSION_NODE, $scopes, $expressoinNode );
+    return $this->expressionLoop( $createExpressionType );
+  }  
+
+  private function createExpressionTypeUnary(
+    array $scopes = [],
+    array $tokes = []    
+  ): array {
+    $explodeLogicalTokens = $this->explodeLogicalTokens( array_slice( $tokes, 1 ));
+    $createExpressionType = $this->createExpressionType( T_EXPRESSION_UNARY, $scopes, $explodeLogicalTokens );
+    return $this->expressionLoop( $createExpressionType );
+  }
+
+  private function createExpressionTypeGroup(
+    array $scopes = [],
+    array $tokes = []    
+  ): array {
+    $explodeLogicalTokens = $this->explodeLogicalTokens( $this->dropUnnecessaryParenteses( $tokes ));
+    $createExpressionType = $this->createExpressionType( T_EXPRESSION_GROUP, $scopes, $explodeLogicalTokens );
+    return $this->expressionLoop( $createExpressionType );
+  } 
+  
+  private function createExpressionTypeSubQuery(
+    array $scopes = [],
+    array $tokens = []    
+  ): array {
+    [ "value" => $query ] = array_slice(
+      $tokens, $this->find( $tokens, T_FN ) - 2, 1
+    )[ 0 ];
+
+    [ $scopes, $tokens ] = $this->whereScopesAndTokens( 
+      $scopes, $this->dropUnnecessaryEndTokens(
+        array_slice( $tokens, $this->find( $tokens, T_FN ))
+      )
+    );
+
+    return [ "type" => T_EXPRESSION_GROUP, "scopes" => $scopes, "query" => $query, "tokens" => $tokens ];
+  }  
+  
+  private function preparedsTokens(
+    int $i = 0
+  ): void {
+    for( $i=0; $i < count( $this->expressionNode ); $i++ ){
+      if( is_array( $this->expressionNode[ $i ])){
+        $this->expressionNode[ $i ] = [ 
+          "number" => $this->expressionNode[ $i ][0], 
+          "value" => $this->expressionNode[ $i ][1], 
+          "type" => $this->namberToken(
+            $this->expressionNode[ $i ][0]
+          )
+        ];
+      } else if( is_string( $this->expressionNode[ $i ])){
+        $this->expressionNode[ $i ] = [ 
+          "number" => ord( $this->expressionNode[ $i ] ), 
+          "value" => $this->expressionNode[ $i ], 
+          "type" => $this->namberToken(
+            ord( $this->expressionNode[ $i ] )
+          )
+        ];
+      }
+    }
+  }
+  
+  private function startupsPreparedsTokens(
+  ): void {
+    $this->preparedsTokens();
+  }
+
+  private function dropUnnecessaryStartTokens(
+  ): void {
+    for( $i=0; $i < count( $this->expressionNode ); $i++ ){
+      if( $this->expressionNode[ $i ][ "number" ] === T_FN ){
+        $this->expressionNode = $this->dropUnnecessaryEndTokens(
+          array_slice( $this->expressionNode, $i )
+        ); break;
+      }
+    }
+  }  
+
+  private function dropUnnecessaryEndTokens(
+    array $tokens = [],
+    int $parenteses = 0
+  ): array {
+    for( $i=0; $i < count( $tokens ); $i++ ){
+      if( $tokens[ $i ][ "number" ] === T_START_PARENTESES ){
+        $parenteses++;
+      }
+
+      if( $tokens[ $i ][ "number" ] === T_END_PARENTESES ){
+        $parenteses--;
+
+        if( $parenteses < 0 ){
+          $tokens = array_slice(
+            $tokens, 0, $i
+          ); break;
+        }          
+      }
+
+      if( $parenteses < 1 ){
+        if( $tokens[ $i ][ "number" ] === T_SEMICOLON ){
+          $tokens = array_slice(
+            $tokens, 0, $i
+          ); break;
+        }
+      }
+    };
+
+    return $tokens;
+  }
+
+  private function dropWhiteSpacesTokens(
+  ): void {
+    for( $i=0; $i < count( $this->expressionNode ); $i++ ){
+      if( $this->expressionNode[ $i ][ "number" ] === T_WHITESPACE ){
+        array_splice( $this->expressionNode, $i, 1 ); $i--;
+      } 
+    }
+  }
+
+  private function startupsAdjustTokens(
+  ): void {
+    $this->dropUnnecessaryStartTokens();
+    $this->dropWhiteSpacesTokens();
+  }
+
+  private function defineScope(
+    array $scopes = [],   
+    array $tokens = []
+  ): array {
+    return [];
+    // [ $instance, $variable ] = $tokens;
+    // return array_merge( 
+    //   $scopes, [[
+    //     "instance" => $instance[ "value" ],
+    //     "variable" => $variable[ "value" ]
+    //   ]]
+    // );
+  }
+
+  private function dropUnnecessaryParenteses(
+    array $tokens
+  ): array {
+    for( $i=0; $i < count( $tokens ); $i++ ){
+      if( $tokens[ $i ][ "number" ] === T_START_PARENTESES ){
+        if( $tokens[ count( $tokens ) - 1][ "number" ] === T_END_PARENTESES ){
+          array_splice( $tokens, $i, 1 );
+          array_splice( $tokens, count( $tokens ) - 1, 1 ); $i--;
+        }
+      }
+
+      break;
+    }
+
+    return $tokens;
+  }
+
+  private function isLogical(
+    int $number
+  ): bool {
+    return $number === T_LOGICAL_AND
+        || $number === T_LOGICAL_OR
+        || $number === T_BOOLEAN_AND
+        || $number === T_BOOLEAN_OR;
+  }  
+
+  private function explodeLogicalTokens(
+    array $expressionNode = [],
+    array $tokensCurrent = [],
+    array $tokensAccumulate = [],
+      int $tokensDepth = 0
+  ): array {
+    for( $i=0; $i < count( $expressionNode ); $i++ ){
+      if( $this->isLogical( $expressionNode[ $i ][ "number" ]) && $tokensDepth === 0 ){
+        if( $tokensCurrent ){
+          $tokensAccumulate[] = $tokensCurrent;
+          $tokensCurrent = [];
+        }
+
+        $tokensAccumulate[] = $this->createExpressionTypeLogical(
+          $expressionNode[ $i ]
+        );
+
+        continue;
+      }
+
+      $tokensCurrent[] = $expressionNode[ $i ];
+
+      if( $expressionNode[ $i ][ "number" ] === T_START_PARENTESES ) $tokensDepth++;
+      if( $expressionNode[ $i ][ "number" ] === T_END_PARENTESES ) $tokensDepth--;
+    }
+
+    if( $tokensCurrent ){
+      $tokensAccumulate[] = $tokensCurrent;
+    }
+
+    return $tokensAccumulate;
+  }
+
+  private function whereScopesAndTokens(
+    array $scopes = [],
+    array $tokens = []
+  ): array {
+    $defineScope = $this->defineScope(
+      $scopes, array_slice( $tokens, 
+        $this->find( $tokens, T_START_PARENTESES ) + 1, 
+        $this->find( $tokens, T_END_PARENTESES ) - 2
+      )
+    );
+
+    return [ $defineScope, $this->explodeLogicalTokens( 
+      array_slice( $tokens, $this->find( $tokens, T_DOUBLE_ARROW ) + 1 )
+    )];
+  }
+
+  private function isExpressionUnary(
+    array $expressoinNode = []
+  ): bool {
+    if( isset( $expressoinNode[ 0 ])){
+      if( $expressoinNode[ 0 ][ "number" ] === T_NOT ){
+        return true;
+      }
+    }
+    
+    return false;
+  }
+
+  private function isExpressionGroup(
+    array $expressoinNode = []
+  ): bool {
+    if( isset( $expressoinNode[ 0 ])){
+      if( $expressoinNode[ 0 ][ "number" ] === T_START_PARENTESES ){
+        if( $expressoinNode[ count( $expressoinNode ) - 1 ][ "number" ] === T_END_PARENTESES ){
+          return true;
+        }
+      }
+    }
+    
+    return false;
+  }
+
+  private function isExpressionSubQuery(
+    array $expressoinNode = []
+  ): bool {
+    if( isset( $expressoinNode[ 0 ])){
+      if( $this->find( $expressoinNode, T_FN ) !== -1 ){
+        return true;
+      }
+    }
+    
+    return false;
+  }  
+
+  private function expressionLoop(
+    array $expressionNode = []    
+  ): array {
+    for( $i = 0; $i < count( $expressionNode[ "tokens" ] ); $i++ ){
+      if( $this->isExpressionUnary( $expressionNode[ "tokens" ][ $i ])){
+        $expressionNode[ "tokens" ][ $i ] = $this->createExpressionTypeUnary( 
+          [], $expressionNode[ "tokens" ][ $i ]
+        );
+      } else 
+      if( $this->isExpressionGroup( $expressionNode["tokens"][ $i ])){
+        $expressionNode ["tokens" ][ $i ] = $this->createExpressionTypeGroup( 
+          [], $expressionNode[ "tokens" ][ $i ]
+        );
+      } 
+      else 
+      if( $this->isExpressionSubQuery( $expressionNode[ "tokens" ][ $i ])){
+        $expressionNode[ "tokens" ][ $i ] = $this->createExpressionTypeSubQuery( 
+          [], $expressionNode[ "tokens" ][ $i ]
+        );
+      }
+    }
+
+    return $expressionNode;
+  }
+
+  private function startupsWhereTokens(
+  ): void {
+    [ $scopes, $tokens ] = $this->whereScopesAndTokens( [], $this->expressionNode );
+    $this->expressionNode = $this->createExpressionTypeNode( $scopes, $tokens );
+  }
+}
