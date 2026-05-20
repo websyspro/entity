@@ -179,7 +179,7 @@ class ExpressionByEntity
       )
     );
 
-    return [ "type" => T_EXPRESSION_GROUP, "scopes" => $scopes, "query" => $query, "tokens" => $tokens ];
+    return [ "type" => T_EXPRESSION_SUBQUERY, "scopes" => $scopes, "query" => $query, "tokens" => $tokens ];
   }  
   
   private function preparedsTokens(
@@ -408,8 +408,7 @@ class ExpressionByEntity
         $expressionNode ["tokens" ][ $i ] = $this->createExpressionTypeGroup( 
           $scopes, $expressionNode[ "tokens" ][ $i ]
         );
-      } 
-      else 
+      } else 
       if( $this->isExpressionSubQuery( $expressionNode[ "tokens" ][ $i ])){
         $expressionNode[ "tokens" ][ $i ] = $this->createExpressionTypeSubQuery( 
           $scopes, $expressionNode[ "tokens" ][ $i ]
