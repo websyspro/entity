@@ -6,9 +6,6 @@ use Closure;
 use ReflectionFunction;
 use function ord, count, array_slice, array_filter, sprintf, is_array, is_string;
 
-/**
- * Define Contants for Tokens
- * **/
 define( "T_START_PARENTESES", 40 );
 define( "T_END_PARENTESES", 41 );
 define( "T_START_BRACKET", 91 );
@@ -415,7 +412,7 @@ class ExpressionByEntity
         || $this->find( $tokens, T_IS_GREATER_OR_EQUAL ) !== -1
         || $this->find( $tokens, T_IS_SMALLER_OR_EQUAL ) !== -1;
   }
-   
+
   private function expressionLoop(
     array $scopes = [],
     array $expressionNode = []    
