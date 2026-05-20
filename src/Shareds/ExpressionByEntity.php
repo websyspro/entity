@@ -29,11 +29,12 @@ define( "T_GREATER_THAN", 62 );
 define( "T_LESS_THAN", 60 );
 define( "T_NOT", 33 );
 
-define( "T_EXPRESSION_NODE", "expressionNode" );
-define( "T_EXPRESSION_UNARY", "expressionUnary" );
-define( "T_EXPRESSION_GROUP", "expressionGroup" );
-define( "T_EXPRESSION_LOGICAL", "expressionLogical" );
-define( "T_EXPRESSION_SUBQUERY", "expressionSubQuery" );
+define( "T_EXPRESSION_NODE", "ExpressionNode" );
+define( "T_EXPRESSION_UNARY", "ExpressionUnary" );
+define( "T_EXPRESSION_GROUP", "ExpressionGroup" );
+define( "T_EXPRESSION_LOGICAL", "ExpressionLogical" );
+define( "T_EXPRESSION_SUBQUERY", "ExpressionSubQuery" );
+define( "T_EXPRESSION_COMPARE", "ExpressionCompare" );
 
 class ExpressionByEntity
 {
@@ -128,9 +129,12 @@ class ExpressionByEntity
   private function createExpressionType(
     string $type,
     array $scopes = [],
-    array $tokens = []
+    array $tokens = [],
+    array $extras = []
   ): array {
-    return [ "type" => $type, "scopes" => $scopes, "tokens" => $tokens ];
+    return array_merge([ 
+      "type" => $type, "scopes" => $scopes, "tokens" => $tokens ], $extras 
+    );
   }
 
   private function createExpressionTypeLogical(
@@ -158,9 +162,9 @@ class ExpressionByEntity
 
   private function createExpressionTypeGroup(
     array $scopes = [],
-    array $tokes = []    
+    array $tokens = []    
   ): array {
-    $explodeLogicalTokens = $this->explodeLogicalTokens( $this->dropUnnecessaryParenteses( $tokes ));
+    $explodeLogicalTokens = $this->explodeLogicalTokens( $this->dropUnnecessaryParenteses( $tokens ));
     $createExpressionType = $this->createExpressionType( T_EXPRESSION_GROUP, $scopes, $explodeLogicalTokens );
     return $this->expressionLoop( $scopes, $createExpressionType );
   } 
@@ -174,11 +178,19 @@ class ExpressionByEntity
     )[ 0 ];
 
     [ $scopes, $tokens ] = $this->whereScopesAndTokens( 
-      $scopes, $this->dropUnnecessaryEndTokens( array_slice( $tokens, $this->find( $tokens, T_FN )))
+      $scopes, array_slice( $tokens, $this->find( $tokens, T_FN ))
     );
 
-    return [ "type" => T_EXPRESSION_SUBQUERY, "scopes" => $scopes, "query"  => $query, "tokens" => $tokens ];
-  }  
+    $createExpressionType = $this->createExpressionType( T_EXPRESSION_SUBQUERY, $scopes, $tokens, [ "query" => $query ]);
+    return $this->expressionLoop( $scopes, $createExpressionType );
+  }
+  
+  private function createExpressionCompare(
+    array $scopes = [],
+    array $tokens = []    
+  ): array {
+    return [ "type" => T_EXPRESSION_COMPARE, "scopes" => $scopes, "tokens" => $tokens ];
+  }
   
   private function preparedsTokens(
     int $i = 0
@@ -390,8 +402,20 @@ class ExpressionByEntity
     }
     
     return false;
-  }  
+  }
 
+  public function isExpressionCompare(
+    array $tokens
+  ): bool {
+    return $this->find( $tokens, T_EQUAL ) !== -1
+        || $this->find( $tokens, T_IS_EQUAL ) !== -1
+        || $this->find( $tokens, T_IS_IDENTICAL ) !== -1
+        || $this->find( $tokens, T_IS_NOT_EQUAL ) !== -1
+        || $this->find( $tokens, T_IS_NOT_IDENTICAL ) !== -1
+        || $this->find( $tokens, T_IS_GREATER_OR_EQUAL ) !== -1
+        || $this->find( $tokens, T_IS_SMALLER_OR_EQUAL ) !== -1;
+  }
+   
   private function expressionLoop(
     array $scopes = [],
     array $expressionNode = []    
@@ -409,6 +433,11 @@ class ExpressionByEntity
       } else 
       if( $this->isExpressionSubQuery( $expressionNode[ "tokens" ][ $i ])){
         $expressionNode[ "tokens" ][ $i ] = $this->createExpressionTypeSubQuery( 
+          $scopes, $expressionNode[ "tokens" ][ $i ]
+        );
+      } else 
+      if( $this->isExpressionCompare( $expressionNode[ "tokens" ][ $i ])){
+        $expressionNode[ "tokens" ][ $i ] = $this->createExpressionCompare(
           $scopes, $expressionNode[ "tokens" ][ $i ]
         );
       }
