@@ -174,12 +174,10 @@ class ExpressionByEntity
     )[ 0 ];
 
     [ $scopes, $tokens ] = $this->whereScopesAndTokens( 
-      $scopes, $this->dropUnnecessaryEndTokens(
-        array_slice( $tokens, $this->find( $tokens, T_FN ))
-      )
+      $scopes, $this->dropUnnecessaryEndTokens( array_slice( $tokens, $this->find( $tokens, T_FN )))
     );
 
-    return [ "type" => T_EXPRESSION_SUBQUERY, "scopes" => $scopes, "query" => $query, "tokens" => $tokens ];
+    return [ "type" => T_EXPRESSION_SUBQUERY, "scopes" => $scopes, "query"  => $query, "tokens" => $tokens ];
   }  
   
   private function preparedsTokens(
