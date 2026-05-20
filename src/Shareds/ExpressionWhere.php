@@ -4,124 +4,66 @@ namespace Websyspro\Entity\Shareds;
 
 use Closure;
 use ReflectionFunction;
-use function ord, count, array_slice, array_filter, sprintf, is_array, is_string;
+use function ord, count, array_slice, is_array, is_string;
 
-define( "T_START_PARENTESES", 40 );
-define( "T_END_PARENTESES", 41 );
-define( "T_START_BRACKET", 91 );
-define( "T_END_BRACKET", 93 );
-define( "T_START_BRACE", 123 );
-define( "T_END_BRACE", 125 );
-define( "T_DOT", 46 );
-define( "T_COMMA", 44 );
-define( "T_SEMICOLON", 59 );
-define( "T_COLON", 58 );
-define( "T_QUESTION", 63 );
-define( "T_PLUS", 43 );
-define( "T_MINUS", 45 );
-define( "T_MULTIPLY", 42 );
-define( "T_DIVIDE", 47 );
-define( "T_EQUAL", 61 );
-define( "T_GREATER_THAN", 62 );
-define( "T_LESS_THAN", 60 );
-define( "T_NOT", 33 );
+define("T_START_PARENTESES", 40);
+define("T_END_PARENTESES", 41);
+define("T_START_BRACKET", 91);
+define("T_END_BRACKET", 93);
+define("T_START_BRACE", 123);
+define("T_END_BRACE", 125);
+define("T_DOT", 46);
+define("T_COMMA", 44);
+define("T_SEMICOLON", 59);
+define("T_COLON", 58);
+define("T_QUESTION", 63);
+define("T_PLUS", 43);
+define("T_MINUS", 45);
+define("T_MULTIPLY", 42);
+define("T_DIVIDE", 47);
+define("T_EQUAL", 61);
+define("T_GREATER_THAN", 62);
+define("T_LESS_THAN", 60);
+define("T_NOT", 33);
 
-define( "T_EXPRESSION_NODE", "ExpressionNode" );
-define( "T_EXPRESSION_UNARY", "ExpressionUnary" );
-define( "T_EXPRESSION_GROUP", "ExpressionGroup" );
-define( "T_EXPRESSION_LOGICAL", "ExpressionLogical" );
-define( "T_EXPRESSION_SUBQUERY", "ExpressionSubQuery" );
-define( "T_EXPRESSION_COMPARE", "ExpressionCompare" );
+define("T_EXPRESSION_NODE", "ExpressionNode");
+define("T_EXPRESSION_UNARY", "ExpressionUnary");
+define("T_EXPRESSION_GROUP", "ExpressionGroup");
+define("T_EXPRESSION_LOGICAL", "ExpressionLogical");
+define("T_EXPRESSION_SUBQUERY", "ExpressionSubQuery");
+define("T_EXPRESSION_COMPARE", "ExpressionCompare");
 
-class ExpressionByEntity
+class ExpressionWhere
 {
-  private array $expressionNode = [];
-  private ReflectionFunction $reflectionFunction;
+  public array $expressionNode = [];
+  public ReflectionFunction $reflectionFunction;
 
   public function __construct(
     public Closure $closure
   ){
-    $this->startups();
-    $this->startupsPreparedsTokens();
-    $this->startupsAdjustTokens();
-    $this->startupsWhereTokens();
+    $this->startupsBuild();
   }
 
-  private function find(
-    array $tokens,
-    int $number
-  ): int {
-    foreach( $tokens as $key => $token ){
-      if( isset( $token[ "number" ])){
-        if( $token[ "number" ] === $number ){
-          return $key;
-        }        
-      }
-    }
-
-    return -1;
-  }  
-
-  private function startups(
+  private function startupsBuild(
   ): void {
-    if( is_callable( $this->closure )){
-      $this->reflectionFunction = (
-        new ReflectionFunction(
-          $this->closure
-        )
-      );
-
-      if( $this->reflectionFunction instanceof ReflectionFunction ){
-        $this->extractScriptFromClosure();
-        $this->extractTokensFromScript();
-      }
-    }
-  }
-
-  private function extractScriptFromClosure(
-  ): string {
-    return implode( " ", array_filter(
-      array_slice( file( $this->reflectionFunction->getFileName()), 
-        $this->reflectionFunction->getStartLine() - 1,
-        $this->reflectionFunction->getEndLine() - 
-        $this->reflectionFunction->getStartLine() + 1
-      ), fn( string $closureLine ) => !str_starts_with( trim( $closureLine ), "//" )
-    ));
-  }
-
-  private function extractTokensFromScript(
-  ): void {
-    $this->expressionNode = array_slice( 
-      token_get_all( sprintf( "<?php %s", $this->extractScriptFromClosure())), 1 
+    $this->expressionNode = tokensAll(
+      $this->closure
     );
   }
+  
 
-  private function namberToken(
-    int $namberToken
-  ): string {
-    return match( $namberToken ){
-      40 => "T_START_PARENTESES",
-      41 => "T_END_PARENTESES",
-      91 => "T_START_BRACKET",
-      93 => "T_END_BRACKET",
-      46 => "T_DOT",
-      44 => "T_COMMA",
-      59 => "T_SEMICOLON",
-      58 => "T_COLON",
-      63 => "T_QUESTION",
-      43 => "T_PLUS",
-      45 => "T_MINUS",
-      42 => "T_MULTIPLY",
-      47 => "T_DIVIDE",
-      61 => "T_EQUAL",
-      62 => "T_GREATER_THAN",
-      60 => "T_LESS_THAN",
-      33 => "T_NOT",
-      123 => "T_START_BRACE",
-      125 => "T_END_BRACE",
-        default => token_name( $namberToken )
-    };
-  }
+
+
+
+
+
+
+
+
+
+
+
+
 
   private function createExpressionType(
     string $type,
@@ -192,21 +134,21 @@ class ExpressionByEntity
   private function preparedsTokens(
     int $i = 0
   ): void {
-    for( $i=0; $i < count( $this->expressionNode ); $i++ ){
-      if( is_array( $this->expressionNode[ $i ])){
-        $this->expressionNode[ $i ] = [ 
-          "number" => $this->expressionNode[ $i ][0], 
-          "value" => $this->expressionNode[ $i ][1], 
+    for( $i=0; $i < count( $this->tokens ); $i++ ){
+      if( is_array( $this->tokens[ $i ])){
+        $this->tokens[ $i ] = [ 
+          "number" => $this->tokens[ $i ][0], 
+          "value" => $this->tokens[ $i ][1], 
           "type" => $this->namberToken(
-            $this->expressionNode[ $i ][0]
+            $this->tokens[ $i ][0]
           )
         ];
-      } else if( is_string( $this->expressionNode[ $i ])){
-        $this->expressionNode[ $i ] = [ 
-          "number" => ord( $this->expressionNode[ $i ] ), 
-          "value" => $this->expressionNode[ $i ], 
+      } else if( is_string( $this->tokens[ $i ])){
+        $this->tokens[ $i ] = [ 
+          "number" => ord( $this->tokens[ $i ] ), 
+          "value" => $this->tokens[ $i ], 
           "type" => $this->namberToken(
-            ord( $this->expressionNode[ $i ] )
+            ord( $this->tokens[ $i ] )
           )
         ];
       }
@@ -220,10 +162,10 @@ class ExpressionByEntity
 
   private function dropUnnecessaryStartTokens(
   ): void {
-    for( $i=0; $i < count( $this->expressionNode ); $i++ ){
-      if( $this->expressionNode[ $i ][ "number" ] === T_FN ){
-        $this->expressionNode = $this->dropUnnecessaryEndTokens(
-          array_slice( $this->expressionNode, $i )
+    for( $i=0; $i < count( $this->tokens ); $i++ ){
+      if( $this->tokens[ $i ][ "number" ] === T_FN ){
+        $this->tokens = $this->dropUnnecessaryEndTokens(
+          array_slice( $this->tokens, $i )
         ); break;
       }
     }
@@ -262,9 +204,9 @@ class ExpressionByEntity
 
   private function dropWhiteSpacesTokens(
   ): void {
-    for( $i=0; $i < count( $this->expressionNode ); $i++ ){
-      if( $this->expressionNode[ $i ][ "number" ] === T_WHITESPACE ){
-        array_splice( $this->expressionNode, $i, 1 ); $i--;
+    for( $i=0; $i < count( $this->tokens ); $i++ ){
+      if( $this->tokens[ $i ][ "number" ] === T_WHITESPACE ){
+        array_splice( $this->tokens, $i, 1 ); $i--;
       } 
     }
   }
@@ -443,9 +385,21 @@ class ExpressionByEntity
     return $expressionNode;
   }
 
+  private function createScopes(
+    array $scopes = [],
+    array $tokens = [] 
+  ): array {
+    return array_merge( $scopes, $tokens );
+  }
+
+  // private function createClosure(
+  // ): array {
+  //   return [ null, null ];
+  // }
+
   private function startupsWhereTokens(
   ): void {
-    [ $scopes, $tokens ] = $this->whereScopesAndTokens( [], $this->expressionNode );
-    $this->expressionNode = $this->createExpressionTypeNode( $scopes, $tokens );
+    [ $scopes, $tokens ] = $this->whereScopesAndTokens( [], $this->tokens );
+    $this->tokens = $this->createExpressionTypeNode( $scopes, $tokens );
   }
 }

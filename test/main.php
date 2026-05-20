@@ -1,8 +1,8 @@
 <?php
 
 use Websyspro\Test\Crm\Entitys\ItemPropostaEntity;
-use Websyspro\Entity\Shareds\ExpressionByEntity;
 use Websyspro\Test\Crm\Entitys\PropostaEntity;
+use Websyspro\Entity\Shareds\ExpressionWhere;
 use Websyspro\Test\Enums\Status;
 
 $start = microtime( true );
@@ -35,7 +35,7 @@ $closure = fn( PropostaEntity $i ) => (
 //   ExtractFromFN::get( $closure )->tokens, new Collection(), $closure
 // );
 
-$expressionWhere = new ExpressionByEntity( $closure );
+$expressionWhere = new ExpressionWhere( $closure );
 
 
 $leftTimer = number_format(( microtime( true ) - $start ) * 1000, 6, ",", "." );
