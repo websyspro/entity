@@ -4,12 +4,13 @@ namespace Websyspro\Entity\Shareds;
 
 use Closure;
 use ReflectionFunction;
+use function count;
 
 class ExpressionWhere
 extends ExpressionUtil
 {
-  public array $expressionNode = [];
   public ReflectionFunction $reflectionFunction;
+  public array $context = [];
 
   public function __construct(
     public Closure $closure
@@ -17,11 +18,53 @@ extends ExpressionUtil
     $this->startupsBuild();
   }
 
-  private function startupsBuild(
-  ): void {
-    $this->expressionNode = $this->tokensAll($this->closure);
+  private function createExpressionNode(
+    array $scopes,
+    array $tokens
+  ): array {
+    $tokens = $this->parserTokens( $tokens );
+    $tokens = $this->startupsLoop( $scopes, $tokens );
+
+    return [ 
+      T_KEY_OBJECT => T_EXPRESSION_NODE,
+      T_KEY_SCOPES => $scopes,
+      T_KEY_TOKENS => $tokens
+    ];
   }
 
+  private function createExpressionGroup(
+    array $scopes,
+    array $tokens
+  ): array {
+    $tokens = $this->dropParenteses( $tokens );
+
+    return [ 
+      T_KEY_OBJECT => T_EXPRESSION_GROUP,
+      T_KEY_SCOPES => $scopes,
+      T_KEY_TOKENS => $this->createExpressionNode( $scopes, $tokens )
+    ];
+  }  
+
+  private function startupsLoop(
+    array $scopes,
+    array $tokens
+  ): array {
+    for( $i=0; $i < count( $tokens ); $i++ ){
+      if( $this->isExpressionGroup( $tokens[ $i ] )){
+        $tokens[ $i ] = $this->createExpressionGroup( $scopes, $tokens[ $i ]);
+      }
+    }
+
+    return $tokens;
+  }  
+
+  private function startupsBuild(
+  ): void {
+    $tokens = $this->tokensAll( $this->closure );
+    $this->context = $this->createExpressionNode(
+      $this->getScopes( $tokens ), $this->getContext( $tokens )
+    );
+  }
 
 
 

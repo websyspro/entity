@@ -10,7 +10,7 @@ use Websyspro\Commons\Collection;
 use Websyspro\Commons\Util;
 use Closure;
 
-class ExpressionUtil
+class ExpressionUtil__
 {
   public static function getTokenAll(
     string $script

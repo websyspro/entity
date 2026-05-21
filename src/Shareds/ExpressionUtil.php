@@ -2,7 +2,7 @@
 
 namespace Websyspro\Entity\Shareds;
 
-use function ord, count, is_string, array_slice, sprintf;
+use function ord, count, is_string, is_array, array_slice, sprintf;
 use ReflectionFunction;
 use Closure;
 
@@ -33,6 +33,13 @@ define("T_EXPRESSION_LOGICAL", "ExpressionLogical");
 define("T_EXPRESSION_SUBQUERY", "ExpressionSubQuery");
 define("T_EXPRESSION_COMPARE", "ExpressionCompare");
 
+define("T_KEY_OBJECT", "object");
+
+define("T_KEY_SCOPES", "scopes");
+define("T_KEY_TOKENS", "tokens");
+define("T_KEY_TOKEN_NAMBER", "number");
+define("T_KEY_TOKEN_VALUE", "value");
+
 class ExpressionUtil
 {
   public function find(
@@ -40,8 +47,8 @@ class ExpressionUtil
     int $number
   ): int {
     foreach($tokens as $key => $token){
-      if(isset($token["number" ])){
-        if($token["number"] === $number){
+      if(isset($token[T_KEY_TOKEN_NAMBER])){
+        if($token[T_KEY_TOKEN_NAMBER] === $number){
           return $key;
         }        
       }
@@ -64,6 +71,45 @@ class ExpressionUtil
     return $this->find($tokens, $number) - 1;
   }
 
+  public function startParentese(
+    array $token
+  ): bool {
+    if(isset($token[T_KEY_TOKEN_NAMBER]) === false){
+      return false;
+    }
+
+    return $token[T_KEY_TOKEN_NAMBER] === T_START_PARENTESES;
+  }
+
+  public function endParentese(
+    array $token
+  ): bool {
+    if(isset($token[T_KEY_TOKEN_NAMBER]) === false){
+      return false;
+    }
+
+    return $token[T_KEY_TOKEN_NAMBER] === T_END_PARENTESES;
+  } 
+
+  public function getScopesByTokens(
+    array $tokens
+  ): array {
+    return array_slice( $tokens, 0, $this->find( $tokens, T_DOUBLE_ARROW ));
+  }
+
+  public function getContextByTokens(
+    array $tokens
+  ): array {
+    return array_slice( $tokens, $this->findNext( $tokens, T_DOUBLE_ARROW ));
+  }  
+
+  public function isExpressionGroup(
+    array $tokens
+  ): bool {
+    [ $token ] = $tokens;
+    return $this->startParentese($token);
+  }
+
   public function tokensByReflection(
     ReflectionFunction $reflectionFunction
   ): array {
@@ -76,30 +122,6 @@ class ExpressionUtil
         ), fn( string $closureLine ) => !str_starts_with( trim( $closureLine ), "//" )
       )))), 1 
     );
-  }
-
-  public function tokensAll(
-    Closure $closure,
-    array $tokens = []
-  ): array {
-    if(is_callable($closure)){
-      $tokens = $this->tokensByReflection(
-        new ReflectionFunction(
-          $closure
-        )
-      );
-
-      for($i=0; $i < count($tokens); $i++){
-        $tokens[$i] = is_array($tokens[$i])
-          ? $this->createToken($tokens[$i]) 
-          : $this->createToken($tokens[$i]);
-      }      
-    }
-
-    $tokens = $this->dropWriteSpace($tokens);
-    $tokens = $this->dropInitialInvalids($tokens);
-    $tokens = $this->dropEndInvalids($tokens);
-    return $this->createClosure($tokens);
   }
 
   public function namberToken(
@@ -136,15 +158,19 @@ class ExpressionUtil
       ? [ ord( $tokenArgs ), $tokenArgs ] 
       : $tokenArgs;
 
-    return [ "number" => $number, "value" => $value, "type" => $this->namberToken( $number )];
+    return [
+      T_KEY_TOKEN_NAMBER => $number,
+      T_KEY_TOKEN_VALUE => $value,
+      "type" => $this->namberToken( $number )
+    ];
   }
 
   public function dropWriteSpace(
     array $tokens
   ): array {
-    for( $i=0; $i<count( $tokens ); $i++ ){
-      if( $tokens[ $i ][ "number" ] === T_WHITESPACE ){
-        array_splice( $tokens, $i, 1 ); $i--;
+    for($i=0; $i<count($tokens); $i++){
+      if($tokens[$i][T_KEY_TOKEN_NAMBER] === T_WHITESPACE){
+        array_splice($tokens, $i, 1); $i--;
       } 
     }
     
@@ -162,11 +188,11 @@ class ExpressionUtil
     int $parenteses = 0
   ): array {
     for($i=0; $i<count($tokens); $i++){
-      if($tokens[$i]["number"] === T_START_PARENTESES){
+      if($tokens[$i][T_KEY_TOKEN_NAMBER] === T_START_PARENTESES){
         $parenteses++;
       }
 
-      if($tokens[$i]["number"] === T_END_PARENTESES){
+      if($tokens[$i][T_KEY_TOKEN_NAMBER] === T_END_PARENTESES){
         $parenteses--;
 
         if($parenteses < 0){
@@ -177,7 +203,7 @@ class ExpressionUtil
       }
 
       if($parenteses < 1){
-        if($tokens[$i]["number"] === T_SEMICOLON){
+        if($tokens[$i][T_KEY_TOKEN_NAMBER] === T_SEMICOLON){
           $tokens = array_slice(
             $tokens, 0, $i
           ); break;
@@ -188,52 +214,110 @@ class ExpressionUtil
     return $tokens;
   }
 
+  public function dropParenteses(
+    array $tokens, 
+    int $i = 0
+  ): array {
+    while( $i < count( $tokens )){
+      if( $tokens[ $i ][ T_KEY_TOKEN_NAMBER ] === T_START_PARENTESES ){
+        array_splice( $tokens, count($tokens) - 1, 1 );
+        array_splice( $tokens, $i, 1 ); 
+        $i--;
+      }
+      
+      break;
+    }
+    return $tokens;
+  }  
+
+  public function dropParentesesInitialExtras(
+    array $tokens, 
+    int $i = 0
+  ): array {
+    $scopes = $this->getScopesByTokens($tokens);
+    $contexts = $this->getContextByTokens($tokens);
+    $contexts = $this->dropParenteses($contexts);
+
+    return array_merge( 
+      $scopes, [
+        $tokens[ $this->find( $tokens, T_DOUBLE_ARROW )]
+      ], $contexts
+    );
+  }
+  
+  public function tokensAll(
+    Closure $closure,
+    array $tokens = []
+  ): array {
+    if( is_callable( $closure )){
+      $tokens = $this->tokensByReflection(
+        new ReflectionFunction( $closure)
+      );
+
+      for($i=0; $i < count($tokens); $i++){
+        $tokens[$i] = is_array( $tokens[ $i ]) 
+          ? $this->createToken( $tokens[ $i ]) 
+          : $this->createToken( $tokens[ $i ]);
+      }      
+    }
+
+    $tokens = $this->dropWriteSpace($tokens);
+    $tokens = $this->dropInitialInvalids($tokens);
+    $tokens = $this->dropEndInvalids($tokens);
+    $tokens = $this->dropParentesesInitialExtras($tokens);
+    return $tokens;
+  }  
+
   public function isLogical(
-    int $number
+    array $token
   ): bool {
-    return $number === T_LOGICAL_AND
-        || $number === T_LOGICAL_OR
-        || $number === T_BOOLEAN_AND
-        || $number === T_BOOLEAN_OR;
+    if(isset($token[T_KEY_TOKEN_NAMBER]) === false){
+      return false;
+    }
+
+    return $token[T_KEY_TOKEN_NAMBER] === T_LOGICAL_AND
+        || $token[T_KEY_TOKEN_NAMBER] === T_LOGICAL_OR
+        || $token[T_KEY_TOKEN_NAMBER] === T_BOOLEAN_AND
+        || $token[T_KEY_TOKEN_NAMBER] === T_BOOLEAN_OR;
   }
 
   public function parserTokens(
-    array $expressionNode = [],
-    array $tokensCurrent = [],
-    array $tokensAccumulate = [],
-      int $tokensDepth = 0
+    array $tokens = [],
+    array $curr = [],
+    array $accu = [],
+      int $depth = 0
   ): array {
-    for($i=0; $i<count($expressionNode); $i++){
-      if($this->isLogical($expressionNode[$i]["number"]) && $tokensDepth===0){
-        if($tokensCurrent){
-          $tokensAccumulate[] = $tokensCurrent;
-          $tokensCurrent = [];
+    foreach( $tokens as $token ){
+      if($this->isLogical($token) && $depth === 0){
+        if( $curr ){
+          $accu[] = $curr;
+          $curr = [];
         }
 
-        $tokensAccumulate[] = $expressionNode[$i];
+        $accu[] = [ $token ];
         continue;
       }
 
-      $tokensCurrent[] = $expressionNode[$i];
+      $curr[] = $token;
 
-      if($expressionNode[$i]["number"] === T_START_PARENTESES) $tokensDepth++;
-      if($expressionNode[$i]["number"] === T_END_PARENTESES) $tokensDepth--;
+      if($this->startParentese($token)) $depth++;
+      if($this->endParentese($token)) $depth--;
     }
 
-    if($tokensCurrent){
-      $tokensAccumulate[] = $tokensCurrent;
+    if( $curr ){
+      $accu[] = $curr;
     }
 
-    return $tokensAccumulate;
+    return $accu;
   }
 
-  public function createScopes(
+  public function getScopes(
     array $tokens
   ): array {
     $scopes = array_chunk(
-      array_slice($tokens, 
-        $this->findNext( $tokens, T_START_PARENTESES),
-        $this->findPrev( $tokens, T_END_PARENTESES) - 1
+      array_slice( $tokens, 
+        $this->findNext( $tokens, T_START_PARENTESES ),
+        $this->findPrev( $tokens, T_END_PARENTESES ) - 1
       ), 2
     );
 
@@ -245,20 +329,9 @@ class ExpressionUtil
     );
   }
 
-  public function createExpressionNode(
+  public function getContext(
     array $tokens
   ): array {
-    return $this->parserTokens(
-      array_slice($tokens, $this->findNext($tokens, T_DOUBLE_ARROW))
-    );
-  }
-
-  public function createClosure(
-    array $tokens
-  ): array {
-    return [
-      "scopes" => $this->createScopes($tokens),
-      "tokens" => $this->createExpressionNode($tokens)
-    ];
+    return array_slice( $tokens, $this->findNext( $tokens, T_DOUBLE_ARROW ));
   }
 }

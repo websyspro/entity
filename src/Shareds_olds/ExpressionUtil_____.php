@@ -7,7 +7,7 @@ use function
   count, 
   array_slice;
 
-class ExpressionUtil
+class ExpressionUtil_____
 {
   public static function where(
     array $items,
@@ -176,7 +176,7 @@ class ExpressionUtil
           continue;
         }
 
-        $tokensCurrent[] = $token;
+        $tokensCurrent[] = $tokens;
 
         if( $token->id === T_START_PARENTESES ) $depth++;
         if( $token->id === T_END_PARENTESES ) $depth--;
@@ -310,7 +310,7 @@ class ExpressionUtil
         && ExpressionUtil::readIsEguals( $tokens ) === true;
   }  
 
-  public static function createExpressionGroup(
+  public static function createExpressionGroup____(
     array $scopes,
     Token|array $tokens
   ): array {
