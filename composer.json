@@ -9,10 +9,7 @@
     "psr-4": {
       "Websyspro\\Entity\\": "src/",
       "Websyspro\\Test\\": "test/"
-    },
-    "files": [
-      "src/Shareds/ExpressionUtil.php"
-    ]
+    }
   },
   "authors": [
     {
