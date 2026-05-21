@@ -27,11 +27,11 @@ define("T_LESS_THAN", 60);
 define("T_NOT", 33);
 
 define("T_EXPRESSION_NODE", "ExpressionNode");
-define("T_EXPRESSION_UNARY", "ExpressionUnary");
 define("T_EXPRESSION_GROUP", "ExpressionGroup");
 define("T_EXPRESSION_LOGICAL", "ExpressionLogical");
 define("T_EXPRESSION_SUBQUERY", "ExpressionSubQuery");
 define("T_EXPRESSION_COMPARE", "ExpressionCompare");
+define("T_EXPRESSION_NEGATIVE", "ExpressionNegative");
 
 define("T_KEY_OBJECT", "object");
 
@@ -71,6 +71,12 @@ class ExpressionUtil
     return $this->find($tokens, $number) - 1;
   }
 
+  public function findFn(
+    array $tokens
+  ): int {
+    return $this->find( $tokens, T_FN ) !== -1;
+  }  
+
   public function startParentese(
     array $token
   ): bool {
@@ -84,12 +90,22 @@ class ExpressionUtil
   public function endParentese(
     array $token
   ): bool {
-    if(isset($token[T_KEY_TOKEN_NAMBER]) === false){
+    if( isset( $token[ T_KEY_TOKEN_NAMBER ]) === false){
       return false;
     }
 
-    return $token[T_KEY_TOKEN_NAMBER] === T_END_PARENTESES;
+    return $token[ T_KEY_TOKEN_NAMBER ] === T_END_PARENTESES;
   } 
+
+  public function findNegative(
+    array $token
+  ): int {
+    if( isset( $token[ T_KEY_TOKEN_NAMBER ]) === false){
+      return false;
+    }
+
+    return $token[ T_KEY_TOKEN_NAMBER ] === T_NOT;
+  }  
 
   public function getScopesByTokens(
     array $tokens
@@ -101,13 +117,26 @@ class ExpressionUtil
     array $tokens
   ): array {
     return array_slice( $tokens, $this->findNext( $tokens, T_DOUBLE_ARROW ));
+  }
+
+  public function isExpressionNegative(
+    array $tokens
+  ): bool {
+    [ $token ] = $tokens;
+    return $this->findNegative( $token );
   }  
 
   public function isExpressionGroup(
     array $tokens
   ): bool {
     [ $token ] = $tokens;
-    return $this->startParentese($token);
+    return $this->startParentese( $token );
+  }
+
+  public function isExpressionSubQuery(
+    array $tokens
+  ): bool {
+    return $this->findFn( $tokens );
   }
 
   public function tokensByReflection(
@@ -244,6 +273,12 @@ class ExpressionUtil
       ], $contexts
     );
   }
+
+  public function dropNegative(
+    array $tokens
+  ): array {
+    return array_slice( $tokens, 1);
+  }  
   
   public function tokensAll(
     Closure $closure,

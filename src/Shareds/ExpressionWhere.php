@@ -32,16 +32,48 @@ extends ExpressionUtil
     ];
   }
 
+  private function createExpressionNegative(
+    array $scopes,
+    array $tokens
+  ): array {
+    $tokens = $this->dropNegative( $tokens );
+    $tokens = $this->parserTokens( $tokens );
+    $tokens = $this->startupsLoop( $scopes, $tokens );
+
+    return [ 
+      T_KEY_OBJECT => T_EXPRESSION_NEGATIVE,
+      T_KEY_SCOPES => $scopes,
+      T_KEY_TOKENS => $tokens
+    ];
+  }  
+
   private function createExpressionGroup(
     array $scopes,
     array $tokens
   ): array {
     $tokens = $this->dropParenteses( $tokens );
+    $tokens = $this->parserTokens( $tokens );
+    $tokens = $this->startupsLoop( $scopes, $tokens );
 
     return [ 
       T_KEY_OBJECT => T_EXPRESSION_GROUP,
       T_KEY_SCOPES => $scopes,
-      T_KEY_TOKENS => $this->createExpressionNode( $scopes, $tokens )
+      T_KEY_TOKENS => $tokens
+    ];
+  }
+  
+  private function createExpressionSubQuery(
+    array $scopes,
+    array $tokens
+  ): array {
+    // $tokens = $this->dropParenteses( $tokens );
+    // $tokens = $this->parserTokens( $tokens );
+    // $tokens = $this->startupsLoop( $scopes, $tokens );
+
+    return [ 
+      T_KEY_OBJECT => T_EXPRESSION_SUBQUERY,
+      T_KEY_SCOPES => $scopes,
+      T_KEY_TOKENS => $tokens
     ];
   }  
 
@@ -50,8 +82,14 @@ extends ExpressionUtil
     array $tokens
   ): array {
     for( $i=0; $i < count( $tokens ); $i++ ){
-      if( $this->isExpressionGroup( $tokens[ $i ] )){
+      if( $this->isExpressionNegative( $tokens[ $i ])){
+        $tokens[ $i ] = $this->createExpressionNegative( $scopes, $tokens[ $i ]);
+      } else
+      if( $this->isExpressionGroup( $tokens[ $i ])){
         $tokens[ $i ] = $this->createExpressionGroup( $scopes, $tokens[ $i ]);
+      } else
+      if( $this->isExpressionSubQuery( $tokens[ $i ])){
+        $tokens[ $i ] = $this->createExpressionSubQuery( $scopes, $tokens[ $i ]);
       }
     }
 
