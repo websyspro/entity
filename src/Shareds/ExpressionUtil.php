@@ -2,7 +2,7 @@
 
 namespace Websyspro\Entity\Shareds;
 
-use function ord, count, is_string, is_array, array_slice, sprintf;
+use function ord, count, is_string, is_array, in_array, array_slice, sprintf;
 use ReflectionFunction;
 use Closure;
 
@@ -34,11 +34,14 @@ define("T_EXPRESSION_COMPARE", "ExpressionCompare");
 define("T_EXPRESSION_NEGATIVE", "ExpressionNegative");
 
 define("T_KEY_OBJECT", "object");
-
 define("T_KEY_SCOPES", "scopes");
 define("T_KEY_TOKENS", "tokens");
+define("T_KEY_CLOSURE", "closure");
+
 define("T_KEY_TOKEN_NAMBER", "number");
 define("T_KEY_TOKEN_VALUE", "value");
+
+define("T_EVENTS_LIST", [ "any" ]);
 
 class ExpressionUtil
 {
@@ -133,10 +136,18 @@ class ExpressionUtil
     return $this->startParentese( $token );
   }
 
+  private function existsEvent(
+    array $tokens
+  ): bool {
+    [ $tokens ] = array_slice( $tokens, $this->findPrev( $tokens, T_FN ) - 1, 1);
+    return in_array( $tokens[ T_KEY_TOKEN_VALUE ], T_EVENTS_LIST );
+  }
+
   public function isExpressionSubQuery(
     array $tokens
   ): bool {
-    return $this->findFn( $tokens );
+    return $this->findFn( $tokens )
+        && $this->existsEvent( $tokens );
   }
 
   public function tokensByReflection(
@@ -344,6 +355,12 @@ class ExpressionUtil
     }
 
     return $accu;
+  }
+
+  public function getClosureId(
+    Closure $closure
+  ): int {
+    return spl_object_id( $closure );
   }
 
   public function getScopes(

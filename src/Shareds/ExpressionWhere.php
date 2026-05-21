@@ -13,20 +13,22 @@ extends ExpressionUtil
   public array $context = [];
 
   public function __construct(
-    public Closure $closure
+    Closure $closure
   ){
-    $this->startupsBuild();
+    $this->startupsBuild( $closure );
   }
 
   private function createExpressionNode(
     array $scopes,
-    array $tokens
+    array $tokens,
+      int $closure
   ): array {
     $tokens = $this->parserTokens( $tokens );
-    $tokens = $this->startupsLoop( $scopes, $tokens );
+    $tokens = $this->startupsLoop( $scopes, $tokens, $closure );
 
     return [ 
       T_KEY_OBJECT => T_EXPRESSION_NODE,
+      T_KEY_CLOSURE => $closure,
       T_KEY_SCOPES => $scopes,
       T_KEY_TOKENS => $tokens
     ];
@@ -34,14 +36,16 @@ extends ExpressionUtil
 
   private function createExpressionNegative(
     array $scopes,
-    array $tokens
+    array $tokens,
+      int $closure
   ): array {
     $tokens = $this->dropNegative( $tokens );
     $tokens = $this->parserTokens( $tokens );
-    $tokens = $this->startupsLoop( $scopes, $tokens );
+    $tokens = $this->startupsLoop( $scopes, $tokens, $closure );
 
     return [ 
       T_KEY_OBJECT => T_EXPRESSION_NEGATIVE,
+      T_KEY_CLOSURE => $closure,
       T_KEY_SCOPES => $scopes,
       T_KEY_TOKENS => $tokens
     ];
@@ -49,14 +53,16 @@ extends ExpressionUtil
 
   private function createExpressionGroup(
     array $scopes,
-    array $tokens
+    array $tokens,
+      int $closure
   ): array {
     $tokens = $this->dropParenteses( $tokens );
     $tokens = $this->parserTokens( $tokens );
-    $tokens = $this->startupsLoop( $scopes, $tokens );
+    $tokens = $this->startupsLoop( $scopes, $tokens, $closure );
 
     return [ 
       T_KEY_OBJECT => T_EXPRESSION_GROUP,
+      T_KEY_CLOSURE => $closure,
       T_KEY_SCOPES => $scopes,
       T_KEY_TOKENS => $tokens
     ];
@@ -64,7 +70,8 @@ extends ExpressionUtil
   
   private function createExpressionSubQuery(
     array $scopes,
-    array $tokens
+    array $tokens,
+      int $closure
   ): array {
     // $tokens = $this->dropParenteses( $tokens );
     // $tokens = $this->parserTokens( $tokens );
@@ -72,6 +79,7 @@ extends ExpressionUtil
 
     return [ 
       T_KEY_OBJECT => T_EXPRESSION_SUBQUERY,
+      T_KEY_CLOSURE => $closure,
       T_KEY_SCOPES => $scopes,
       T_KEY_TOKENS => $tokens
     ];
@@ -79,17 +87,18 @@ extends ExpressionUtil
 
   private function startupsLoop(
     array $scopes,
-    array $tokens
+    array $tokens,
+      int $closure
   ): array {
     for( $i=0; $i < count( $tokens ); $i++ ){
       if( $this->isExpressionNegative( $tokens[ $i ])){
-        $tokens[ $i ] = $this->createExpressionNegative( $scopes, $tokens[ $i ]);
+        $tokens[ $i ] = $this->createExpressionNegative( $scopes, $tokens[ $i ], $closure);
       } else
       if( $this->isExpressionGroup( $tokens[ $i ])){
-        $tokens[ $i ] = $this->createExpressionGroup( $scopes, $tokens[ $i ]);
+        $tokens[ $i ] = $this->createExpressionGroup( $scopes, $tokens[ $i ], $closure);
       } else
       if( $this->isExpressionSubQuery( $tokens[ $i ])){
-        $tokens[ $i ] = $this->createExpressionSubQuery( $scopes, $tokens[ $i ]);
+        $tokens[ $i ] = $this->createExpressionSubQuery( $scopes, $tokens[ $i ], $closure);
       }
     }
 
@@ -97,10 +106,11 @@ extends ExpressionUtil
   }  
 
   private function startupsBuild(
+    Closure $closure
   ): void {
-    $tokens = $this->tokensAll( $this->closure );
+    $tokens = $this->tokensAll( $closure );
     $this->context = $this->createExpressionNode(
-      $this->getScopes( $tokens ), $this->getContext( $tokens )
+      $this->getScopes( $tokens ), $this->getContext( $tokens ), $this->getClosureId( $closure)
     );
   }
 
