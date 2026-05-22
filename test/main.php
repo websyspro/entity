@@ -38,7 +38,6 @@ $closure = fn( PropostaEntity $i ) => (
 
 // for( $i = 0; $i <= 50; $i++ ){
 //   ClosureUtil::getEntityStructure( PropostaEntity::class );
-//   ClosureUtil::getEntityStructure( ItemPropostaEntity::class );
 // }
 
 $expressionWhere = new ExpressionWhere( $closure );

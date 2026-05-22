@@ -28,6 +28,7 @@ define("T_NOT", 33);
 
 define("T_EXPRESSION_NODE", "ExpressionNode");
 define("T_EXPRESSION_GROUP", "ExpressionGroup");
+define("T_EXPRESSION_UNARY", "ExpressionUnary");
 define("T_EXPRESSION_LOGICAL", "ExpressionLogical");
 define("T_EXPRESSION_SUBQUERY", "ExpressionSubQuery");
 define("T_EXPRESSION_COMPARE", "ExpressionCompare");
@@ -70,6 +71,22 @@ class ExpressionUtil
     array $tokens
   ): int {
     return $this->find( $tokens, T_FN ) !== -1;
+  }
+  
+  public function findEguals(
+    array $tokens
+  ): int {
+    foreach( $tokens as $key => $token ){
+      if( $token['number'] === T_EQUAL ) return $key;
+      if( $token['number'] === T_IS_EQUAL ) return $key;
+      if( $token['number'] === T_IS_IDENTICAL ) return $key;
+      if( $token['number'] === T_IS_NOT_EQUAL ) return $key;
+      if( $token['number'] === T_IS_NOT_IDENTICAL ) return $key;
+      if( $token['number'] === T_IS_GREATER_OR_EQUAL ) return $key;
+      if( $token['number'] === T_IS_GREATER_OR_EQUAL ) return $key;
+    }
+
+    return -1;
   }  
 
   public function startParentese(
@@ -147,6 +164,25 @@ class ExpressionUtil
     return $this->findFn( $tokens )
         && $this->existsEvent( $tokens );
   }
+
+  public function isExpressionLogical(
+    array $tokens
+  ): bool {
+    [ $token ] = $tokens;
+    return $this->isLogical( $token );
+  }
+
+  public function isExpressionUnary(
+    array $tokens
+  ): bool {
+    return $this->findEguals( $tokens ) === -1;
+  }
+  
+  public function isExpressionCompare(
+    array $tokens
+  ): bool {
+    return $this->findEguals( $tokens ) !== -1;
+  }  
 
   public function tokensByReflection(
     ReflectionFunction $reflectionFunction
@@ -364,7 +400,6 @@ class ExpressionUtil
         [ $instance, $variable ] = $scope;
         return [
           "instance" => ClosureUtil::getUse( $closure, $instance[ "value" ]), 
-          //"instance" => $instance[ "value" ],
           "variable" => $variable[ "value" ]
         ];
       }, $scopes

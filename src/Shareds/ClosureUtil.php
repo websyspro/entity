@@ -7,7 +7,7 @@ use Websyspro\Entity\Enums\MetaType;
 use ReflectionFunction;
 use Closure;
 
-use function array_slice, call_user_func_array;
+use function array_slice, sprintf, count;
 
 class ClosureUtil
 {
@@ -15,6 +15,7 @@ class ClosureUtil
   public static array $cacheEntityStructure;
   public static array $cacheClosures;
   public static array $cacheUses;
+  public static array $cacheParams;
 
   public static function getReflectFunction(
     Closure $closure
@@ -131,5 +132,22 @@ class ClosureUtil
     );
     
     return $useItem[ "path" ];
+  }
+  
+  public static function createParam(
+    Closure $closure,
+    string $value
+  ): string {
+    if( isset( ClosureUtil::$cacheParams ) === false ){
+      ClosureUtil::$cacheParams = [];
+    }
+
+    if( isset( ClosureUtil::$cacheParams[spl_object_id( $closure )]) === false ){
+      ClosureUtil::$cacheParams[spl_object_id( $closure )] = [];
+    }
+
+    $paramKey = sprintf( ":param_%s", [ count( ClosureUtil::$cacheParams[ spl_object_id( $closure )])]);
+    ClosureUtil::$cacheParams[ spl_object_id( $closure )][ $paramKey ] = $value;
+    return $paramKey;
   }  
 }
