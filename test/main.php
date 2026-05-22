@@ -1,5 +1,6 @@
 <?php
 
+use Websyspro\Entity\Shareds\ClosureUtil;
 use Websyspro\Test\Crm\Entitys\ItemPropostaEntity;
 use Websyspro\Test\Crm\Entitys\PropostaEntity;
 use Websyspro\Entity\Shareds\ExpressionWhere;
@@ -34,6 +35,11 @@ $closure = fn( PropostaEntity $i ) => (
 // $expressoinNode = new ExpressionNode(
 //   ExtractFromFN::get( $closure )->tokens, new Collection(), $closure
 // );
+
+// for( $i = 0; $i <= 50; $i++ ){
+//   ClosureUtil::getEntityStructure( PropostaEntity::class );
+//   ClosureUtil::getEntityStructure( ItemPropostaEntity::class );
+// }
 
 $expressionWhere = new ExpressionWhere( $closure );
 

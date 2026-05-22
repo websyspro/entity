@@ -15,80 +15,68 @@ extends ExpressionUtil
   public function __construct(
     Closure $closure
   ){
-    $this->startupsBuild( $closure );
+    $this->startupsBuild(
+      ClosureUtil::setClosure(
+        $closure
+      )
+    );
   }
 
   private function createExpressionNode(
     array $scopes,
     array $tokens,
-      int $closure
+    Closure $closure
   ): array {
     $tokens = $this->parserTokens( $tokens );
     $tokens = $this->startupsLoop( $scopes, $tokens, $closure );
 
-    return [ 
-      T_KEY_OBJECT => T_EXPRESSION_NODE,
-      T_KEY_CLOSURE => $closure,
-      T_KEY_SCOPES => $scopes,
-      T_KEY_TOKENS => $tokens
-    ];
+    return [ 'object' => T_EXPRESSION_NODE, 'closure' => $closure, 'scopes' => $scopes, 'tokens' => $tokens ];
   }
 
   private function createExpressionNegative(
     array $scopes,
     array $tokens,
-      int $closure
+    Closure $closure
   ): array {
     $tokens = $this->dropNegative( $tokens );
     $tokens = $this->parserTokens( $tokens );
     $tokens = $this->startupsLoop( $scopes, $tokens, $closure );
 
-    return [ 
-      T_KEY_OBJECT => T_EXPRESSION_NEGATIVE,
-      T_KEY_CLOSURE => $closure,
-      T_KEY_SCOPES => $scopes,
-      T_KEY_TOKENS => $tokens
-    ];
+    return [ 'object' => T_EXPRESSION_NEGATIVE, 'closure' => $closure, 'scopes' => $scopes, 'tokens' => $tokens ];
   }  
 
   private function createExpressionGroup(
     array $scopes,
     array $tokens,
-      int $closure
+    Closure $closure
   ): array {
     $tokens = $this->dropParenteses( $tokens );
     $tokens = $this->parserTokens( $tokens );
     $tokens = $this->startupsLoop( $scopes, $tokens, $closure );
 
-    return [ 
-      T_KEY_OBJECT => T_EXPRESSION_GROUP,
-      T_KEY_CLOSURE => $closure,
-      T_KEY_SCOPES => $scopes,
-      T_KEY_TOKENS => $tokens
-    ];
+    return [ 'object' => T_EXPRESSION_GROUP, 'closure' => $closure, 'scopes' => $scopes, 'tokens' => $tokens ];
   }
   
   private function createExpressionSubQuery(
     array $scopes,
     array $tokens,
-      int $closure
+    Closure $closure
   ): array {
-    // $tokens = $this->dropParenteses( $tokens );
-    // $tokens = $this->parserTokens( $tokens );
-    // $tokens = $this->startupsLoop( $scopes, $tokens );
+    $events = $this->getEventBySubQuery( $tokens );
+    $tokens = $this->dropInitialInvalids( $tokens );
+    $scopes = $this->getScopes( $closure, $tokens, $scopes );
+    $tokens = $this->getContext( $tokens );
+    $tokens = $this->dropEndInvalids( $tokens );
+    $tokens = $this->parserTokens( $tokens );
+    $tokens = $this->startupsLoop( $scopes, $tokens, $closure );
 
-    return [ 
-      T_KEY_OBJECT => T_EXPRESSION_SUBQUERY,
-      T_KEY_CLOSURE => $closure,
-      T_KEY_SCOPES => $scopes,
-      T_KEY_TOKENS => $tokens
-    ];
+    return [ 'object' => T_EXPRESSION_SUBQUERY, 'events' => $events, 'closure' => $closure, 'scopes' => $scopes, 'tokens' => $tokens ];
   }  
 
   private function startupsLoop(
     array $scopes,
     array $tokens,
-      int $closure
+    Closure $closure
   ): array {
     for( $i=0; $i < count( $tokens ); $i++ ){
       if( $this->isExpressionNegative( $tokens[ $i ])){
@@ -110,7 +98,7 @@ extends ExpressionUtil
   ): void {
     $tokens = $this->tokensAll( $closure );
     $this->context = $this->createExpressionNode(
-      $this->getScopes( $tokens ), $this->getContext( $tokens ), $this->getClosureId( $closure)
+      $this->getScopes( $closure, $tokens ), $this->getContext( $tokens ), $closure 
     );
   }
 

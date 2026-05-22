@@ -33,14 +33,6 @@ define("T_EXPRESSION_SUBQUERY", "ExpressionSubQuery");
 define("T_EXPRESSION_COMPARE", "ExpressionCompare");
 define("T_EXPRESSION_NEGATIVE", "ExpressionNegative");
 
-define("T_KEY_OBJECT", "object");
-define("T_KEY_SCOPES", "scopes");
-define("T_KEY_TOKENS", "tokens");
-define("T_KEY_CLOSURE", "closure");
-
-define("T_KEY_TOKEN_NAMBER", "number");
-define("T_KEY_TOKEN_VALUE", "value");
-
 define("T_EVENTS_LIST", [ "any" ]);
 
 class ExpressionUtil
@@ -49,10 +41,10 @@ class ExpressionUtil
     array $tokens,
     int $number
   ): int {
-    foreach($tokens as $key => $token){
-      if(isset($token[T_KEY_TOKEN_NAMBER])){
-        if($token[T_KEY_TOKEN_NAMBER] === $number){
-          return $key;
+    foreach( $tokens as $key => $token ){
+      if( isset( $token[ 'number' ])){
+        if( (int)$token[ 'number' ] === $number ){
+          return (int)$key;
         }        
       }
     }
@@ -83,31 +75,31 @@ class ExpressionUtil
   public function startParentese(
     array $token
   ): bool {
-    if(isset($token[T_KEY_TOKEN_NAMBER]) === false){
+    if(isset($token['number']) === false){
       return false;
     }
 
-    return $token[T_KEY_TOKEN_NAMBER] === T_START_PARENTESES;
+    return $token['number'] === T_START_PARENTESES;
   }
 
   public function endParentese(
     array $token
   ): bool {
-    if( isset( $token[ T_KEY_TOKEN_NAMBER ]) === false){
+    if( isset( $token['number']) === false){
       return false;
     }
 
-    return $token[ T_KEY_TOKEN_NAMBER ] === T_END_PARENTESES;
+    return $token['number'] === T_END_PARENTESES;
   } 
 
   public function findNegative(
     array $token
   ): int {
-    if( isset( $token[ T_KEY_TOKEN_NAMBER ]) === false){
+    if( isset( $token['number']) === false){
       return false;
     }
 
-    return $token[ T_KEY_TOKEN_NAMBER ] === T_NOT;
+    return $token['number'] === T_NOT;
   }  
 
   public function getScopesByTokens(
@@ -136,11 +128,17 @@ class ExpressionUtil
     return $this->startParentese( $token );
   }
 
+  public function getEventBySubQuery(
+    array $tokens
+  ): string {
+    [ $tokens ] = array_slice( $tokens, $this->findPrev( $tokens, T_FN ) - 1, 1);
+    return $tokens[ 'value' ];
+  }
+
   private function existsEvent(
     array $tokens
   ): bool {
-    [ $tokens ] = array_slice( $tokens, $this->findPrev( $tokens, T_FN ) - 1, 1);
-    return in_array( $tokens[ T_KEY_TOKEN_VALUE ], T_EVENTS_LIST );
+    return in_array( $this->getEventBySubQuery( $tokens ), T_EVENTS_LIST );
   }
 
   public function isExpressionSubQuery(
@@ -199,8 +197,8 @@ class ExpressionUtil
       : $tokenArgs;
 
     return [
-      T_KEY_TOKEN_NAMBER => $number,
-      T_KEY_TOKEN_VALUE => $value,
+      'number' => $number,
+      'value' => $value,
       "type" => $this->namberToken( $number )
     ];
   }
@@ -209,7 +207,7 @@ class ExpressionUtil
     array $tokens
   ): array {
     for($i=0; $i<count($tokens); $i++){
-      if($tokens[$i][T_KEY_TOKEN_NAMBER] === T_WHITESPACE){
+      if($tokens[$i]['number'] === T_WHITESPACE){
         array_splice($tokens, $i, 1); $i--;
       } 
     }
@@ -228,11 +226,11 @@ class ExpressionUtil
     int $parenteses = 0
   ): array {
     for($i=0; $i<count($tokens); $i++){
-      if($tokens[$i][T_KEY_TOKEN_NAMBER] === T_START_PARENTESES){
+      if($tokens[$i]['number'] === T_START_PARENTESES){
         $parenteses++;
       }
 
-      if($tokens[$i][T_KEY_TOKEN_NAMBER] === T_END_PARENTESES){
+      if($tokens[$i]['number'] === T_END_PARENTESES){
         $parenteses--;
 
         if($parenteses < 0){
@@ -243,7 +241,7 @@ class ExpressionUtil
       }
 
       if($parenteses < 1){
-        if($tokens[$i][T_KEY_TOKEN_NAMBER] === T_SEMICOLON){
+        if($tokens[$i]['number'] === T_SEMICOLON){
           $tokens = array_slice(
             $tokens, 0, $i
           ); break;
@@ -259,7 +257,7 @@ class ExpressionUtil
     int $i = 0
   ): array {
     while( $i < count( $tokens )){
-      if( $tokens[ $i ][ T_KEY_TOKEN_NAMBER ] === T_START_PARENTESES ){
+      if( $tokens[$i]['number'] === T_START_PARENTESES ){
         array_splice( $tokens, count($tokens) - 1, 1 );
         array_splice( $tokens, $i, 1 ); 
         $i--;
@@ -269,21 +267,6 @@ class ExpressionUtil
     }
     return $tokens;
   }  
-
-  public function dropParentesesInitialExtras(
-    array $tokens, 
-    int $i = 0
-  ): array {
-    $scopes = $this->getScopesByTokens($tokens);
-    $contexts = $this->getContextByTokens($tokens);
-    $contexts = $this->dropParenteses($contexts);
-
-    return array_merge( 
-      $scopes, [
-        $tokens[ $this->find( $tokens, T_DOUBLE_ARROW )]
-      ], $contexts
-    );
-  }
 
   public function dropNegative(
     array $tokens
@@ -297,7 +280,9 @@ class ExpressionUtil
   ): array {
     if( is_callable( $closure )){
       $tokens = $this->tokensByReflection(
-        new ReflectionFunction( $closure)
+        ClosureUtil::getReflectFunction(
+          $closure
+        )
       );
 
       for($i=0; $i < count($tokens); $i++){
@@ -310,21 +295,20 @@ class ExpressionUtil
     $tokens = $this->dropWriteSpace($tokens);
     $tokens = $this->dropInitialInvalids($tokens);
     $tokens = $this->dropEndInvalids($tokens);
-    $tokens = $this->dropParentesesInitialExtras($tokens);
     return $tokens;
   }  
 
   public function isLogical(
     array $token
   ): bool {
-    if(isset($token[T_KEY_TOKEN_NAMBER]) === false){
+    if(isset($token['number']) === false){
       return false;
     }
 
-    return $token[T_KEY_TOKEN_NAMBER] === T_LOGICAL_AND
-        || $token[T_KEY_TOKEN_NAMBER] === T_LOGICAL_OR
-        || $token[T_KEY_TOKEN_NAMBER] === T_BOOLEAN_AND
-        || $token[T_KEY_TOKEN_NAMBER] === T_BOOLEAN_OR;
+    return $token['number'] === T_LOGICAL_AND
+        || $token['number'] === T_LOGICAL_OR
+        || $token['number'] === T_BOOLEAN_AND
+        || $token['number'] === T_BOOLEAN_OR;
   }
 
   public function parserTokens(
@@ -364,7 +348,9 @@ class ExpressionUtil
   }
 
   public function getScopes(
-    array $tokens
+    Closure|int $closure,
+    array $tokens,
+    array $scopesParents = [],
   ): array {
     $scopes = array_chunk(
       array_slice( $tokens, 
@@ -373,12 +359,18 @@ class ExpressionUtil
       ), 2
     );
 
-    return array_map(
-      function(array $scope){
+    $scopes = array_map(
+      function(array $scope) use( $closure ){
         [ $instance, $variable ] = $scope;
-        return [ "instance" => $instance[ "value" ], "variable" => $variable[ "value" ]];
+        return [
+          "instance" => ClosureUtil::getUse( $closure, $instance[ "value" ]), 
+          //"instance" => $instance[ "value" ],
+          "variable" => $variable[ "value" ]
+        ];
       }, $scopes
     );
+
+    return array_merge( $scopesParents, $scopes );
   }
 
   public function getContext(
