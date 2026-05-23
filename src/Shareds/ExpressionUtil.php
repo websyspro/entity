@@ -439,6 +439,54 @@ class ExpressionUtil
         || $token[ 'number' ] === T_GREATER_THAN
         || $token[ 'number' ] === T_LESS_THAN;
   }
+
+  public function adjustEqualFieldWithValue(
+    array $expressionEqual,
+    array $expressionRight
+  ): array {
+    [ 'tokens' => $tokens, 'islist' => $islist ] = $expressionRight;
+    [ 'number' => $number, 'value' => $value 
+    ] = $expressionEqual[ 'tokens' ];
+
+    $isExpressionNull = strtoupper( $tokens ) === "NULL";
+    $isExpressionLike = preg_match( "#%#", preg_replace( "#\\\%#", "", $tokens ));
+    $isExpressionEqual = in_array( $number, [ T_EQUAL, T_IS_EQUAL, T_IS_IDENTICAL ]);
+    $isNotExpressionEqual = in_array( $number, [ T_IS_NOT_EQUAL, T_IS_NOT_IDENTICAL ]);
+
+    if( $isExpressionEqual && $isExpressionLike ){
+      return [ 'object' => T_EXPRESSION_EQUAL, 'value' => 'Like' ];
+    } else if( $isNotExpressionEqual && $isExpressionLike ){
+      return [ 'object' => T_EXPRESSION_EQUAL, 'value' => 'Not Like' ];
+    } else if( $isExpressionEqual && $islist === 'yes' ){
+      return [ 'object' => T_EXPRESSION_EQUAL, 'value' => 'In' ];
+    } else if( $isNotExpressionEqual && $islist === 'yes' ){
+      return [ 'object' => T_EXPRESSION_EQUAL, 'value' => 'Not In' ];
+    } else if( $isExpressionEqual && $isExpressionNull ){
+      return [ 'object' => T_EXPRESSION_EQUAL, 'value' => 'Is Null' ];
+    } else if( $isNotExpressionEqual && $isExpressionNull ){
+      return [ 'object' => T_EXPRESSION_EQUAL, 'value' => 'Not Null' ];
+    } else if( $isExpressionEqual ){
+      return [ 'object' => T_EXPRESSION_EQUAL, 'value' => '=' ];
+    } else if( $isNotExpressionEqual ){
+      return [ 'object' => T_EXPRESSION_EQUAL, 'value' => '<>' ];
+    } else return [ 'object' => T_EXPRESSION_EQUAL, 'value' => $value ];
+  }
+
+  public function adjustEqualFieldWithField(
+    array $expressionEqual    
+  ): array {
+    [ 'number' => $number, 'value' => $value 
+    ] = $expressionEqual[ 'tokens' ];
+
+    $isExpressionEqual = in_array( $number, [ T_EQUAL, T_IS_EQUAL, T_IS_IDENTICAL ]);
+    $isNotExpressionEqual = in_array( $number, [ T_IS_NOT_EQUAL, T_IS_NOT_IDENTICAL ]);
+
+    if( $isExpressionEqual ){
+      return [ 'object' => T_EXPRESSION_EQUAL, 'value' => '=' ];
+    } else if( $isNotExpressionEqual ){
+      return [ 'object' => T_EXPRESSION_EQUAL, 'value' => '<>' ];
+    } else return [ 'object' => T_EXPRESSION_EQUAL, 'value' => $value ];
+  }
   
   public function parserTokensCompare(
     array $tokens = [],
@@ -482,7 +530,9 @@ class ExpressionUtil
       T_IS_GREATER_OR_EQUAL => T_IS_SMALLER_OR_EQUAL, T_IS_SMALLER_OR_EQUAL => T_IS_GREATER_OR_EQUAL,
     };
 
-    return [ 'object' => T_EXPRESSION_EQUAL, 'number' => $number, 'value' => $value, 'type' => $this->namberToken( $number )];
+    return [ 'object' => T_EXPRESSION_EQUAL, 'tokens' => [
+      'number' => $number, 'value' => $value, 'type' => $this->namberToken( $number )
+    ]];
   }
 
   public function adjustComparePositions(
@@ -509,7 +559,9 @@ class ExpressionUtil
     string $value
   ): string {
     $instanceType = $expressionLeft['type'];
-    return $instanceType::$columnType->Encode( $value );
+    return ClosureUtil::createParam(
+      $closure, $instanceType::$columnType->Encode( $value )
+    );
   }
 
   public function parseValue(
@@ -531,8 +583,7 @@ class ExpressionUtil
       'object' => T_EXPRESSION_VALUE,
       'islist' => $expressionRight[ 'islist' ],
        'value' => $expressionRight[ 'islist' ] === 'yes' 
-          ? sprintf(  "(%s)", join(", ", $values)) 
-          : join( "", $values ) 
+          ? sprintf(  "(%s)", join(", ", $values)) : join( "", $values ) 
     ];
   }
 
@@ -547,11 +598,55 @@ class ExpressionUtil
     [ $expressionLeft, $expressionEqual, $expressionRight ] = $tokens;
     if( $expressionLeft['object'] === T_EXPRESSION_FIELD ){
       if( $expressionRight['object'] === T_EXPRESSION_VALUE ){
+        $expressionEqual = $this->adjustEqualFieldWithValue( $expressionEqual, $expressionRight );
         $expressionRight = $this->parseValue( $closure, $expressionLeft, $expressionRight );
         return [ $expressionLeft, $expressionEqual, $expressionRight ];
       }
     }
+    if( $expressionLeft['object'] === T_EXPRESSION_FIELD ){
+      if( $expressionRight['object'] === T_EXPRESSION_FIELD ){
+        $expressionEqual = $this->adjustEqualFieldWithField( $expressionEqual );
+        return [ $expressionLeft, $expressionEqual, $expressionRight ];
+      }
+    }
     
+    return $tokens;
+  }
+
+  public function adjustCompareSimple(
+    array $tokens
+  ): array {
+    if( count( $tokens ) === 1 ){
+      [ $expression ] = $tokens;
+      if( $expression['object'] === T_EXPRESSION_FIELD ){
+        return [ sprintf( "%s.%s", $expression['table'], $expression['field'])];
+      }
+    } else
+    if( count( $tokens ) === 3 ){
+      [ $expressionLeft, $expressionEqual, $expressionRight ] = $tokens;
+      if( $expressionLeft['object'] === T_EXPRESSION_FIELD ){
+        if( $expressionEqual['object'] === T_EXPRESSION_EQUAL ){
+          if( $expressionRight['object'] === T_EXPRESSION_VALUE ){
+            return [
+              sprintf( "%s.%s", $expressionLeft['table'], $expressionLeft['field']), 
+              $expressionEqual[ 'value' ], $expressionRight[ 'value' ]
+            ];
+          } 
+        }
+      }
+      if( $expressionLeft['object'] === T_EXPRESSION_FIELD ){
+        if( $expressionEqual['object'] === T_EXPRESSION_EQUAL ){
+          if( $expressionRight['object'] === T_EXPRESSION_FIELD ){
+            return [
+              sprintf( "%s.%s", $expressionLeft['table'], $expressionLeft['field']), $expressionEqual[ 'value' ],
+              sprintf("%s.%s", $expressionRight['table'], $expressionRight['field'])
+            ];
+          }
+        }
+      }
+    }
+
+
     return $tokens;
   }
 

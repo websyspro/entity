@@ -163,8 +163,22 @@ class ClosureUtil
       ClosureUtil::$cacheParams[ spl_object_id( $closure )] = [];
     }
 
-    $paramKey = sprintf( ":param_%s", [ count( ClosureUtil::$cacheParams[ spl_object_id( $closure )])]);
+    $paramKey = sprintf( ":param_%s", count( ClosureUtil::$cacheParams[ spl_object_id( $closure )]));
     ClosureUtil::$cacheParams[ spl_object_id( $closure )][ $paramKey ] = $value;
     return $paramKey;
+  } 
+  
+  public static function getParams(
+    Closure $closure
+  ): array {
+    if( isset( ClosureUtil::$cacheParams ) === false ){
+      ClosureUtil::$cacheParams = [];
+    }
+
+    if( isset( ClosureUtil::$cacheParams[ spl_object_id( $closure )]) === false ){
+      return ClosureUtil::$cacheParams[ spl_object_id( $closure )];
+    }
+
+    return ClosureUtil::$cacheParams;
   }  
 }
