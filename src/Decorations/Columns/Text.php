@@ -16,8 +16,8 @@ use Websyspro\Entity\Shareds\AbstractColumn;
 class Text
 extends AbstractColumn
 {
-  public AttributeType $attributeType = AttributeType::column;
-  public ColumnType $columnType = ColumnType::text;
+  public static AttributeType $attributeType = AttributeType::column;
+  public static ColumnType $columnType = ColumnType::text;
 
   /**
    * Initializes text column attribute with specified size.

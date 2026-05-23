@@ -15,8 +15,8 @@ use Websyspro\Entity\Shareds\AbstractColumn;
 #[Attribute( Attribute::TARGET_PROPERTY )]
 class Time extends AbstractColumn
 {
-  public AttributeType $attributeType = AttributeType::column;
-  public ColumnType $columnType = ColumnType::time;
+  public static AttributeType $attributeType = AttributeType::column;
+  public static ColumnType $columnType = ColumnType::time;
 
   /**
    * Generates SQL column definition for TIME type.

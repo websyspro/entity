@@ -87,7 +87,7 @@ extends ExpressionUtil
 
     return [ 
       'object' => T_EXPRESSION_SUBQUERY,
-      // 'events' => $events,
+      'events' => $events,
       // 'closure' => $closure,
       // 'scopes' => $scopes,
       'tokens' => $tokens
@@ -97,11 +97,8 @@ extends ExpressionUtil
   private function createExpressionLogical(
     array $tokens
   ): array {
-    [ $token ] = $tokens;
-    return [
-      'object' => T_EXPRESSION_LOGICAL,
-      'tokens' => $token
-    ];
+    $token = $this->adjustCompare( $tokens );
+    return [ 'object' => T_EXPRESSION_LOGICAL, 'tokens' => $token ];
   }
 
   private function createExpressionUnary(
@@ -127,13 +124,9 @@ extends ExpressionUtil
   ): array {
     $tokens = $this->parserTokensCompare( $tokens );
     $tokens = $this->startupsCompareLoop( $closure, $scopes, $tokens );
-
-    return [ 
-      'object' => T_EXPRESSION_COMPARE,
-      // 'closure' => $closure,
-      // 'scopes' => $scopes,
-      'tokens' => $tokens
-    ];
+    $tokens = $this->adjustComparePositions( $tokens );
+    $tokens = $this->adjustCompareParserValue( $closure, $tokens );
+    return [ 'object' => T_EXPRESSION_COMPARE, 'tokens' => $tokens ];
   }  
 
   private function startupsLoop(
@@ -171,16 +164,17 @@ extends ExpressionUtil
     array $tokens
   ): array {
     [ $variable, $_, $variableName ] = $tokens;
-    $entity = $this->getInstance( $variable[ 'value' ], $scopes );
+    $entityStructure = ClosureUtil::getEntityStructure(
+      $this->getInstance( $variable[ 'value' ], $scopes )
+    );
+
+    [ 'value' => $field ] = $variableName;
 
     return [ 
       'object' => T_EXPRESSION_FIELD,
-      // 'closure' => $closure,
-      // 'scopes' => $scopes,
-      'tokens' => [
-        'entity' => $entity,
-        'field' => $variableName[ 'value' ]
-      ]
+      'table' => $entityStructure->entity['alias'],
+      'field' => $entityStructure->alias[ $field ] ?? $field,
+      'type' => $entityStructure->types[ $field ]
     ];
   }
 
@@ -203,12 +197,12 @@ extends ExpressionUtil
     array $scopes,
     array $tokens
   ): array {
-    return [ 
-      'object' => T_EXPRESSION_VALUE,
-      // 'closure' => $closure,
-      // 'scopes' => $scopes,
-      'tokens' => $tokens
-    ];
+    $isList = $this->isExpressionValueList( $tokens );
+    $tokens = $this->dropCurlOpenAndNotDot( $tokens );
+    $tokens = $this->updateVariable( $closure, $tokens );
+    $tokens = $this->updateEnums( $closure, $tokens );
+    $tokens = $this->adjustValues( $tokens );
+    return [ 'object' => T_EXPRESSION_VALUE, 'islist' => $isList, 'tokens' => $tokens ];
   }  
   
   private function startupsCompareLoop(

@@ -16,8 +16,8 @@ use Websyspro\Entity\Shareds\AbstractColumn;
 class LongText
 extends AbstractColumn
 {
-  public AttributeType $attributeType = AttributeType::column;
-  public ColumnType $columnType = ColumnType::longtext;
+  public static AttributeType $attributeType = AttributeType::column;
+  public static ColumnType $columnType = ColumnType::longtext;
 
   /**
    * Initializes longtext column attribute (size parameter unused but kept for compatibility).

@@ -16,8 +16,8 @@ use Websyspro\Entity\Shareds\AbstractColumn;
 class Decimal
 extends AbstractColumn
 {
-  public AttributeType $attributeType = AttributeType::column;
-  public ColumnType $columnType = ColumnType::decimal;
+  public static AttributeType $attributeType = AttributeType::column;
+  public static ColumnType $columnType = ColumnType::decimal;
 
   /**
    * Initializes decimal column attribute with precision configuration.

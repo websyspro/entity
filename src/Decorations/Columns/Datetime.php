@@ -16,8 +16,8 @@ use Websyspro\Entity\Shareds\AbstractColumn;
 class Datetime 
 extends AbstractColumn
 {
-  public AttributeType $attributeType = AttributeType::column;
-  public ColumnType $columnType = ColumnType::datetime;
+  public static AttributeType $attributeType = AttributeType::column;
+  public static ColumnType $columnType = ColumnType::datetime;
 
   /**
    * Generates SQL column definition for DATETIME type.

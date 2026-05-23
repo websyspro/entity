@@ -14,6 +14,7 @@ class ClosureUtil
   public static array $cacheReflectionFunction;
   public static array $cacheEntityStructure;
   public static array $cacheClosures;
+  public static array $cacheStatics;
   public static array $cacheUses;
   public static array $cacheParams;
 
@@ -133,6 +134,22 @@ class ClosureUtil
     
     return $useItem[ "path" ];
   }
+
+  public static function getStatics(
+    Closure $closure
+  ): array {
+    if( isset( ClosureUtil::$cacheStatics ) === false ){
+      ClosureUtil::$cacheStatics = [];
+    }
+
+    if( isset(ClosureUtil::$cacheStatics[ spl_object_id( $closure )])){
+      return ClosureUtil::$cacheStatics[ spl_object_id( $closure )];
+    }
+
+    $reflectFunction = ClosureUtil::getReflectFunction($closure);
+    ClosureUtil::$cacheStatics[ spl_object_id( $closure )] = $reflectFunction->getStaticVariables();
+    return ClosureUtil::$cacheStatics[ spl_object_id( $closure )];
+  }  
   
   public static function createParam(
     Closure $closure,

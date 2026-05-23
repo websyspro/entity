@@ -16,8 +16,8 @@ use Websyspro\Entity\Shareds\AbstractColumn;
 class Number
 extends AbstractColumn
 {
-  public AttributeType $attributeType = AttributeType::column;
-  public ColumnType $columnType = ColumnType::number;
+  public static AttributeType $attributeType = AttributeType::column;
+  public static ColumnType $columnType = ColumnType::number;
 
   /**
    * Generates SQL column definition for BIGINT type.

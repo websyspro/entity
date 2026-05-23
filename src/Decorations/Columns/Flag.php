@@ -16,8 +16,8 @@ use Websyspro\Entity\Shareds\AbstractColumn;
 class Flag 
 extends AbstractColumn
 {
-  public AttributeType $attributeType = AttributeType::column;
-  public ColumnType $columnType = ColumnType::flag;
+  public static AttributeType $attributeType = AttributeType::column;
+  public static ColumnType $columnType = ColumnType::flag;
 
   /**
    * Generates SQL column definition for SMALLINT type used as boolean flag.

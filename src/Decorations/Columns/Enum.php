@@ -18,8 +18,8 @@ use UnitEnum;
 class Enum
 extends AbstractColumn
 {
-  public AttributeType $attributeType = AttributeType::column;
-  public ColumnType $columnType = ColumnType::longtext;
+  public static AttributeType $attributeType = AttributeType::column;
+  public static ColumnType $columnType = ColumnType::longtext;
 
   /**
    * Initializes enum column attribute with PHP enum class reference.
