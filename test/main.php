@@ -20,7 +20,7 @@ $closure = fn( PropostaEntity $i ) => (
   && $i->NomeProposta->trim()->lower()->startWith("Test EMERSON THIAGOS")
   && $i->Status === Status::Aprovada
   && $i->IsDeleted === false 
-  && ( $i->PrazoFaturamento === 9098767 Or ( $i->PrazoFaturamento === 11191 ))
+  && ( $i->PrazoFaturamento === 9098767 || ( $i->PrazoFaturamento === 11191 ))
   && $i->Created >= $startDate
   && $i->IsActive === true 
   && '01/31/2026' < $i->Created
