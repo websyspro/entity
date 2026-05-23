@@ -23,7 +23,7 @@ $closure = fn( PropostaEntity $i ) => (
   && ( $i->PrazoFaturamento === 9098767 Or ( $i->PrazoFaturamento === 11191 ))
   && $i->Created >= $startDate
   && $i->IsActive === true 
-  && '01/31/2026' >= $i->Created
+  && '01/31/2026' < $i->Created
   && !$i->itemsProposta->any( fn( ItemPropostaEntity $o ) => 
     $o->PropostaId === $i->Id && $o->IsActive === true && $o->IsDeleted === false
   )

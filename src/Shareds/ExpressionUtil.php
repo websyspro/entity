@@ -32,6 +32,9 @@ define("T_EXPRESSION_UNARY", "ExpressionUnary");
 define("T_EXPRESSION_LOGICAL", "ExpressionLogical");
 define("T_EXPRESSION_SUBQUERY", "ExpressionSubQuery");
 define("T_EXPRESSION_COMPARE", "ExpressionCompare");
+define("T_EXPRESSION_FIELD", "ExpressionField");
+define("T_EXPRESSION_VALUE", "ExpressionValue");
+define("T_EXPRESSION_EQUAL", "ExpressionEqual");
 define("T_EXPRESSION_NEGATIVE", "ExpressionNegative");
 
 define("T_EVENTS_LIST", [ "any" ]);
@@ -83,7 +86,9 @@ class ExpressionUtil
       if( $token['number'] === T_IS_NOT_EQUAL ) return $key;
       if( $token['number'] === T_IS_NOT_IDENTICAL ) return $key;
       if( $token['number'] === T_IS_GREATER_OR_EQUAL ) return $key;
-      if( $token['number'] === T_IS_GREATER_OR_EQUAL ) return $key;
+      if( $token['number'] === T_IS_SMALLER_OR_EQUAL ) return $key;
+      if( $token['number'] === T_GREATER_THAN ) return $key;
+      if( $token['number'] === T_LESS_THAN ) return $key;
     }
 
     return -1;
@@ -182,6 +187,32 @@ class ExpressionUtil
     array $tokens
   ): bool {
     return $this->findEguals( $tokens ) !== -1;
+  } 
+  
+  public function isExpressionField(
+    array $tokens
+  ): bool {
+    if( count( $tokens ) < 3 ){
+      return false;
+    }
+
+    [ $variable, $operator, $variableName ] = $tokens;
+    return $variable[ 'number' ] === T_VARIABLE 
+        && $operator[ 'number' ] === T_OBJECT_OPERATOR 
+        && $variableName[ 'number' ] === T_STRING;
+  }
+
+  public function isExpressionEquals(
+    array $tokens
+  ): bool {
+    [ $token ] = $tokens;
+    return $this->isEquals( $token ) === true;
+  }   
+
+  public function isExpressionValue(
+    array $tokens
+  ): bool {
+    return $this->isExpressionField( $tokens ) === false;
   }  
 
   public function tokensByReflection(
@@ -354,7 +385,7 @@ class ExpressionUtil
       int $depth = 0
   ): array {
     foreach( $tokens as $token ){
-      if($this->isLogical($token) && $depth === 0){
+      if( $this->isLogical( $token ) && $depth === 0){
         if( $curr ){
           $accu[] = $curr;
           $curr = [];
@@ -366,8 +397,8 @@ class ExpressionUtil
 
       $curr[] = $token;
 
-      if($this->startParentese($token)) $depth++;
-      if($this->endParentese($token)) $depth--;
+      if( $this->startParentese( $token )) $depth++;
+      if( $this->endParentese( $token )) $depth--;
     }
 
     if( $curr ){
@@ -377,10 +408,63 @@ class ExpressionUtil
     return $accu;
   }
 
-  public function getClosureId(
-    Closure $closure
-  ): int {
-    return spl_object_id( $closure );
+  public function isEquals(
+    array $token
+  ): bool {
+    if( isset( $token[ 'number' ]) === false){
+      return false;
+    }
+
+    return $token[ 'number' ] === T_EQUAL
+        || $token[ 'number' ] === T_IS_EQUAL
+        || $token[ 'number' ] === T_IS_IDENTICAL
+        || $token[ 'number' ] === T_IS_NOT_EQUAL
+        || $token[ 'number' ] === T_IS_NOT_IDENTICAL
+        || $token[ 'number' ] === T_IS_GREATER_OR_EQUAL
+        || $token[ 'number' ] === T_IS_SMALLER_OR_EQUAL
+        || $token[ 'number' ] === T_GREATER_THAN
+        || $token[ 'number' ] === T_LESS_THAN;
+  }
+  
+  public function parserTokensCompare(
+    array $tokens = [],
+    array $curr = [],
+    array $accu = [],
+      int $depth = 0
+  ): array {
+    foreach( $tokens as $token ){
+      if( $this->isEquals( $token ) && $depth === 0){
+        if( $curr ){
+          $accu[] = $curr;
+          $curr = [];
+        }
+
+        $accu[] = [ $token ];
+        continue;
+      }
+
+      $curr[] = $token;
+
+      if( $this->startParentese( $token )) $depth++;
+      if( $this->endParentese( $token )) $depth--;
+    }
+
+    if( $curr ){
+      $accu[] = $curr;
+    }
+
+    return $accu;
+  }
+  
+  public function getInstance(
+    string $variable,
+    array $scopes
+  ): string {
+    [ $scope ] = array_values( array_filter( $scopes,
+      fn( array $scope ) => $scope[ "variable" ] === $variable
+    ));
+
+    return $scope[ "instance" ];
   }
 
   public function getScopes(
