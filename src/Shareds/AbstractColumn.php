@@ -12,8 +12,8 @@ use Websyspro\Entity\Enums\ColumnType;
  */
 class AbstractColumn
 {
-  public AttributeType $attributeType = AttributeType::column;
-  public ColumnType $columnType = ColumnType::text;
+  public static AttributeType $attributeType = AttributeType::column;
+  public static ColumnType $columnType = ColumnType::text;
 
   /**
    * Generates SQL definition for this column or constraint.

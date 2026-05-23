@@ -508,7 +508,8 @@ class ExpressionUtil
     array $expressionLeft,
     string $value
   ): string {
-    return $value;
+    $instanceType = $expressionLeft['type'];
+    return $instanceType::$columnType->Encode( $value );
   }
 
   public function parseValue(
