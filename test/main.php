@@ -15,7 +15,9 @@ $startDate = '01/01/2026';
 $concate = "JOIN";
 
 $closure = fn( PropostaEntity $i ) => (
-  $i->NomeProposta !== [ 'Item 1 ' . $concate, "{$escolaA}", Status::Aprovada->value, Status::RevisaoGerentePendente, $escolaB, 12 ]
+  $i->NomeProposta === [ 'Item 1 ' . $concate, "{$escolaA}", Status::Aprovada->value, Status::RevisaoGerentePendente, $escolaB, 12 ]
+  && $i->NomeProposta->trim()->upper()->contains( 'Item 1 ' . $concate )
+  && $i->NomeProposta === '%TEST'
   && !$i->IsActive
   && $i->Status === Status::Aprovada
   && $i->IsDeleted === false 
@@ -24,7 +26,7 @@ $closure = fn( PropostaEntity $i ) => (
   && $i->IsActive === true 
   && '01/31/2026' >= $i->Created
   && !$i->itemsProposta->any( fn( ItemPropostaEntity $o ) => 
-    $o->PropostaId === $i->Id && $o->IsActive === true && $o->IsDeleted === false
+    $o->PropostaId === $i->Id && $o->IsActive === true && $o->IsDeleted === false && $i->NomeContato !== 'EMERSON%'
   )
   && $i->IsActive === false 
 );
@@ -44,4 +46,5 @@ $expressionWhere = new ExpressionWhere( $closure );
 $leftTimer = number_format(( microtime( true ) - $start ) * 1000, 6, ",", "." );
 echo "Execute timer: {$leftTimer}(ms)" . PHP_EOL . PHP_EOL;
 
+print_r( ClosureUtil::getParams($closure) );
 print_r( $expressionWhere );

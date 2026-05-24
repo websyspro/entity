@@ -28,11 +28,13 @@ extends ExpressionUtil
     array $tokens,
   ): array {
     $tokens = $this->parserTokens( $tokens );
-    $tokens = $this->startupsLoop( $closure, $scopes, $tokens );
+    $tokens = $this->loopTokens( $tokens, $scopes, $closure );
+    $tokens = $this->joinsTokens( $tokens );
+    $tokens = $this->revaliderTokens( $tokens );
 
     return [
-      'object' => T_EXPRESSION_NODE,
-      'tokens' => $tokens
+      T_KEY_OBJECT => T_EXPRESSION_NODE,
+      T_KEY_TOKENS => $tokens
     ];
   }
 
@@ -43,11 +45,11 @@ extends ExpressionUtil
   ): array {
     $tokens = $this->dropNegative( $tokens );
     $tokens = $this->parserTokens( $tokens );
-    $tokens = $this->startupsLoop( $closure, $scopes, $tokens );
+    $tokens = $this->loopTokens( $tokens, $scopes, $closure );
 
     return [
-      'object' => T_EXPRESSION_NEGATIVE,
-      'tokens' => $tokens
+      T_KEY_OBJECT => T_EXPRESSION_NEGATIVE,
+      T_KEY_TOKENS => $tokens
     ];
   }  
 
@@ -58,11 +60,13 @@ extends ExpressionUtil
   ): array {
     $tokens = $this->dropParenteses( $tokens );
     $tokens = $this->parserTokens( $tokens );
-    $tokens = $this->startupsLoop( $closure, $scopes, $tokens );
+    $tokens = $this->loopTokens( $tokens, $scopes, $closure );
+    $tokens = $this->joinsTokens( $tokens );
+    $tokens = $this->revaliderTokens( $tokens );
 
     return [
-      'object' => T_EXPRESSION_GROUP,
-      'tokens' => $tokens
+      T_KEY_OBJECT => T_EXPRESSION_GROUP,
+      T_KEY_TOKENS => $tokens
     ];
   }
   
@@ -77,12 +81,14 @@ extends ExpressionUtil
     $tokens = $this->getContext( $tokens );
     $tokens = $this->dropEndInvalids( $tokens );
     $tokens = $this->parserTokens( $tokens );
-    $tokens = $this->startupsLoop( $closure, $scopes, $tokens );
+    $tokens = $this->loopTokens( $tokens, $scopes, $closure );
+    $tokens = $this->joinsTokens( $tokens );
+    $tokens = $this->revaliderTokens( $tokens );
 
     return [ 
-      'object' => T_EXPRESSION_SUBQUERY,
-      'events' => $events,
-      'tokens' => $tokens
+      T_KEY_OBJECT => T_EXPRESSION_SUBQUERY,
+      T_KEY_METHOD => $events,
+      T_KEY_TOKENS => $tokens
     ];
   }
   
@@ -92,8 +98,8 @@ extends ExpressionUtil
     $token = $this->adjustCompare( $tokens );
     
     return [
-      'object' => T_EXPRESSION_LOGICAL,
-      'tokens' => $token
+      T_KEY_OBJECT => T_EXPRESSION_LOGICAL,
+      T_KEY_TOKENS => $token
     ];
   }
 
@@ -103,12 +109,11 @@ extends ExpressionUtil
     array $tokens
   ): array {
     $tokens = $this->parserTokensCompare( $tokens );
-    $tokens = $this->startupsCompareLoop( $closure, $scopes, $tokens );
-    $tokens = $this->adjustCompareSimple( $tokens );
+    $tokens = $this->loopCompareTokens( $closure, $scopes, $tokens );
     
     return [ 
-      'object' => T_EXPRESSION_UNARY,
-      'tokens' => $tokens
+      T_KEY_OBJECT => T_EXPRESSION_UNARY,
+      T_KEY_TOKENS => $tokens
     ];
   }
   
@@ -118,62 +123,49 @@ extends ExpressionUtil
     array $tokens
   ): array {
     $tokens = $this->parserTokensCompare( $tokens );
-    $tokens = $this->startupsCompareLoop( $closure, $scopes, $tokens );
+    $tokens = $this->loopCompareTokens( $closure, $scopes, $tokens );
     $tokens = $this->adjustComparePositions( $tokens );
     $tokens = $this->adjustCompareParserValue( $closure, $tokens );
-    $tokens = $this->adjustCompareSimple( $tokens );
 
     return [
-      'object' => T_EXPRESSION_COMPARE,
-      'tokens' => $tokens
+      T_KEY_OBJECT => T_EXPRESSION_COMPARE,
+      T_KEY_TOKENS => $tokens
     ];
   }  
 
-  private function startupsLoop(
-    Closure $closure,
+  private function loopTokens(
+    array $tokens,
     array $scopes,
-    array $tokens
+    Closure $closure,
   ): array {
-    for( $i=0; $i < count( $tokens ); $i++ ){
-      if( $this->isExpressionNegative( $tokens[$i] )){
-        $tokens[$i] = $this->createExpressionNegative($closure, $scopes, $tokens[$i]);
-      } else
-      if( $this->isExpressionGroup( $tokens[$i] )){
-        $tokens[$i] = $this->createExpressionGroup($closure, $scopes, $tokens[$i]);
-      } else
-      if( $this->isExpressionSubQuery( $tokens[$i] )){
-        $tokens[$i] = $this->createExpressionSubQuery($closure, $scopes, $tokens[$i]);
-      } else
-      if( $this->isExpressionLogical( $tokens[$i] )){
-        $tokens[$i] = $this->createExpressionLogical($tokens[$i]);
-      } else
-      if( $this->isExpressionUnary( $tokens[$i] )){
-        $tokens[$i] = $this->createExpressionUnary($closure, $scopes, $tokens[$i]);
-      } else
-      if( $this->isExpressionCompare( $tokens[$i] )){
-        $tokens[$i] = $this->createExpressionCompare($closure, $scopes, $tokens[$i]);
-      }
+    foreach($tokens as $key => $token){
+      $tokens[$key] = match($this->getExpressionType($token)){
+        T_IS_EXPRESSION_NEGATIVE => $this->createExpressionNegative($closure, $scopes, $token),
+        T_IS_EXPRESSION_GROUP => $this->createExpressionGroup($closure, $scopes, $token ),
+        T_IS_EXPRESSION_SUBQUERY => $this->createExpressionSubQuery($closure, $scopes, $token),  
+        T_IS_EXPRESSION_LOGICAL => $this->createExpressionLogical( $token ),
+        T_IS_EXPRESSION_UNARY => $this->createExpressionUnary($closure, $scopes, $token),
+        T_IS_EXPRESSION_COMPARE => $this->createExpressionCompare($closure, $scopes, $token)
+      };
     }
 
     return $tokens;
   }
 
   private function createExpressionField(
+    array $tokens,
     array $scopes,
-    array $tokens
+    Closure $closure
   ): array {
-    [ $variable, $_, $variableName ] = $tokens;
-    $entityStructure = ClosureUtil::getEntityStructure(
-      $this->getInstance( $variable[ 'value' ], $scopes )
-    );
-
-    [ 'value' => $field ] = $variableName;
-
-    return [ 
-      'object' => T_EXPRESSION_FIELD,
-      'table' => $entityStructure->entity['alias'],
-      'field' => $entityStructure->alias[ $field ] ?? $field,
-      'type' => $entityStructure->types[ $field ]
+    [ $table, $field, $type, $methods 
+    ] = $this->expressionFieldProps( $tokens, $scopes, $closure );
+    
+    return [
+      T_KEY_OBJECT => T_EXPRESSION_FIELD,
+      T_KEY_TABLE => $table,
+      T_KEY_FIELD => $field,
+      T_KEY_TYPE => $type,
+      T_KEY_METHOD => $methods
     ];
   }
 
@@ -181,10 +173,10 @@ extends ExpressionUtil
     array $tokens
   ): array {
     [ $token ] = $tokens;
-
-    return [ 
-      'object' => T_EXPRESSION_EQUAL,
-      'tokens' => $token
+    
+    return [
+      T_KEY_OBJECT => T_EXPRESSION_EQUAL,
+      T_KEY_TOKENS => $token
     ];
   }  
 
@@ -194,32 +186,28 @@ extends ExpressionUtil
   ): array {
     $isList = $this->isExpressionValueList( $tokens );
     $tokens = $this->dropCurlOpenAndNotDot( $tokens );
-    $tokens = $this->updateVariable( $closure, $tokens );
-    $tokens = $this->updateEnums( $closure, $tokens );
+    $tokens = $this->updateTokensVariable( $tokens, $closure );
+    $tokens = $this->updateTokensEnums( $tokens, $closure );
     $tokens = $this->adjustValues( $tokens );
 
     return [
-      'object' => T_EXPRESSION_VALUE,
-      'islist' => $isList,
-      'tokens' => $tokens
+      T_KEY_OBJECT => T_EXPRESSION_VALUE,
+      T_KEY_ISLIST => $isList,
+      T_KEY_TOKENS => $tokens
     ];
   }  
   
-  private function startupsCompareLoop(
+  private function loopCompareTokens(
     Closure $closure,
     array $scopes,
     array $tokens
   ): array {
-    for( $i=0; $i < count( $tokens ); $i++ ){
-      if( $this->isExpressionField( $tokens[$i] )){
-        $tokens[ $i ] = $this->createExpressionField( $scopes, $tokens[$i] );
-      } else
-      if( $this->isExpressionEquals( $tokens[$i] )){
-        $tokens[ $i ] = $this->createExpressionEqual( $tokens[$i] );
-      } else
-      if( $this->isExpressionValue( $tokens[$i] )){
-        $tokens[ $i ] = $this->createExpressionValue( $closure, $tokens[$i] );
-      }
+    foreach($tokens as $key => $token){
+      $tokens[ $key ] = match( $this->getExpressionCompareType( $token )){
+        T_IS_EXPRESSION_FIELD => $this->createExpressionField($token, $scopes, $closure),
+        T_IS_EXPRESSION_EQUAL => $this->createExpressionEqual($token),
+        T_IS_EXPRESSION_VALUE => $this->createExpressionValue($closure, $token)
+      };
     }
 
     return $tokens;
