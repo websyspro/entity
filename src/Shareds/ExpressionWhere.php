@@ -45,7 +45,6 @@ extends ExpressionUtil
     Closure $closure
   ): array {
     $tokens = $this->dropNegative( $tokens );
-
     if( $this->getExpressionType( $tokens ) === T_IS_EXPRESSION_SUBQUERY ){
       $tokens = $this->dropNegative( $tokens );
       $tokens = $this->parserTokens( $tokens );
@@ -57,7 +56,7 @@ extends ExpressionUtil
       ];
     }
     
-    $tokens = $this->createTokenCompareByNegative( $tokens );
+    $tokens = $this->createTokenCompareEqualIsNegatiive( $tokens );
     return $this->createExpressionCompare( $tokens, $scopes, $closure);
   }  
 
@@ -118,13 +117,8 @@ extends ExpressionUtil
     array $scopes,
     Closure $closure
   ): array {
-    $tokens = $this->parserTokensCompare( $tokens );
-    $tokens = $this->loopCompareTokens( $closure, $scopes, $tokens );
-    
-    return [ 
-      T_KEY_OBJECT => T_EXPRESSION_UNARY,
-      T_KEY_TOKENS => $tokens
-    ];
+    $tokens = $this->createTokenCompareEqualIsNotNegatiive( $tokens );
+    return $this->createExpressionCompare( $tokens, $scopes, $closure);
   }
   
   private function createExpressionCompare(
@@ -293,6 +287,20 @@ extends ExpressionUtil
     return sprintf( "%s In %s", $tableField, $expressionValue[ T_KEY_VALUE ]);;
   }
 
+  private function buildExpressionNotIn(
+    array $tokens
+  ): string {
+    [ $expressionField, $expressionValue 
+    ] = $tokens[ T_KEY_TOKENS ];
+
+    $tableField = sprintf( "%s.%s", 
+      $expressionField[ T_KEY_TABLE ],
+      $expressionField[ T_KEY_FIELD ]
+    );    
+
+    return sprintf( "%s Not In %s", $tableField, $expressionValue[ T_KEY_VALUE ]);;
+  }  
+
   private function buildExpressionLike(
     array $tokens
   ): string {
@@ -369,6 +377,7 @@ extends ExpressionUtil
         T_EXPRESSION_COMPARE => $this->buildExpressionCompare( $token ),
         T_EXPRESSION_BETWEEN => $this->buildExpressionBetween( $token ),
         T_EXPRESSION_IN => $this->buildExpressionIn( $token ),
+        T_EXPRESSION_NOT_IN => $this->buildExpressionNotIn( $token ),
         T_EXPRESSION_LIKE => $this->buildExpressionLike( $token ),
         T_EXPRESSION_NEGATIVE => $this->buildExpressionNegative( $token ),
         T_EXPRESSION_GROUP => $this->buildExpressionGroup( $token ),

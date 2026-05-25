@@ -372,14 +372,23 @@ class ExpressionUtil
     ];
   }
 
-  public function createTokenCompareByNegative(
+  public function createTokenCompareEqualIsNegatiive(
     array $tokens
   ): array {
     return array_merge( $tokens, 
       [ $this->createToken( "===" ) ],
-      [ $this->createToken( $this->getExpressionType($tokens) === T_IS_EXPRESSION_NEGATIVE ? true : false )]
+      [ $this->createToken( false )]
     );
   }
+
+  public function createTokenCompareEqualIsNotNegatiive(
+    array $tokens
+  ): array {
+    return array_merge( $tokens, 
+      [ $this->createToken( "===" ) ],
+      [ $this->createToken( true )]
+    );
+  }  
 
   public function dropWriteSpace(
     array $tokens

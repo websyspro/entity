@@ -181,7 +181,7 @@ class ClosureUtil
       ClosureUtil::$cacheParams[ $splObjectId ] = [];
     }
 
-    if( isset( ClosureUtil::$cacheParams[ spl_object_id( $closure )]) === false ){
+    if( isset( ClosureUtil::$cacheParams[ spl_object_id( $closure )]) === true ){
       return ClosureUtil::$cacheParams[ spl_object_id( $closure )];
     }
 

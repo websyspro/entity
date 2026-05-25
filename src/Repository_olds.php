@@ -17,7 +17,7 @@ use Websyspro\Entity\Shareds\EntityStructure;
 use Websyspro\Entity\Shareds\Param;
 use Websyspro\Entity\Shareds\Token;
 
-class Repository
+class Repository_olds
 {
   public string $sql;
   public mixed $fn;
