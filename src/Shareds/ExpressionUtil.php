@@ -48,6 +48,9 @@ define( "T_IS_EXPRESSION_EQUAL_NOT_IN", "Not In" );
 define( "T_IS_EXPRESSION_EQUAL_LIKE", "Like" );
 define( "T_IS_EXPRESSION_EQUAL_NOT_LIKE", "Not Like" );
 
+define( "T_IS_EXPRESSION_UNARY_IS_NOT_YES", "0" );
+define( "T_IS_EXPRESSION_UNARY_IS_NOT_NO", "1" );
+
 define( "T_IS_EXPRESSION_NEGATIVE", 1 );
 define( "T_IS_EXPRESSION_GROUP", 2 );
 define( "T_IS_EXPRESSION_SUBQUERY", 3 );
@@ -67,6 +70,7 @@ define( "T_KEY_OBJECT", "object" );
 define( "T_KEY_TOKENS", "tokens" );
 define( "T_KEY_METHOD", "method" );
 define( "T_KEY_ACTION", "action" );
+define( "T_KEY_IS_NOT", "isnot" );
 define( "T_KEY_ARGS", "args" );
 define( "T_KEY_TABLE", "table" );
 define( "T_KEY_FIELD", "field" );
@@ -305,7 +309,7 @@ class ExpressionUtil
     return T_EVENTS_LIST[ $tokens[ T_KEY_VALUE ]];
   }
 
-  private function existsEvent(
+  public function existsEvent(
     array $tokens
   ): bool {
     return in_array( $this->getEventBySubQuery( $tokens ), T_EVENTS_LIST );
@@ -366,6 +370,15 @@ class ExpressionUtil
         $number
       )
     ];
+  }
+
+  public function createTokenCompareByNegative(
+    array $tokens
+  ): array {
+    return array_merge( $tokens, 
+      [ $this->createToken( "===" ) ],
+      [ $this->createToken( $this->getExpressionType($tokens) === T_IS_EXPRESSION_NEGATIVE ? true : false )]
+    );
   }
 
   public function dropWriteSpace(
@@ -626,6 +639,13 @@ class ExpressionUtil
     return $accu;
   }
 
+  public function extractNegativeToken(
+    array $tokens = []
+  ): array {
+    return $this->isExpressionNegative( $tokens )
+      ? [ T_KEY_YES, array_slice( $tokens, 1 )] 
+      : [ T_KEY_NO, $tokens ];
+  }
   
   public function parserTokensCompare(
     array $tokens = [],
@@ -933,13 +953,21 @@ class ExpressionUtil
         ));
 
         if( count( $methodCompareList ) === 0 ){
-          $tokens[ $key ] = [
-            T_KEY_OBJECT => T_EXPRESSION_COMPARE,
-            T_KEY_TOKENS => [ $expressionField,
-              [ T_KEY_OBJECT => T_EXPRESSION_EQUAL, T_KEY_VALUE => "=" ],
-              [ T_KEY_OBJECT => T_EXPRESSION_VALUE, T_KEY_ISLIST => T_KEY_NO, T_KEY_VALUE => "1" ],
-            ]
-          ];          
+          // $tokens[ $key ] = [
+          //   T_KEY_OBJECT => T_EXPRESSION_COMPARE,
+          //   T_KEY_TOKENS => [ $expressionField,
+          //     [ 
+          //       T_KEY_OBJECT => T_EXPRESSION_EQUAL,
+          //       T_KEY_VALUE => "=" ],
+          //     [ 
+          //       T_KEY_OBJECT => T_EXPRESSION_VALUE,
+          //       T_KEY_ISLIST => T_KEY_NO,
+          //       T_KEY_VALUE => $token[T_KEY_IS_NOT] === T_KEY_YES
+          //         ? T_IS_EXPRESSION_UNARY_IS_NOT_YES
+          //         : T_IS_EXPRESSION_UNARY_IS_NOT_NO
+          //     ],
+          //   ]
+          // ];          
         } else {
           [ $methodCompare ] = $methodCompareList;
           [ T_KEY_TABLE => $table, T_KEY_FIELD => $field, T_KEY_TYPE => $type ] = $expressionField;
@@ -1000,20 +1028,6 @@ class ExpressionUtil
                   $methods, fn( array $method ) => $method[T_KEY_ACTION] !== T_METHODS_ACTION_COMPARE 
                 ))
               ]), array_merge( $expressionValue, [ T_KEY_VALUE => [ $expressionValue[ T_KEY_VALUE ]]])
-            ]
-          ];
-        }
-      } else
-      if( $expressionObject === T_EXPRESSION_NEGATIVE ){
-        [ $expressionChild ] = $token[ T_KEY_TOKENS ];
-        if( $expressionChild[ T_KEY_OBJECT ] === T_EXPRESSION_UNARY ){
-          [ $expressionField ] = $expressionChild[ T_KEY_TOKENS ];
-
-          $tokens[ $key ] = [
-            T_KEY_OBJECT => T_EXPRESSION_COMPARE,
-            T_KEY_TOKENS => [ $expressionField,
-              [ T_KEY_OBJECT => T_EXPRESSION_EQUAL, T_KEY_VALUE => "=" ],
-              [ T_KEY_OBJECT => T_EXPRESSION_VALUE, T_KEY_ISLIST => T_KEY_NO, T_KEY_VALUE => "0" ],
             ]
           ];
         }

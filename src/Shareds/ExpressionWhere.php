@@ -5,6 +5,7 @@ namespace Websyspro\Entity\Shareds;
 use Closure;
 use ReflectionFunction;
 use function sprintf, count, is_array;
+use Websyspro\Entity\Shareds_\Token;
 
 class ExpressionWhere
 extends ExpressionUtil
@@ -44,13 +45,20 @@ extends ExpressionUtil
     Closure $closure
   ): array {
     $tokens = $this->dropNegative( $tokens );
-    $tokens = $this->parserTokens( $tokens );
-    $tokens = $this->loopTokens( $tokens, $scopes, $closure );
 
-    return [
-      T_KEY_OBJECT => T_EXPRESSION_NEGATIVE,
-      T_KEY_TOKENS => $tokens
-    ];
+    if( $this->getExpressionType( $tokens ) === T_IS_EXPRESSION_SUBQUERY ){
+      $tokens = $this->dropNegative( $tokens );
+      $tokens = $this->parserTokens( $tokens );
+      $tokens = $this->loopTokens( $tokens, $scopes, $closure );
+
+      return [
+        T_KEY_OBJECT => T_EXPRESSION_NEGATIVE,
+        T_KEY_TOKENS => $tokens
+      ];
+    }
+    
+    $tokens = $this->createTokenCompareByNegative( $tokens );
+    return $this->createExpressionCompare( $tokens, $scopes, $closure);
   }  
 
   private function createExpressionGroup(

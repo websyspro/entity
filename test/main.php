@@ -14,21 +14,22 @@ $escolaB = "Minha Escola B";
 $startDate = '01/01/2026';
 $concate = "JOIN";
 
-$closure = fn( PropostaEntity $i ) => $i->IsActive && !$i->IsDeleted && $i->Status !== Status::Aprovada
-  // $i->NomeProposta === [ 'Item 1 ' . $concate, "{$escolaA}", Status::Aprovada->value, Status::RevisaoGerentePendente, $escolaB, 12 ]
-  // && $i->NomeProposta->trim()->upper()->contains( 'Item 1 ' . $concate )
-  // && $i->NomeProposta === '%TEST'
-  // && !$i->IsActive
-  // && $i->Status === Status::Aprovada
-  // && $i->IsDeleted === false 
-  // && ( $i->PrazoFaturamento === 9098767 || ( $i->PrazoFaturamento === 11191 ))
-  // && $i->Created >= $startDate
-  // && $i->IsActive === true 
-  // && '01/31/2026' >= $i->Created
-  // && !$i->itemsProposta->any( fn( ItemPropostaEntity $o ) => 
-  //   $o->PropostaId === $i->Id && $o->IsActive === true && $o->IsDeleted === false && $i->NomeContato !== 'EMERSON%'
-  // )
-  // && $i->IsActive === false 
+$closure = fn( PropostaEntity $i ) =>   
+  // && !$i->IsDeleted && $i->Status !== Status::Aprovada
+  $i->NomeProposta === [ 'Item 1 ' . $concate, "{$escolaA}", Status::Aprovada->value, Status::RevisaoGerentePendente, $escolaB, 12 ]
+  && $i->NomeProposta->trim()->upper()->contains( 'Item 1 ' . $concate )
+  && $i->NomeProposta === '%TEST'
+  && !$i->IsActive
+  && $i->Status === Status::Aprovada
+  && $i->IsDeleted === false 
+  && ( $i->PrazoFaturamento === 9098767 || ( $i->PrazoFaturamento === 11191 ))
+  && $i->Created >= $startDate
+  && $i->IsActive === true 
+  && '01/31/2026' >= $i->Created
+  && !$i->itemsProposta->any( fn( ItemPropostaEntity $o ) => 
+    $o->PropostaId === $i->Id && $o->IsActive === true && $o->IsDeleted === false && $i->NomeContato !== 'EMERSON%'
+  )
+  && $i->IsActive === false 
 ;
 
 //print_r(ExtractFromFN::get( $closure )->tokens);
@@ -47,5 +48,5 @@ $leftTimer = number_format(( microtime( true ) - $start ) * 1000, 6, ",", "." );
 echo "Execute timer: {$leftTimer}(ms)" . PHP_EOL . PHP_EOL;
 
 print_r( ClosureUtil::getParams( $closure ));
-var_dump( $expressionWhere->sqlBuild());
-//print_r( $expressionWhere );
+// var_dump( $expressionWhere->sqlBuild());
+print_r( $expressionWhere );
