@@ -53,7 +53,7 @@ class ClosureUtil
     return $entityStructure;
   }  
 
-  public static function setClosure(
+  public static function addClosure(
     Closure $closure
   ): Closure {
     if( isset( ClosureUtil::$cacheClosures ) === false ){
@@ -71,7 +71,7 @@ class ClosureUtil
   public static function getClosure(
     Closure $closure
   ): Closure {
-    return ClosureUtil::setClosure( $closure );
+    return ClosureUtil::addClosure( $closure );
   }
 
   public static function getRowsFromClosure(
@@ -159,12 +159,13 @@ class ClosureUtil
       ClosureUtil::$cacheParams = [];
     }
 
-    if( isset( ClosureUtil::$cacheParams[ spl_object_id( $closure )]) === false ){
-      ClosureUtil::$cacheParams[ spl_object_id( $closure )] = [];
+    $splObjectId = spl_object_id( $closure );
+    if( isset( ClosureUtil::$cacheParams[ $splObjectId ]) === false ){
+      ClosureUtil::$cacheParams[ $splObjectId ] = [];
     }
 
-    $paramKey = sprintf( ":param_%s", count( ClosureUtil::$cacheParams[ spl_object_id( $closure )]));
-    ClosureUtil::$cacheParams[ spl_object_id( $closure )][ $paramKey ] = $value;
+    $paramKey = sprintf( ":param_%s_%s", $splObjectId, count( ClosureUtil::$cacheParams[ $splObjectId]));
+    ClosureUtil::$cacheParams[ $splObjectId ][ $paramKey ] = $value;
     return $paramKey;
   } 
   
@@ -173,6 +174,11 @@ class ClosureUtil
   ): array {
     if( isset( ClosureUtil::$cacheParams ) === false ){
       ClosureUtil::$cacheParams = [];
+    }
+
+    $splObjectId = spl_object_id( $closure );
+    if( isset( ClosureUtil::$cacheParams[ $splObjectId ] ) === false ){
+      ClosureUtil::$cacheParams[ $splObjectId ] = [];
     }
 
     if( isset( ClosureUtil::$cacheParams[ spl_object_id( $closure )]) === false ){

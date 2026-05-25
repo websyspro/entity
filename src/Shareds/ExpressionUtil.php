@@ -2,46 +2,46 @@
 
 namespace Websyspro\Entity\Shareds;
 
-use function ord, count, is_string, is_array, in_array, array_slice, sprintf, defined;
+use Websyspro\Entity\Decorations\Columns\Datetime;
 use ReflectionFunction;
 use Closure;
-use Websyspro\Entity\Decorations\Columns\Datetime;
+use function ord, count, is_string, is_array, in_array, array_slice, sprintf, defined;
 
-define("T_START_PARENTESES", 40);
-define("T_END_PARENTESES", 41);
-define("T_START_BRACKET", 91);
-define("T_END_BRACKET", 93);
-define("T_START_BRACE", 123);
-define("T_END_BRACE", 125);
-define("T_DOT", 46);
-define("T_COMMA", 44);
-define("T_SEMICOLON", 59);
-define("T_COLON", 58);
-define("T_QUESTION", 63);
-define("T_PLUS", 43);
-define("T_MINUS", 45);
-define("T_MULTIPLY", 42);
-define("T_DIVIDE", 47);
-define("T_EQUAL", 61);
-define("T_GREATER_THAN", 62);
-define("T_LESS_THAN", 60);
-define("T_NOT", 33);
+define( "T_START_PARENTESES", 40 );
+define( "T_END_PARENTESES", 41 );
+define( "T_START_BRACKET", 91 );
+define( "T_END_BRACKET", 93 );
+define( "T_START_BRACE", 123 );
+define( "T_END_BRACE", 125 );
+define( "T_DOT", 46 );
+define( "T_COMMA", 44 );
+define( "T_SEMICOLON", 59 );
+define( "T_COLON", 58 );
+define( "T_QUESTION", 63 );
+define( "T_PLUS", 43 );
+define( "T_MINUS", 45 );
+define( "T_MULTIPLY", 42 );
+define( "T_DIVIDE", 47 );
+define( "T_EQUAL", 61 );
+define( "T_GREATER_THAN", 62 );
+define( "T_LESS_THAN", 60 );
+define( "T_NOT", 33 );
 
-define("T_EXPRESSION_NODE", "ExpressionNode");
-define("T_EXPRESSION_GROUP", "ExpressionGroup");
-define("T_EXPRESSION_UNARY", "ExpressionUnary");
-define("T_EXPRESSION_LOGICAL", "ExpressionLogical");
-define("T_EXPRESSION_SUBQUERY", "ExpressionSubQuery");
-define("T_EXPRESSION_COMPARE", "ExpressionCompare");
-define("T_EXPRESSION_BETWEEN", "ExpressionBetween");
-define("T_EXPRESSION_LIKE", "ExpressionLike");
-define("T_EXPRESSION_NOT_LIKE", "ExpressionNotLike");
-define("T_EXPRESSION_IN", "ExpressionIn");
-define("T_EXPRESSION_NOT_IN", "ExpressionNotIn");
-define("T_EXPRESSION_FIELD", "ExpressionField");
-define("T_EXPRESSION_VALUE", "ExpressionValue");
-define("T_EXPRESSION_EQUAL", "ExpressionEqual");
-define("T_EXPRESSION_NEGATIVE", "ExpressionNegative");
+define( "T_EXPRESSION_NODE", "ExpressionNode" );
+define( "T_EXPRESSION_GROUP", "ExpressionGroup" );
+define( "T_EXPRESSION_UNARY", "ExpressionUnary" );
+define( "T_EXPRESSION_LOGICAL", "ExpressionLogical" );
+define( "T_EXPRESSION_SUBQUERY", "ExpressionSubQuery" );
+define( "T_EXPRESSION_COMPARE", "ExpressionCompare" );
+define( "T_EXPRESSION_BETWEEN", "ExpressionBetween" );
+define( "T_EXPRESSION_LIKE", "ExpressionLike" );
+define( "T_EXPRESSION_NOT_LIKE", "ExpressionNotLike" );
+define( "T_EXPRESSION_IN", "ExpressionIn" );
+define( "T_EXPRESSION_NOT_IN", "ExpressionNotIn" );
+define( "T_EXPRESSION_FIELD", "ExpressionField" );
+define( "T_EXPRESSION_VALUE", "ExpressionValue" );
+define( "T_EXPRESSION_EQUAL", "ExpressionEqual" );
+define( "T_EXPRESSION_NEGATIVE", "ExpressionNegative" );
 
 define( "T_IS_EXPRESSION_EQUAL_IN", "In" );
 define( "T_IS_EXPRESSION_EQUAL_NOT_IN", "Not In" );
@@ -75,6 +75,9 @@ define( "T_KEY_ISLIST", "islist" );
 define( "T_KEY_TYPE", "type" );
 define( "T_KEY_VALUE", "value" );
 define( "T_KEY_NUMBER", "number" );
+define( "T_KEY_NAME", "name" );
+define( "T_KEY_VARIABLE", "variable" );
+define( "T_KEY_INSTANCE", "instance" );
 
 define( "T_KEY_NO", "no" );
 define( "T_KEY_YES", "yes" );
@@ -99,8 +102,8 @@ class ExpressionUtil
     int $number
   ): int {
     foreach( $tokens as $key => $token ){
-      if( isset( $token[ 'number' ])){
-        if( (int)$token[ 'number' ] === $number ){
+      if( isset( $token[ T_KEY_NUMBER ])){
+        if( (int)$token[ T_KEY_NUMBER ] === $number ){
           return (int)$key;
         }        
       }
@@ -133,15 +136,15 @@ class ExpressionUtil
     array $tokens
   ): int {
     foreach( $tokens as $key => $token ){
-      if( $token['number'] === T_EQUAL ) return $key;
-      if( $token['number'] === T_IS_EQUAL ) return $key;
-      if( $token['number'] === T_IS_IDENTICAL ) return $key;
-      if( $token['number'] === T_IS_NOT_EQUAL ) return $key;
-      if( $token['number'] === T_IS_NOT_IDENTICAL ) return $key;
-      if( $token['number'] === T_IS_GREATER_OR_EQUAL ) return $key;
-      if( $token['number'] === T_IS_SMALLER_OR_EQUAL ) return $key;
-      if( $token['number'] === T_GREATER_THAN ) return $key;
-      if( $token['number'] === T_LESS_THAN ) return $key;
+      if( $token[T_KEY_NUMBER] === T_EQUAL ) return $key;
+      if( $token[T_KEY_NUMBER] === T_IS_EQUAL ) return $key;
+      if( $token[T_KEY_NUMBER] === T_IS_IDENTICAL ) return $key;
+      if( $token[T_KEY_NUMBER] === T_IS_NOT_EQUAL ) return $key;
+      if( $token[T_KEY_NUMBER] === T_IS_NOT_IDENTICAL ) return $key;
+      if( $token[T_KEY_NUMBER] === T_IS_GREATER_OR_EQUAL ) return $key;
+      if( $token[T_KEY_NUMBER] === T_IS_SMALLER_OR_EQUAL ) return $key;
+      if( $token[T_KEY_NUMBER] === T_GREATER_THAN ) return $key;
+      if( $token[T_KEY_NUMBER] === T_LESS_THAN ) return $key;
     }
 
     return -1;
@@ -150,31 +153,31 @@ class ExpressionUtil
   public function startParentese(
     array $token
   ): bool {
-    if(isset($token['number']) === false){
+    if(isset($token[T_KEY_NUMBER]) === false){
       return false;
     }
 
-    return $token['number'] === T_START_PARENTESES;
+    return $token[T_KEY_NUMBER] === T_START_PARENTESES;
   }
 
   public function endParentese(
     array $token
   ): bool {
-    if( isset( $token['number']) === false){
+    if( isset( $token[T_KEY_NUMBER]) === false){
       return false;
     }
 
-    return $token['number'] === T_END_PARENTESES;
+    return $token[T_KEY_NUMBER] === T_END_PARENTESES;
   } 
 
   public function findNegative(
     array $token
   ): int {
-    if( isset( $token['number']) === false){
+    if( isset( $token[T_KEY_NUMBER]) === false){
       return false;
     }
 
-    return $token['number'] === T_NOT;
+    return $token[T_KEY_NUMBER] === T_NOT;
   }  
 
   public function getScopesByTokens(
@@ -299,7 +302,7 @@ class ExpressionUtil
     array $tokens
   ): string {
     [ $tokens ] = array_slice( $tokens, $this->findPrev( $tokens, T_FN ) - 1, 1);
-    return T_EVENTS_LIST[ $tokens[ 'value' ]];
+    return T_EVENTS_LIST[ $tokens[ T_KEY_VALUE ]];
   }
 
   private function existsEvent(
@@ -357,9 +360,11 @@ class ExpressionUtil
       : $tokenArgs;
 
     return [
-      'number' => $number,
-      'value' => $value,
-      "type" => $this->namberToken( $number )
+      T_KEY_NUMBER => $number,
+      T_KEY_VALUE => $value,
+      T_KEY_TYPE => $this->namberToken(
+        $number
+      )
     ];
   }
 
@@ -367,7 +372,7 @@ class ExpressionUtil
     array $tokens
   ): array {
     for($i=0; $i<count($tokens); $i++){
-      if($tokens[$i]['number'] === T_WHITESPACE){
+      if($tokens[$i][T_KEY_NUMBER] === T_WHITESPACE){
         array_splice($tokens, $i, 1); $i--;
       } 
     }
@@ -386,11 +391,11 @@ class ExpressionUtil
     int $parenteses = 0
   ): array {
     for($i=0; $i<count($tokens); $i++){
-      if($tokens[$i]['number'] === T_START_PARENTESES){
+      if($tokens[$i][T_KEY_NUMBER] === T_START_PARENTESES){
         $parenteses++;
       }
 
-      if($tokens[$i]['number'] === T_END_PARENTESES){
+      if($tokens[$i][T_KEY_NUMBER] === T_END_PARENTESES){
         $parenteses--;
 
         if($parenteses < 0){
@@ -401,7 +406,7 @@ class ExpressionUtil
       }
 
       if($parenteses < 1){
-        if($tokens[$i]['number'] === T_SEMICOLON){
+        if($tokens[$i][T_KEY_NUMBER] === T_SEMICOLON){
           $tokens = array_slice(
             $tokens, 0, $i
           ); break;
@@ -417,7 +422,7 @@ class ExpressionUtil
     int $i = 0
   ): array {
     while( $i < count( $tokens )){
-      if( $tokens[$i]['number'] === T_START_PARENTESES ){
+      if( $tokens[$i][T_KEY_NUMBER] === T_START_PARENTESES ){
         array_splice( $tokens, count($tokens) - 1, 1 );
         array_splice( $tokens, $i, 1 ); 
         $i--;
@@ -461,14 +466,14 @@ class ExpressionUtil
   public function isLogical(
     array $token
   ): bool {
-    if(isset($token['number']) === false){
+    if(isset($token[T_KEY_NUMBER]) === false){
       return false;
     }
 
-    return $token['number'] === T_LOGICAL_AND
-        || $token['number'] === T_LOGICAL_OR
-        || $token['number'] === T_BOOLEAN_AND
-        || $token['number'] === T_BOOLEAN_OR;
+    return $token[T_KEY_NUMBER] === T_LOGICAL_AND
+        || $token[T_KEY_NUMBER] === T_LOGICAL_OR
+        || $token[T_KEY_NUMBER] === T_BOOLEAN_AND
+        || $token[T_KEY_NUMBER] === T_BOOLEAN_OR;
   }
 
   public function parserTokens(
@@ -508,7 +513,7 @@ class ExpressionUtil
       return end( $tokens );
     }
 
-    [ 'number' => $number ] = end( $tokens );
+    [ T_KEY_NUMBER => $number ] = end( $tokens );
     return match($number) {
       T_LOGICAL_AND => 'And', T_BOOLEAN_AND => 'And',
       T_LOGICAL_OR => 'Or', T_BOOLEAN_OR => 'Or'
@@ -518,19 +523,19 @@ class ExpressionUtil
   public function isEquals(
     array $token
   ): bool {
-    if( isset( $token[ 'number' ]) === false){
+    if( isset( $token[ T_KEY_NUMBER ]) === false){
       return false;
     }
 
-    return $token[ 'number' ] === T_EQUAL
-        || $token[ 'number' ] === T_IS_EQUAL
-        || $token[ 'number' ] === T_IS_IDENTICAL
-        || $token[ 'number' ] === T_IS_NOT_EQUAL
-        || $token[ 'number' ] === T_IS_NOT_IDENTICAL
-        || $token[ 'number' ] === T_IS_GREATER_OR_EQUAL
-        || $token[ 'number' ] === T_IS_SMALLER_OR_EQUAL
-        || $token[ 'number' ] === T_GREATER_THAN
-        || $token[ 'number' ] === T_LESS_THAN;
+    return $token[ T_KEY_NUMBER ] === T_EQUAL
+        || $token[ T_KEY_NUMBER ] === T_IS_EQUAL
+        || $token[ T_KEY_NUMBER ] === T_IS_IDENTICAL
+        || $token[ T_KEY_NUMBER ] === T_IS_NOT_EQUAL
+        || $token[ T_KEY_NUMBER ] === T_IS_NOT_IDENTICAL
+        || $token[ T_KEY_NUMBER ] === T_IS_GREATER_OR_EQUAL
+        || $token[ T_KEY_NUMBER ] === T_IS_SMALLER_OR_EQUAL
+        || $token[ T_KEY_NUMBER ] === T_GREATER_THAN
+        || $token[ T_KEY_NUMBER ] === T_LESS_THAN;
   }
 
   public function isObjectOperator(
@@ -545,9 +550,9 @@ class ExpressionUtil
     array $expressionEqual,
     array $expressionRight
   ): array {
-    [ 'tokens' => $tokens, 'islist' => $islist ] = $expressionRight;
-    [ 'number' => $number, 'value' => $value 
-    ] = $expressionEqual[ 'tokens' ];
+    [ T_KEY_TOKENS => $tokens, T_KEY_ISLIST => $islist ] = $expressionRight;
+    [ T_KEY_NUMBER => $number, T_KEY_VALUE => $value 
+    ] = $expressionEqual[ T_KEY_TOKENS ];
 
     $isExpressionNull = strtoupper( $tokens ) === "NULL";
     $isExpressionLike = preg_match( "#%#", preg_replace( "#\\\%#", "", $tokens ));
@@ -555,38 +560,38 @@ class ExpressionUtil
     $isNotExpressionEqual = in_array( $number, [ T_IS_NOT_EQUAL, T_IS_NOT_IDENTICAL ]);
 
     if( $isExpressionEqual && $isExpressionLike ){
-      return [ 'object' => T_EXPRESSION_EQUAL, 'value' => 'Like' ];
+      return [ T_KEY_OBJECT => T_EXPRESSION_EQUAL, T_KEY_VALUE => 'Like' ];
     } else if( $isNotExpressionEqual && $isExpressionLike ){
-      return [ 'object' => T_EXPRESSION_EQUAL, 'value' => 'Not Like' ];
-    } else if( $isExpressionEqual && $islist === 'yes' ){
-      return [ 'object' => T_EXPRESSION_EQUAL, 'value' => 'In' ];
-    } else if( $isNotExpressionEqual && $islist === 'yes' ){
-      return [ 'object' => T_EXPRESSION_EQUAL, 'value' => 'Not In' ];
+      return [ T_KEY_OBJECT => T_EXPRESSION_EQUAL, T_KEY_VALUE => 'Not Like' ];
+    } else if( $isExpressionEqual && $islist === T_KEY_YES ){
+      return [ T_KEY_OBJECT => T_EXPRESSION_EQUAL, T_KEY_VALUE => 'In' ];
+    } else if( $isNotExpressionEqual && $islist === T_KEY_YES ){
+      return [ T_KEY_OBJECT => T_EXPRESSION_EQUAL, T_KEY_VALUE => 'Not In' ];
     } else if( $isExpressionEqual && $isExpressionNull ){
-      return [ 'object' => T_EXPRESSION_EQUAL, 'value' => 'Is Null' ];
+      return [ T_KEY_OBJECT => T_EXPRESSION_EQUAL, T_KEY_VALUE => 'Is Null' ];
     } else if( $isNotExpressionEqual && $isExpressionNull ){
-      return [ 'object' => T_EXPRESSION_EQUAL, 'value' => 'Not Null' ];
+      return [ T_KEY_OBJECT => T_EXPRESSION_EQUAL, T_KEY_VALUE => 'Not Null' ];
     } else if( $isExpressionEqual ){
-      return [ 'object' => T_EXPRESSION_EQUAL, 'value' => '=' ];
+      return [ T_KEY_OBJECT => T_EXPRESSION_EQUAL, T_KEY_VALUE => '=' ];
     } else if( $isNotExpressionEqual ){
-      return [ 'object' => T_EXPRESSION_EQUAL, 'value' => '<>' ];
-    } else return [ 'object' => T_EXPRESSION_EQUAL, 'value' => $value ];
+      return [ T_KEY_OBJECT => T_EXPRESSION_EQUAL, T_KEY_VALUE => '<>' ];
+    } else return [ T_KEY_OBJECT => T_EXPRESSION_EQUAL, T_KEY_VALUE => $value ];
   }
 
   public function adjustEqualFieldWithField(
     array $expressionEqual    
   ): array {
-    [ 'number' => $number, 'value' => $value 
-    ] = $expressionEqual[ 'tokens' ];
+    [ T_KEY_NUMBER => $number, T_KEY_VALUE => $value 
+    ] = $expressionEqual[ T_KEY_TOKENS ];
 
     $isExpressionEqual = in_array( $number, [ T_EQUAL, T_IS_EQUAL, T_IS_IDENTICAL ]);
     $isNotExpressionEqual = in_array( $number, [ T_IS_NOT_EQUAL, T_IS_NOT_IDENTICAL ]);
 
     if( $isExpressionEqual ){
-      return [ 'object' => T_EXPRESSION_EQUAL, 'value' => '=' ];
+      return [ T_KEY_OBJECT => T_EXPRESSION_EQUAL, T_KEY_VALUE => '=' ];
     } else if( $isNotExpressionEqual ){
-      return [ 'object' => T_EXPRESSION_EQUAL, 'value' => '<>' ];
-    } else return [ 'object' => T_EXPRESSION_EQUAL, 'value' => $value ];
+      return [ T_KEY_OBJECT => T_EXPRESSION_EQUAL, T_KEY_VALUE => '<>' ];
+    } else return [ T_KEY_OBJECT => T_EXPRESSION_EQUAL, T_KEY_VALUE => $value ];
   }
 
   public function chuckTokensByNumber(
@@ -655,17 +660,17 @@ class ExpressionUtil
   public function adjustCompareReverse(
     array $expressionEqual
   ): array {
-    $value = match( $expressionEqual[ 'tokens' ][ 'value' ]){
+    $value = match( $expressionEqual[ T_KEY_TOKENS ][ T_KEY_VALUE ]){
       '>' => '<', '<' => '>', '>=' => '<=', '<=' => '>='
     };
 
-    $number = match( $expressionEqual[ 'tokens' ][ 'number' ]){
+    $number = match( $expressionEqual[ T_KEY_TOKENS ][ T_KEY_NUMBER ]){
       T_GREATER_THAN => T_LESS_THAN, T_LESS_THAN => T_GREATER_THAN,
       T_IS_GREATER_OR_EQUAL => T_IS_SMALLER_OR_EQUAL, T_IS_SMALLER_OR_EQUAL => T_IS_GREATER_OR_EQUAL,
     };
 
-    return [ 'object' => T_EXPRESSION_EQUAL, 'tokens' => [
-      'number' => $number, 'value' => $value, 'type' => $this->namberToken( $number )
+    return [ T_KEY_OBJECT => T_EXPRESSION_EQUAL, T_KEY_TOKENS => [
+      T_KEY_NUMBER => $number, T_KEY_VALUE => $value, T_KEY_TYPE => $this->namberToken( $number )
     ]];
   }
 
@@ -677,8 +682,8 @@ class ExpressionUtil
     }
 
     [ $expressionLeft, $expressionEqual, $expressionRight ] = $tokens;
-    if( $expressionLeft['object'] === T_EXPRESSION_VALUE ){
-      if( $expressionRight['object'] === T_EXPRESSION_FIELD ){
+    if( $expressionLeft[ T_KEY_OBJECT ] === T_EXPRESSION_VALUE ){
+      if( $expressionRight[ T_KEY_OBJECT ] === T_EXPRESSION_FIELD ){
         $expressionEqual = $this->adjustCompareReverse( $expressionEqual );
         return [ $expressionRight, $expressionEqual, $expressionLeft ];
       }
@@ -692,7 +697,7 @@ class ExpressionUtil
     array $expressionLeft,
     string $value
   ): string {
-    $instanceType = $expressionLeft['type'];
+    $instanceType = $expressionLeft[T_KEY_TYPE];
     return ClosureUtil::createParam(
       $closure, $instanceType::$columnType->Encode( $value )
     );
@@ -703,9 +708,9 @@ class ExpressionUtil
     array $expressionLeft,
     array $expressionRight
   ): array {
-    $values = $expressionRight[ 'islist' ] === 'yes'
-      ? explode( ",", trim( $expressionRight['tokens'], "[]" )) 
-      : [ $expressionRight[ 'tokens' ] ];
+    $values = $expressionRight[ T_KEY_ISLIST ] === T_KEY_YES
+      ? explode( ",", trim( $expressionRight[ T_KEY_TOKENS ], "[]" )) 
+      : [ $expressionRight[ T_KEY_TOKENS ] ];
 
     $values = array_map(
       fn( string $value ) => $this->parseValueType(
@@ -714,9 +719,9 @@ class ExpressionUtil
     );
 
     return [
-      'object' => T_EXPRESSION_VALUE,
-      'islist' => $expressionRight[ 'islist' ],
-       'value' => $expressionRight[ 'islist' ] === 'yes' 
+      T_KEY_OBJECT => T_EXPRESSION_VALUE,
+      T_KEY_ISLIST => $expressionRight[ T_KEY_ISLIST ],
+      T_KEY_VALUE => $expressionRight[ T_KEY_ISLIST ] === T_KEY_YES
           ? sprintf(  "(%s)", join(", ", $values)) : join( "", $values ) 
     ];
   }
@@ -763,10 +768,10 @@ class ExpressionUtil
       : false;    
   }  
 
-  private function expressionCompareType(
+  public function expressionCompareType(
     array $tokens
   ): int {
-    if(count( $tokens ) !== 3){
+    if( count( $tokens[ T_KEY_TOKENS ]) !== 3){
       return 0;
     }
 
@@ -777,17 +782,17 @@ class ExpressionUtil
       if( $this->expressionCompareIsField( $expressionRight )){
         return T_FIELD_AND_FIELD;
       }
-    } else
+    }
     if( $this->expressionCompareIsField( $expressionLeft )){
       if( $this->expressionCompareIsValue( $expressionRight )){
         return T_FIELD_AND_VALUE;
       }
-    } else
+    }
     if( $this->expressionCompareIsValue( $expressionLeft )){
       if( $this->expressionCompareIsValue( $expressionRight )){
         return T_VALUE_AND_VALUE;
       }
-    } else
+    }
     if( $this->expressionCompareIsValue( $expressionLeft )){
       if( $this->expressionCompareIsField( $expressionRight )){
         return T_VALUE_AND_FIELD;
@@ -802,28 +807,28 @@ class ExpressionUtil
   ): array {
     if( count( $tokens ) === 1 ){
       [ $expression ] = $tokens;
-      if( $expression['object'] === T_EXPRESSION_FIELD ){
-        return [ sprintf( "%s.%s", $expression['table'], $expression['field'])];
+      if( $expression[ T_KEY_OBJECT ] === T_EXPRESSION_FIELD ){
+        return [ sprintf( "%s.%s", $expression[ T_KEY_TABLE ], $expression[ T_KEY_FIELD ])];
       }
     } else
     if( count( $tokens ) === 3 ){
       [ $expressionLeft, $expressionEqual, $expressionRight ] = $tokens;
-      if( $expressionLeft['object'] === T_EXPRESSION_FIELD ){
-        if( $expressionEqual['object'] === T_EXPRESSION_EQUAL ){
-          if( $expressionRight['object'] === T_EXPRESSION_VALUE ){
+      if( $expressionLeft[ T_KEY_OBJECT ] === T_EXPRESSION_FIELD ){
+        if( $expressionEqual[ T_KEY_OBJECT ] === T_EXPRESSION_EQUAL ){
+          if( $expressionRight[ T_KEY_OBJECT ] === T_EXPRESSION_VALUE ){
             return [
-              sprintf( "%s.%s", $expressionLeft['table'], $expressionLeft['field']), 
-              $expressionEqual[ 'value' ], $expressionRight[ 'value' ]
+              sprintf( "%s.%s", $expressionLeft[ T_KEY_TABLE ], $expressionLeft[ T_KEY_FIELD ]), 
+              $expressionEqual[ T_KEY_VALUE ], $expressionRight[ T_KEY_VALUE ]
             ];
           } 
         }
       }
-      if( $expressionLeft['object'] === T_EXPRESSION_FIELD ){
-        if( $expressionEqual['object'] === T_EXPRESSION_EQUAL ){
-          if( $expressionRight['object'] === T_EXPRESSION_FIELD ){
+      if( $expressionLeft[ T_KEY_OBJECT ] === T_EXPRESSION_FIELD ){
+        if( $expressionEqual[ T_KEY_OBJECT ] === T_EXPRESSION_EQUAL ){
+          if( $expressionRight[ T_KEY_OBJECT ] === T_EXPRESSION_FIELD ){
             return [
-              sprintf( "%s.%s", $expressionLeft['table'], $expressionLeft['field']), $expressionEqual[ 'value' ],
-              sprintf("%s.%s", $expressionRight['table'], $expressionRight['field'])
+              sprintf( "%s.%s", $expressionLeft[ T_KEY_TABLE ], $expressionLeft[ T_KEY_FIELD ]), $expressionEqual[ T_KEY_VALUE ],
+              sprintf( "%s.%s", $expressionRight[ T_KEY_TABLE ], $expressionRight[ T_KEY_FIELD ])
             ];
           }
         }
@@ -909,11 +914,12 @@ class ExpressionUtil
   ): array {
     foreach($tokens as $key => $token){
       $expressionObject = $token[ T_KEY_OBJECT ];
-
+      
       $expressionObjectIsRevalider = in_array(
-        $expressionObject, [ T_EXPRESSION_COMPARE, T_EXPRESSION_UNARY ]
+        $expressionObject, [ T_EXPRESSION_COMPARE, T_EXPRESSION_UNARY, T_EXPRESSION_NEGATIVE ]
       ) === false;
 
+      
       if( $expressionObjectIsRevalider ){
         continue;
       }
@@ -927,40 +933,48 @@ class ExpressionUtil
         ));
 
         if( count( $methodCompareList ) === 0 ){
-          continue;
-        }
-
-        [ $methodCompare ] = $methodCompareList;
-        [ T_KEY_TABLE => $table, T_KEY_FIELD => $field, T_KEY_TYPE => $type ] = $expressionField;
-
-        $isMethodCompareLikes = in_array( 
-          $methodCompare[ T_KEY_METHOD ], [
-            T_METHODS_START_WITH, T_METHODS_NOT_START_WITH,
-            T_METHODS_END_WITH, T_METHODS_NOT_END_WITH,
-            T_METHODS_CONTAINS, T_METHODS_NOT_CONTAINS,
-          ]
-        );
-
-        if( $isMethodCompareLikes ){
           $tokens[ $key ] = [
-            T_KEY_OBJECT => match($methodCompare[ T_KEY_METHOD ]){
-              T_METHODS_NOT_START_WITH, T_METHODS_NOT_END_WITH, T_METHODS_NOT_CONTAINS  => T_EXPRESSION_NOT_LIKE,
-                default => T_EXPRESSION_LIKE
-            },
-            T_KEY_TOKENS => [
-              [ T_KEY_OBJECT => T_EXPRESSION_FIELD, T_KEY_TABLE => $table, T_KEY_FIELD => $field, T_KEY_TYPE => $type,
-                T_KEY_METHOD => array_values( array_filter( 
-                  $methods, fn( array $method ) => $method[T_KEY_ACTION] !== T_METHODS_ACTION_COMPARE 
-                ))
-              ], [ 
-                T_KEY_OBJECT => T_EXPRESSION_VALUE,
-                T_KEY_ISLIST => count( $methodCompare[ T_KEY_ARGS ]) === 1 ? T_KEY_NO : T_KEY_YES,
-                T_KEY_VALUE  => $methodCompare[ T_KEY_ARGS ]
-              ]
+            T_KEY_OBJECT => T_EXPRESSION_COMPARE,
+            T_KEY_TOKENS => [ $expressionField,
+              [ T_KEY_OBJECT => T_EXPRESSION_EQUAL, T_KEY_VALUE => "=" ],
+              [ T_KEY_OBJECT => T_EXPRESSION_VALUE, T_KEY_ISLIST => T_KEY_NO, T_KEY_VALUE => "1" ],
             ]
-          ];
+          ];          
+        } else {
+          [ $methodCompare ] = $methodCompareList;
+          [ T_KEY_TABLE => $table, T_KEY_FIELD => $field, T_KEY_TYPE => $type ] = $expressionField;
+
+          $isMethodCompareLikes = in_array( 
+            $methodCompare[ T_KEY_METHOD ], [
+              T_METHODS_START_WITH, T_METHODS_NOT_START_WITH,
+              T_METHODS_END_WITH, T_METHODS_NOT_END_WITH,
+              T_METHODS_CONTAINS, T_METHODS_NOT_CONTAINS,
+            ]
+          );
+
+          if( $isMethodCompareLikes ){
+            $tokens[ $key ] = [
+              T_KEY_OBJECT => match($methodCompare[ T_KEY_METHOD ]){
+                T_METHODS_NOT_START_WITH, T_METHODS_NOT_END_WITH, T_METHODS_NOT_CONTAINS  => T_EXPRESSION_NOT_LIKE,
+                  default => T_EXPRESSION_LIKE
+              },
+              T_KEY_TOKENS => [
+                [ T_KEY_OBJECT => T_EXPRESSION_FIELD, T_KEY_TABLE => $table, T_KEY_FIELD => $field, T_KEY_TYPE => $type,
+                  T_KEY_METHOD => array_values( array_filter( 
+                    $methods, fn( array $method ) => $method[T_KEY_ACTION] !== T_METHODS_ACTION_COMPARE 
+                  ))
+                ], [ 
+                  T_KEY_OBJECT => T_EXPRESSION_VALUE,
+                  T_KEY_ISLIST => count( $methodCompare[ T_KEY_ARGS ]) === 1 
+                    ? T_KEY_NO : T_KEY_YES,
+                  T_KEY_VALUE  => count( $methodCompare[ T_KEY_ARGS ]) === 1 
+                    ? $methodCompare[ T_KEY_ARGS ] : $methodCompare[ T_KEY_ARGS ]
+                ]
+              ]
+            ];
+          }
         }
-      } else 
+      } else
       if( $expressionObject === T_EXPRESSION_COMPARE ){
         [ $expressionField, $expressionEqual, $expressionValue ] = $token[ T_KEY_TOKENS ];
         [ T_KEY_METHOD => $methods ] = $expressionField;
@@ -985,7 +999,21 @@ class ExpressionUtil
                 T_KEY_METHOD => array_values( array_filter( 
                   $methods, fn( array $method ) => $method[T_KEY_ACTION] !== T_METHODS_ACTION_COMPARE 
                 ))
-              ]), $expressionValue
+              ]), array_merge( $expressionValue, [ T_KEY_VALUE => [ $expressionValue[ T_KEY_VALUE ]]])
+            ]
+          ];
+        }
+      } else
+      if( $expressionObject === T_EXPRESSION_NEGATIVE ){
+        [ $expressionChild ] = $token[ T_KEY_TOKENS ];
+        if( $expressionChild[ T_KEY_OBJECT ] === T_EXPRESSION_UNARY ){
+          [ $expressionField ] = $expressionChild[ T_KEY_TOKENS ];
+
+          $tokens[ $key ] = [
+            T_KEY_OBJECT => T_EXPRESSION_COMPARE,
+            T_KEY_TOKENS => [ $expressionField,
+              [ T_KEY_OBJECT => T_EXPRESSION_EQUAL, T_KEY_VALUE => "=" ],
+              [ T_KEY_OBJECT => T_EXPRESSION_VALUE, T_KEY_ISLIST => T_KEY_NO, T_KEY_VALUE => "0" ],
             ]
           ];
         }
@@ -1094,9 +1122,9 @@ class ExpressionUtil
       ...array_slice( $tokens, -1, 1)
     ];
 
-    return $tokenStartBracket[ 'number' ] === T_START_BRACKET
-        && $tokensEndBracket[ 'number' ] === T_END_BRACKET 
-         ? 'yes' : 'no';
+    return $tokenStartBracket[ T_KEY_NUMBER ] === T_START_BRACKET
+        && $tokensEndBracket[ T_KEY_NUMBER ] === T_END_BRACKET 
+         ? T_KEY_YES : T_KEY_NO;
   }  
 
   public function isVariable(
@@ -1109,7 +1137,7 @@ class ExpressionUtil
     array $tokens
   ): array {
     for($i=0; $i < count($tokens); $i++){
-      [ 'number' => $number ] = $tokens[$i];
+      [ T_KEY_NUMBER => $number ] = $tokens[$i];
       if(in_array( $number, [ T_CURLY_OPEN, T_END_BRACE, T_DOT ])){
         array_splice( $tokens, $i, 1);
       }
@@ -1123,15 +1151,15 @@ class ExpressionUtil
     Closure $closure
   ): array {
     for( $i=0; $i < count($tokens); $i++ ){
-      [ 'number' => $number, 'value' => $value ] = $tokens[ $i ];
+      [ T_KEY_NUMBER => $number, T_KEY_VALUE => $value ] = $tokens[ $i ];
       if( in_array( $number, [ T_VARIABLE ])){
         $statics = ClosureUtil::getStatics( $closure );
         if( count( $statics )){
           $value = $statics[ ltrim($value, "$") ];
           $tokens[ $i ] = [
-            "number" => T_STRING,
-            "value" => $value,
-            "type" => token_name( T_STRING )
+            T_KEY_NUMBER => T_STRING,
+            T_KEY_VALUE => $value,
+            T_KEY_TYPE => token_name( T_STRING )
           ];
         }
       }
@@ -1149,11 +1177,11 @@ class ExpressionUtil
 
     if( count($tokens) === 5 ){
       [ $enum, $double, $case, $operator, $property ] = $tokens;
-        return $enum[ 'number' ] === T_STRING 
-            && $double[ 'number' ] === T_DOUBLE_COLON 
-            && $case[ 'number' ] === T_STRING 
-            && $operator[ 'number' ] === T_OBJECT_OPERATOR 
-            && $property[ 'number' ] === T_STRING;
+        return $enum[ T_KEY_NUMBER ] === T_STRING 
+            && $double[ T_KEY_NUMBER ] === T_DOUBLE_COLON 
+            && $case[ T_KEY_NUMBER ] === T_STRING 
+            && $operator[ T_KEY_NUMBER ] === T_OBJECT_OPERATOR 
+            && $property[ T_KEY_NUMBER ] === T_STRING;
     }
 
     return false;
@@ -1168,9 +1196,9 @@ class ExpressionUtil
 
     if( count($tokens) === 3 ){
       [ $enum, $double, $case ] = $tokens;
-        return $enum[ 'number' ] === T_STRING 
-            && $double[ 'number' ] === T_DOUBLE_COLON 
-            && $case[ 'number' ] === T_STRING;
+        return $enum[ T_KEY_NUMBER ] === T_STRING 
+            && $double[ T_KEY_NUMBER ] === T_DOUBLE_COLON 
+            && $case[ T_KEY_NUMBER ] === T_STRING;
     }
 
     return false;
@@ -1189,19 +1217,19 @@ class ExpressionUtil
       [ $enum,, $case ] = $tokens;
     }
 
-    $use = ClosureUtil::getUse( $closure, $enum[ 'value' ]);
+    $use = ClosureUtil::getUse( $closure, $enum[ T_KEY_VALUE ]);
     if( $use ){
-      $constantEnum = sprintf( "%s::%s", $use, $case[ 'value' ]);
+      $constantEnum = sprintf( "%s::%s", $use, $case[ T_KEY_VALUE ]);
       if( defined( $constantEnum )){
         $enumCase = constant( $constantEnum );
         if( isset( $property )){
-          return $property[ 'value' ] === "name"
+          return $property[ T_KEY_VALUE ] === T_KEY_NAME
             ? $enumCase->name : $enumCase->value;
         } else return $enumCase->value;
       }
     }
 
-    return join( "", array_map( fn( array $token ) => $token[ "value" ], $tokens ));
+    return join( "", array_map( fn( array $token ) => $token[ T_KEY_VALUE ], $tokens ));
   }
 
   public function updateTokensEnums(
@@ -1217,26 +1245,26 @@ class ExpressionUtil
 
       if( $isTokensEnumWithPropertys ){
         $tokens[ $i ] = [
-          "number" => T_STRING,
-          "value" => $this->updateEnumValue(
+          T_KEY_NUMBER => T_STRING,
+          T_KEY_VALUE => $this->updateEnumValue(
             $closure, array_slice(
               $tokens, $i, 5
             )
           ),
-          "type" => token_name(
+          T_KEY_TYPE => token_name(
             T_STRING
           )
         ];
       } else 
       if( $isTokensEnumNotPropertys ){
         $tokens[ $i ] = [
-          "number" => T_STRING,
-          "value" => $this->updateEnumValue(
+          T_KEY_NUMBER => T_STRING,
+          T_KEY_VALUE => $this->updateEnumValue(
             $closure, array_slice(
               $tokens, $i, 3
             )
           ),
-          "type" => token_name(
+          T_KEY_TYPE => token_name(
             T_STRING
           )
         ];
@@ -1266,15 +1294,27 @@ class ExpressionUtil
     array $scopes
   ): string {
     [ $scope ] = array_values( array_filter( $scopes,
-      fn( array $scope ) => $scope[ "variable" ] === $variable
+      fn( array $scope ) => $scope[T_KEY_VARIABLE] === $variable
     ));
 
-    return $scope[ "instance" ];
+    return $scope[ T_KEY_INSTANCE ];
+  }
+
+  public function getInstanceSubQuery(
+    array $scopes
+  ): string {
+    [ $scope ] = array_slice( $scopes, -1, 1 );
+
+    $entityStructure = ClosureUtil::getEntityStructure(
+      $this->getInstance( $scope[T_KEY_VARIABLE], $scopes )
+    );
+
+    return $entityStructure->entity[T_KEY_ALIAS];
   }
 
   public function getScopes(
-    Closure|int $closure,
     array $tokens,
+    Closure|int $closure,
     array $scopesParents = [],
   ): array {
     $scopes = array_chunk(
@@ -1288,8 +1328,8 @@ class ExpressionUtil
       function(array $scope) use( $closure ){
         [ $instance, $variable ] = $scope;
         return [
-          "instance" => ClosureUtil::getUse( $closure, $instance[ "value" ]), 
-          "variable" => $variable[ "value" ]
+          T_KEY_INSTANCE => ClosureUtil::getUse( $closure, $instance[ T_KEY_VALUE ]), 
+          T_KEY_VARIABLE => $variable[ T_KEY_VALUE ]
         ];
       }, $scopes
     );
