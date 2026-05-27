@@ -4,8 +4,7 @@ namespace Websyspro\Entity\Shareds;
 
 use Closure;
 use ReflectionFunction;
-use function sprintf, count, is_array;
-use Websyspro\Entity\Shareds_\Token;
+use function sprintf, is_array;
 
 class ExpressionWhere
 extends ExpressionUtil
@@ -16,11 +15,8 @@ extends ExpressionUtil
   public function __construct(
     Closure $closure
   ){
-    $this->startupsBuild(
-      ClosureUtil::addClosure(
-        $closure
-      )
-    );
+    $closure = ClosureUtil::addClosure( $closure);
+    $this->compile( $closure );
   }
 
   private function createExpressionNode(
@@ -28,10 +24,10 @@ extends ExpressionUtil
     array $scopes,
     Closure $closure
   ): array {
-    $tokens = $this->parserTokens( $tokens );
-    $tokens = $this->loopTokens( $tokens, $scopes, $closure );
-    $tokens = $this->joinsTokens( $tokens );
-    $tokens = $this->revaliderTokens( $tokens );
+    $tokens = $this->compileParserTokens( $tokens );
+    $tokens = $this->compileTokens( $tokens, $scopes, $closure );
+    $tokens = $this->compileImplodeTokens( $tokens );
+    $tokens = $this->compileRevaliderTokens( $tokens );
 
     return [
       T_KEY_OBJECT => T_EXPRESSION_NODE,
@@ -47,8 +43,8 @@ extends ExpressionUtil
     $tokens = $this->dropNegative( $tokens );
     if( $this->getExpressionType( $tokens ) === T_IS_EXPRESSION_SUBQUERY ){
       $tokens = $this->dropNegative( $tokens );
-      $tokens = $this->parserTokens( $tokens );
-      $tokens = $this->loopTokens( $tokens, $scopes, $closure );
+      $tokens = $this->compileParserTokens( $tokens );
+      $tokens = $this->compileTokens( $tokens, $scopes, $closure );
 
       return [
         T_KEY_OBJECT => T_EXPRESSION_NEGATIVE,
@@ -66,10 +62,10 @@ extends ExpressionUtil
     Closure $closure
   ): array {
     $tokens = $this->dropParenteses( $tokens );
-    $tokens = $this->parserTokens( $tokens );
-    $tokens = $this->loopTokens( $tokens, $scopes, $closure );
-    $tokens = $this->joinsTokens( $tokens );
-    $tokens = $this->revaliderTokens( $tokens );
+    $tokens = $this->compileParserTokens( $tokens );
+    $tokens = $this->compileTokens( $tokens, $scopes, $closure );
+    $tokens = $this->compileImplodeTokens( $tokens );
+    $tokens = $this->compileRevaliderTokens( $tokens );
 
     return [
       T_KEY_OBJECT => T_EXPRESSION_GROUP,
@@ -87,15 +83,15 @@ extends ExpressionUtil
     $scopes = $this->getScopes( $tokens, $closure, $scopes );
     $tokens = $this->getContext( $tokens );
     $tokens = $this->dropEndInvalids( $tokens );
-    $tokens = $this->parserTokens( $tokens );
-    $tokens = $this->loopTokens( $tokens, $scopes, $closure );
-    $tokens = $this->joinsTokens( $tokens );
-    $tokens = $this->revaliderTokens( $tokens );
-    $table  = $this->getInstanceSubQuery( $scopes );
+    $tokens = $this->compileParserTokens( $tokens );
+    $tokens = $this->compileTokens( $tokens, $scopes, $closure );
+    $tokens = $this->compileImplodeTokens( $tokens );
+    $tokens = $this->compileRevaliderTokens( $tokens );
+    $entity = $this->entitySubQuery( $scopes );
 
     return [ 
       T_KEY_OBJECT => T_EXPRESSION_SUBQUERY,
-      T_KEY_TABLE => $table,
+      T_KEY_ENTITY => $entity,
       T_KEY_METHODS => $events,
       T_KEY_TOKENS => $tokens
     ];
@@ -137,7 +133,7 @@ extends ExpressionUtil
     ];
   }  
 
-  private function loopTokens(
+  private function compileTokens(
     array $tokens,
     array $scopes,
     Closure $closure,
@@ -166,7 +162,7 @@ extends ExpressionUtil
     
     return [
       T_KEY_OBJECT => T_EXPRESSION_FIELD,
-      T_KEY_TABLE => $table,
+      T_KEY_ENTITY => $table,
       T_KEY_FIELD => $field,
       T_KEY_TYPE => $type,
       T_KEY_METHODS => $methods
@@ -217,24 +213,23 @@ extends ExpressionUtil
     return $tokens;
   }  
 
-  private function startupsBuild(
+  private function compile(
     Closure $closure
   ): void {
     $tokens = $this->tokensAll( $closure );
 
     $this->context = $this->createExpressionNode(
-      $this->getContext( $tokens ), 
-      $this->getScopes( $tokens, $closure ), $closure
+      $this->getContext( $tokens ), $this->getScopes( $tokens, $closure ), $closure
     );
   }
 
   private function buildField(
     array $tokensFromField
   ): string {
-    [ T_KEY_TABLE => $table, T_KEY_FIELD => $field, T_KEY_METHODS => $methods
+    [ T_KEY_ENTITY => $entity, T_KEY_FIELD => $field, T_KEY_METHODS => $methods
     ] = $tokensFromField;
 
-    return "{$table}.{$field}";
+    return "{$entity}.{$field}";
   }
 
   private function buildExpressionLogical(
@@ -325,14 +320,14 @@ extends ExpressionUtil
     array $expressionSubQuery
   ): string {
     $expressionSubQueryBuild = $this->buildLoop( $expressionSubQuery[ T_KEY_TOKENS ]);
-    return "{$expressionSubQuery[T_KEY_METHODS]} ( Select 1 From {$expressionSubQuery[T_KEY_TABLE]} Where {$expressionSubQueryBuild})";
+    return "{$expressionSubQuery[T_KEY_METHODS]} ( Select 1 From {$expressionSubQuery[T_KEY_ENTITY]} Where {$expressionSubQueryBuild})";
   }
 
   private function buildExpressionUnary(
     array $expressionUnary
   ): string {
     [ $expressionField ] = $expressionUnary[ T_KEY_TOKENS ];
-    return "{$expressionField[T_KEY_TABLE]}.{$expressionField[T_KEY_FIELD]}";
+    return "{$expressionField[T_KEY_ENTITY]}.{$expressionField[T_KEY_FIELD]}";
   }
 
   private function buildLoop(

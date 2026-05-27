@@ -38,9 +38,9 @@ $repository->where( fn( PropostaEntity $i ) =>
 $rows = $repository->all();
 
 $leftTimer = number_format(( microtime( true ) - $start ) * 1000, 6, ",", "." );
-echo "Execute timer: {$leftTimer}(ms)\n";
+echo "Execute timer: {$leftTimer}(ms)\n\n";
 
-print_r( $rows );
+print_r( $repository->expressionWhere );
 
 // var_dump( $expressionWhere->sqlBuild());
 // print_r( $expressionWhere );

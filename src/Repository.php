@@ -83,10 +83,10 @@ class Repository
 
   public function all(
   ): array {
-    $rows = Database::query(
-      $this->sqlAll(), $this->params
-    );
+    // return Database::query(
+    //   $this->sqlAll(), $this->params
+    // );
 
-    return $rows;
+    return [];
   }
 }

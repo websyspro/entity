@@ -72,7 +72,7 @@ define( "T_KEY_METHODS", "methods" );
 define( "T_KEY_ACTION", "action" );
 define( "T_KEY_IS_NOT", "isnot" );
 define( "T_KEY_ARGS", "args" );
-define( "T_KEY_TABLE", "table" );
+define( "T_KEY_ENTITY", "entity" );
 define( "T_KEY_FIELD", "field" );
 define( "T_KEY_ALIAS", "alias" );
 define( "T_KEY_ISLIST", "islist" );
@@ -498,7 +498,7 @@ class ExpressionUtil
         || $token[T_KEY_NUMBER] === T_BOOLEAN_OR;
   }
 
-  public function parserTokens(
+  public function compileParserTokens(
     array $tokens = [],
     array $curr = [],
     array $accu = [],
@@ -844,7 +844,7 @@ class ExpressionUtil
     if( count( $tokens ) === 1 ){
       [ $expression ] = $tokens;
       if( $expression[ T_KEY_OBJECT ] === T_EXPRESSION_FIELD ){
-        return [ sprintf( "%s.%s", $expression[ T_KEY_TABLE ], $expression[ T_KEY_FIELD ])];
+        return [ sprintf( "%s.%s", $expression[ T_KEY_ENTITY ], $expression[ T_KEY_FIELD ])];
       }
     } else
     if( count( $tokens ) === 3 ){
@@ -853,7 +853,7 @@ class ExpressionUtil
         if( $expressionEqual[ T_KEY_OBJECT ] === T_EXPRESSION_EQUAL ){
           if( $expressionRight[ T_KEY_OBJECT ] === T_EXPRESSION_VALUE ){
             return [
-              sprintf( "%s.%s", $expressionLeft[ T_KEY_TABLE ], $expressionLeft[ T_KEY_FIELD ]), 
+              sprintf( "%s.%s", $expressionLeft[ T_KEY_ENTITY ], $expressionLeft[ T_KEY_FIELD ]), 
               $expressionEqual[ T_KEY_VALUE ], $expressionRight[ T_KEY_VALUE ]
             ];
           } 
@@ -863,8 +863,8 @@ class ExpressionUtil
         if( $expressionEqual[ T_KEY_OBJECT ] === T_EXPRESSION_EQUAL ){
           if( $expressionRight[ T_KEY_OBJECT ] === T_EXPRESSION_FIELD ){
             return [
-              sprintf( "%s.%s", $expressionLeft[ T_KEY_TABLE ], $expressionLeft[ T_KEY_FIELD ]), $expressionEqual[ T_KEY_VALUE ],
-              sprintf( "%s.%s", $expressionRight[ T_KEY_TABLE ], $expressionRight[ T_KEY_FIELD ])
+              sprintf( "%s.%s", $expressionLeft[ T_KEY_ENTITY ], $expressionLeft[ T_KEY_FIELD ]), $expressionEqual[ T_KEY_VALUE ],
+              sprintf( "%s.%s", $expressionRight[ T_KEY_ENTITY ], $expressionRight[ T_KEY_FIELD ])
             ];
           }
         }
@@ -883,10 +883,10 @@ class ExpressionUtil
       : false;
   }
 
-  public function joinsTokens(
+  public function compileImplodeTokens(
     array $tokens
   ): array {
-    if(count($tokens) <= 2){
+    if( count( $tokens ) <= 2 ){
       return $tokens;
     }
 
@@ -945,18 +945,15 @@ class ExpressionUtil
     return $tokens;
   }
 
-  public function revaliderTokens(
+  public function compileRevaliderTokens(
     array $tokens = []
   ): array {
-    return $tokens;
-
     foreach($tokens as $key => $token){
       $expressionObject = $token[ T_KEY_OBJECT ];
       
       $expressionObjectIsRevalider = in_array(
         $expressionObject, [ T_EXPRESSION_COMPARE, T_EXPRESSION_UNARY, T_EXPRESSION_NEGATIVE ]
       ) === false;
-
       
       if( $expressionObjectIsRevalider ){
         continue;
@@ -970,25 +967,9 @@ class ExpressionUtil
           $methods, fn( array $method ) => $method[T_KEY_ACTION] === T_METHODS_ACTION_COMPARE 
         ));
 
-        if( count( $methodCompareList ) === 0 ){
-          // $tokens[ $key ] = [
-          //   T_KEY_OBJECT => T_EXPRESSION_COMPARE,
-          //   T_KEY_TOKENS => [ $expressionField,
-          //     [ 
-          //       T_KEY_OBJECT => T_EXPRESSION_EQUAL,
-          //       T_KEY_VALUE => "=" ],
-          //     [ 
-          //       T_KEY_OBJECT => T_EXPRESSION_VALUE,
-          //       T_KEY_ISLIST => T_KEY_NO,
-          //       T_KEY_VALUE => $token[T_KEY_IS_NOT] === T_KEY_YES
-          //         ? T_IS_EXPRESSION_UNARY_IS_NOT_YES
-          //         : T_IS_EXPRESSION_UNARY_IS_NOT_NO
-          //     ],
-          //   ]
-          // ];          
-        } else {
+        if( count( $methodCompareList ) !== 0 ){
           [ $methodCompare ] = $methodCompareList;
-          [ T_KEY_TABLE => $table, T_KEY_FIELD => $field, T_KEY_TYPE => $type ] = $expressionField;
+          [ T_KEY_ENTITY => $table, T_KEY_FIELD => $field, T_KEY_TYPE => $type ] = $expressionField;
 
           $isMethodCompareLikes = in_array( 
             $methodCompare[ T_KEY_METHODS ], [
@@ -1005,7 +986,7 @@ class ExpressionUtil
                   default => T_EXPRESSION_LIKE
               },
               T_KEY_TOKENS => [
-                [ T_KEY_OBJECT => T_EXPRESSION_FIELD, T_KEY_TABLE => $table, T_KEY_FIELD => $field, T_KEY_TYPE => $type,
+                [ T_KEY_OBJECT => T_EXPRESSION_FIELD, T_KEY_ENTITY => $table, T_KEY_FIELD => $field, T_KEY_TYPE => $type,
                   T_KEY_METHODS => array_values( array_filter( 
                     $methods, fn( array $method ) => $method[T_KEY_ACTION] !== T_METHODS_ACTION_COMPARE 
                   ))
@@ -1332,7 +1313,7 @@ class ExpressionUtil
     return $scope[ T_KEY_INSTANCE ];
   }
 
-  public function getInstanceSubQuery(
+  public function entitySubQuery(
     array $scopes
   ): string {
     [ $scope ] = array_slice( $scopes, -1, 1 );
