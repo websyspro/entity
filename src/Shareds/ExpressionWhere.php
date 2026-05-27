@@ -16,18 +16,36 @@ extends ExpressionUtil
     Closure $closure
   ){
     $closure = ClosureUtil::addClosure( $closure);
-    $this->compile( $closure );
+    $this->preCompile( $closure );
   }
+
+  private function preCompile(
+    Closure $closure
+  ): void {
+    $tokens = $this->tokensAll( $closure );
+
+    if( $this->existsCache( $tokens )){
+      $this->context = $this->loadCache();
+    } else {
+      $this->context = $this->createExpressionNode(
+        $this->getContext( $tokens ), $this->getScopes( $tokens, $closure ), $closure
+      );
+  
+      if( empty( $this->context ) === false ){
+        $this->saveCache( $tokens, $this->context );
+      } 
+    }
+  }  
 
   private function createExpressionNode(
     array $tokens,
     array $scopes,
     Closure $closure
   ): array {
-    $tokens = $this->compileParserTokens( $tokens );
-    $tokens = $this->compileTokens( $tokens, $scopes, $closure );
-    $tokens = $this->compileImplodeTokens( $tokens );
-    $tokens = $this->compileRevaliderTokens( $tokens );
+    $tokens = $this->preCompileParserTokens( $tokens );
+    $tokens = $this->preCompileTokens( $tokens, $scopes, $closure );
+    $tokens = $this->preCompileImplodeTokens( $tokens );
+    $tokens = $this->preCompileRevaliderTokens( $tokens );
 
     return [
       T_KEY_OBJECT => T_EXPRESSION_NODE,
@@ -43,8 +61,8 @@ extends ExpressionUtil
     $tokens = $this->dropNegative( $tokens );
     if( $this->getExpressionType( $tokens ) === T_IS_EXPRESSION_SUBQUERY ){
       $tokens = $this->dropNegative( $tokens );
-      $tokens = $this->compileParserTokens( $tokens );
-      $tokens = $this->compileTokens( $tokens, $scopes, $closure );
+      $tokens = $this->preCompileParserTokens( $tokens );
+      $tokens = $this->preCompileTokens( $tokens, $scopes, $closure );
 
       return [
         T_KEY_OBJECT => T_EXPRESSION_NEGATIVE,
@@ -62,10 +80,10 @@ extends ExpressionUtil
     Closure $closure
   ): array {
     $tokens = $this->dropParenteses( $tokens );
-    $tokens = $this->compileParserTokens( $tokens );
-    $tokens = $this->compileTokens( $tokens, $scopes, $closure );
-    $tokens = $this->compileImplodeTokens( $tokens );
-    $tokens = $this->compileRevaliderTokens( $tokens );
+    $tokens = $this->preCompileParserTokens( $tokens );
+    $tokens = $this->preCompileTokens( $tokens, $scopes, $closure );
+    $tokens = $this->preCompileImplodeTokens( $tokens );
+    $tokens = $this->preCompileRevaliderTokens( $tokens );
 
     return [
       T_KEY_OBJECT => T_EXPRESSION_GROUP,
@@ -83,10 +101,10 @@ extends ExpressionUtil
     $scopes = $this->getScopes( $tokens, $closure, $scopes );
     $tokens = $this->getContext( $tokens );
     $tokens = $this->dropEndInvalids( $tokens );
-    $tokens = $this->compileParserTokens( $tokens );
-    $tokens = $this->compileTokens( $tokens, $scopes, $closure );
-    $tokens = $this->compileImplodeTokens( $tokens );
-    $tokens = $this->compileRevaliderTokens( $tokens );
+    $tokens = $this->preCompileParserTokens( $tokens );
+    $tokens = $this->preCompileTokens( $tokens, $scopes, $closure );
+    $tokens = $this->preCompileImplodeTokens( $tokens );
+    $tokens = $this->preCompileRevaliderTokens( $tokens );
     $entity = $this->entitySubQuery( $scopes );
 
     return [ 
@@ -125,7 +143,7 @@ extends ExpressionUtil
     $tokens = $this->parserTokensCompare( $tokens );
     $tokens = $this->loopCompareTokens( $closure, $scopes, $tokens );
     $tokens = $this->adjustComparePositions( $tokens );
-    $tokens = $this->adjustCompareParserValue( $closure, $tokens );
+    // $tokens = $this->adjustCompareParserValue( $closure, $tokens );
 
     return [
       T_KEY_OBJECT => T_EXPRESSION_COMPARE,
@@ -133,7 +151,7 @@ extends ExpressionUtil
     ];
   }  
 
-  private function compileTokens(
+  private function preCompileTokens(
     array $tokens,
     array $scopes,
     Closure $closure,
@@ -186,9 +204,9 @@ extends ExpressionUtil
   ): array {
     $isList = $this->isExpressionValueList( $tokens );
     $tokens = $this->dropCurlOpenAndNotDot( $tokens );
-    $tokens = $this->updateTokensVariable( $tokens, $closure );
-    $tokens = $this->updateTokensEnums( $tokens, $closure );
-    $tokens = $this->adjustValues( $tokens );
+    // $tokens = $this->updateTokensVariable( $tokens, $closure );
+    // $tokens = $this->updateTokensEnums( $tokens, $closure );
+    // $tokens = $this->adjustValues( $tokens );
 
     return [
       T_KEY_OBJECT => T_EXPRESSION_VALUE,
@@ -211,18 +229,8 @@ extends ExpressionUtil
     }
 
     return $tokens;
-  }  
-
-  private function compile(
-    Closure $closure
-  ): void {
-    $tokens = $this->tokensAll( $closure );
-
-    $this->context = $this->createExpressionNode(
-      $this->getContext( $tokens ), $this->getScopes( $tokens, $closure ), $closure
-    );
   }
-
+  
   private function buildField(
     array $tokensFromField
   ): string {

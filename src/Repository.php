@@ -27,9 +27,9 @@ class Repository
 
   private function startups(
   ): void {
-    if( class_exists( $this->entity )){
-      $this->entityStructure = $this->entity::meta( MetaType::Query );
-    }
+    // if( class_exists( $this->entity )){
+    //   $this->entityStructure = $this->entity::meta( MetaType::Query );
+    // }
   }
 
   private function tableAlias(
