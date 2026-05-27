@@ -62,7 +62,7 @@ class Repository
   private function preparedWhere(
   ): string|null {
     if( isset( $this->expressionWhere )){
-      return preg_replace_callback( "#\:param_\d+_\d+#", fn( array $matches ) => (
+      return preg_replace_callback( "#\:param_\d*_\d*#", fn( array $matches ) => (
         $this->addParam( $matches, ClosureUtil::getParams( $this->closureWhere ))
       ), $this->expressionWhere->sqlBuild());
     }
@@ -70,27 +70,23 @@ class Repository
     return null;
   }
 
+  private function sqlAll(
+  ): string {
+    return (
+      "Select *
+         From {$this->tableAlias()} 
+        Where {$this->preparedWhere()}
+     Order by 1 asc   
+       Offset 0 Rows Fetch Next 12 Rows Only"
+    );
+  }
+
   public function all(
   ): array {
-    var_dump(
-      "Select *
-         From {$this->tableAlias()} 
-        Where {$this->preparedWhere()}
-     Order by 1 asc   
-       Offset 1 Rows Fetch Next 12 Rows Only"
-    );
-
     $rows = Database::query(
-      "Select *
-         From {$this->tableAlias()} 
-        Where {$this->preparedWhere()}
-     Order by 1 asc   
-       Offset 1 Rows Fetch Next 12 Rows Only",
-       $this->params
+      $this->sqlAll(), $this->params
     );
 
-    print_r($rows);
-
-    return [];
+    return $rows;
   }
 }

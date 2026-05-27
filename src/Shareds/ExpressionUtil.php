@@ -68,7 +68,7 @@ define( "T_VALUE_AND_FIELD", 4 );
 
 define( "T_KEY_OBJECT", "object" );
 define( "T_KEY_TOKENS", "tokens" );
-define( "T_KEY_METHOD", "method" );
+define( "T_KEY_METHODS", "methods" );
 define( "T_KEY_ACTION", "action" );
 define( "T_KEY_IS_NOT", "isnot" );
 define( "T_KEY_ARGS", "args" );
@@ -590,9 +590,9 @@ class ExpressionUtil
     } else if( $isNotExpressionEqual && $islist === T_KEY_YES ){
       return [ T_KEY_OBJECT => T_EXPRESSION_EQUAL, T_KEY_VALUE => 'Not In' ];
     } else if( $isExpressionEqual && $isExpressionNull ){
-      return [ T_KEY_OBJECT => T_EXPRESSION_EQUAL, T_KEY_VALUE => 'Is Null' ];
+      return [ T_KEY_OBJECT => T_EXPRESSION_EQUAL, T_KEY_VALUE => 'Is' ];
     } else if( $isNotExpressionEqual && $isExpressionNull ){
-      return [ T_KEY_OBJECT => T_EXPRESSION_EQUAL, T_KEY_VALUE => 'Not Null' ];
+      return [ T_KEY_OBJECT => T_EXPRESSION_EQUAL, T_KEY_VALUE => 'Is Not' ];
     } else if( $isExpressionEqual ){
       return [ T_KEY_OBJECT => T_EXPRESSION_EQUAL, T_KEY_VALUE => '=' ];
     } else if( $isNotExpressionEqual ){
@@ -726,7 +726,14 @@ class ExpressionUtil
     array $expressionLeft,
     string $value
   ): string {
-    $instanceType = $expressionLeft[T_KEY_TYPE];
+    $instanceType = $expressionLeft[
+      T_KEY_TYPE
+    ];
+
+    if( strtolower( $value )  === 'null' ){
+      return $instanceType::$columnType->Encode( $value );
+    }
+
     return ClosureUtil::createParam(
       $closure, $instanceType::$columnType->Encode( $value )
     );
@@ -941,6 +948,8 @@ class ExpressionUtil
   public function revaliderTokens(
     array $tokens = []
   ): array {
+    return $tokens;
+
     foreach($tokens as $key => $token){
       $expressionObject = $token[ T_KEY_OBJECT ];
       
@@ -982,7 +991,7 @@ class ExpressionUtil
           [ T_KEY_TABLE => $table, T_KEY_FIELD => $field, T_KEY_TYPE => $type ] = $expressionField;
 
           $isMethodCompareLikes = in_array( 
-            $methodCompare[ T_KEY_METHOD ], [
+            $methodCompare[ T_KEY_METHODS ], [
               T_METHODS_START_WITH, T_METHODS_NOT_START_WITH,
               T_METHODS_END_WITH, T_METHODS_NOT_END_WITH,
               T_METHODS_CONTAINS, T_METHODS_NOT_CONTAINS,
@@ -991,13 +1000,13 @@ class ExpressionUtil
 
           if( $isMethodCompareLikes ){
             $tokens[ $key ] = [
-              T_KEY_OBJECT => match($methodCompare[ T_KEY_METHOD ]){
+              T_KEY_OBJECT => match( $methodCompare[ T_KEY_METHODS ]){
                 T_METHODS_NOT_START_WITH, T_METHODS_NOT_END_WITH, T_METHODS_NOT_CONTAINS  => T_EXPRESSION_NOT_LIKE,
                   default => T_EXPRESSION_LIKE
               },
               T_KEY_TOKENS => [
                 [ T_KEY_OBJECT => T_EXPRESSION_FIELD, T_KEY_TABLE => $table, T_KEY_FIELD => $field, T_KEY_TYPE => $type,
-                  T_KEY_METHOD => array_values( array_filter( 
+                  T_KEY_METHODS => array_values( array_filter( 
                     $methods, fn( array $method ) => $method[T_KEY_ACTION] !== T_METHODS_ACTION_COMPARE 
                   ))
                 ], [ 
@@ -1014,14 +1023,14 @@ class ExpressionUtil
       } else
       if( $expressionObject === T_EXPRESSION_COMPARE ){
         [ $expressionField, $expressionEqual, $expressionValue ] = $token[ T_KEY_TOKENS ];
-        [ T_KEY_METHOD => $methods ] = $expressionField;
+        [ T_KEY_METHODS => $methods ] = $expressionField;
 
         if( in_array( $expressionEqual[ T_KEY_VALUE ], [ T_IS_EXPRESSION_EQUAL_IN, T_IS_EXPRESSION_EQUAL_NOT_IN ] )){
           $tokens[ $key ] = [
             T_KEY_OBJECT => $expressionEqual[ T_KEY_VALUE ] === T_IS_EXPRESSION_EQUAL_IN ? T_EXPRESSION_IN : T_EXPRESSION_NOT_IN,
             T_KEY_TOKENS => [
               array_merge( $expressionField, [
-                T_KEY_METHOD => array_values( array_filter( 
+                T_KEY_METHODS => array_values( array_filter( 
                   $methods, fn( array $method ) => $method[T_KEY_ACTION] !== T_METHODS_ACTION_COMPARE 
                 ))
               ]), $expressionValue
@@ -1033,7 +1042,7 @@ class ExpressionUtil
             T_KEY_OBJECT => $expressionEqual[ T_KEY_VALUE ] === T_IS_EXPRESSION_EQUAL_LIKE ? T_EXPRESSION_LIKE : T_EXPRESSION_NOT_LIKE,
             T_KEY_TOKENS => [
               array_merge( $expressionField, [
-                T_KEY_METHOD => array_values( array_filter( 
+                T_KEY_METHODS => array_values( array_filter( 
                   $methods, fn( array $method ) => $method[T_KEY_ACTION] !== T_METHODS_ACTION_COMPARE 
                 ))
               ]), array_merge( $expressionValue, [ T_KEY_VALUE => [ $expressionValue[ T_KEY_VALUE ]]])
@@ -1100,7 +1109,7 @@ class ExpressionUtil
         $methodTypes = in_array( $methodName[ T_KEY_VALUE ], T_METHODS_ACTION_MODIFY_LIST );
 
         return [ 
-          T_KEY_METHOD => $methodName[ T_KEY_VALUE ],
+          T_KEY_METHODS => $methodName[ T_KEY_VALUE ],
           T_KEY_ACTION => $methodTypes ? T_METHODS_ACTION_MODIFY : T_METHODS_ACTION_COMPARE,
           T_KEY_ARGS => $methodoArgs
         ];

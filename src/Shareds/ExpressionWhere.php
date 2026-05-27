@@ -96,7 +96,7 @@ extends ExpressionUtil
     return [ 
       T_KEY_OBJECT => T_EXPRESSION_SUBQUERY,
       T_KEY_TABLE => $table,
-      T_KEY_METHOD => $events,
+      T_KEY_METHODS => $events,
       T_KEY_TOKENS => $tokens
     ];
   }
@@ -169,7 +169,7 @@ extends ExpressionUtil
       T_KEY_TABLE => $table,
       T_KEY_FIELD => $field,
       T_KEY_TYPE => $type,
-      T_KEY_METHOD => $methods
+      T_KEY_METHODS => $methods
     ];
   }
 
@@ -221,100 +221,70 @@ extends ExpressionUtil
     Closure $closure
   ): void {
     $tokens = $this->tokensAll( $closure );
-    
+
     $this->context = $this->createExpressionNode(
       $this->getContext( $tokens ), 
       $this->getScopes( $tokens, $closure ), $closure
     );
   }
 
-  private function buildExpressionLogical(
-    array $tokens
+  private function buildField(
+    array $tokensFromField
   ): string {
-    return sprintf( "%s", $tokens[T_KEY_TOKENS]);
-  }  
+    [ T_KEY_TABLE => $table, T_KEY_FIELD => $field, T_KEY_METHODS => $methods
+    ] = $tokensFromField;
 
-  private function buildExpressionGroup(
-    array $token
-  ): string {
-    return sprintf( "(%s)", $this->buildLoop($token[T_KEY_TOKENS], $token[T_KEY_OBJECT]));
+    return "{$table}.{$field}";
   }
 
+  private function buildExpressionLogical(
+    array $expressionLogical
+  ): string {
+    return $expressionLogical[T_KEY_TOKENS];
+  }  
+
   private function buildExpressionCompare(
-    array $tokens
+    array $expressionCompare
   ): string|null {
-    $expressionCompareType = $this->expressionCompareType($tokens);
+    $expressionCompareType = $this->expressionCompareType($expressionCompare);
  
     if( $expressionCompareType === T_FIELD_AND_VALUE ){
       [ $expressionField, $expressionEqual, $expressionValue 
-      ] = $tokens[ T_KEY_TOKENS ];
-      
-      $methodExists = count(
-        $expressionField[ T_KEY_METHOD ]
-      );
+      ] = $expressionCompare[ T_KEY_TOKENS ];
 
-      $tableField = sprintf( "%s.%s", 
-        $expressionField[ T_KEY_TABLE ],
-        $expressionField[ T_KEY_FIELD ]
-      );
-      
-      return sprintf( "%s %s %s", $tableField, $expressionEqual[ T_KEY_VALUE ], $expressionValue[ T_KEY_VALUE ]);
+      return sprintf( "%s %s %s", $this->buildField( $expressionField ), $expressionEqual[ T_KEY_VALUE ], $expressionValue[ T_KEY_VALUE ]);
     } else
     if( $expressionCompareType === T_FIELD_AND_FIELD ){
       [ $expressionField1, $expressionEqual, $expressionField2 
-      ] = $tokens[ T_KEY_TOKENS ];
+      ] = $expressionCompare[ T_KEY_TOKENS ];
       
-      $tableField1 = "{$expressionField1[T_KEY_TABLE]}.{$expressionField1[T_KEY_FIELD]}";
-      $tableField2 = "{$expressionField2[T_KEY_TABLE]}.{$expressionField2[T_KEY_FIELD]}";
-      
-      return "{$tableField1} {$expressionEqual[T_KEY_VALUE]} {$tableField2}";
+      return "{$this->buildField( $expressionField1 )} {$expressionEqual[T_KEY_VALUE]} {$this->buildField( $expressionField2 )}";
     }
 
     return null;
   }
 
   private function buildExpressionIn(
-    array $tokens
+    array $expressionIn
   ): string {
-    [ $expressionField, $expressionValue 
-    ] = $tokens[ T_KEY_TOKENS ];
-
-    $tableField = sprintf( "%s.%s", 
-      $expressionField[ T_KEY_TABLE ],
-      $expressionField[ T_KEY_FIELD ]
-    );    
-
-    return sprintf( "%s In %s", $tableField, $expressionValue[ T_KEY_VALUE ]);;
+    [ $expressionField, $expressionValue ] = $expressionIn[ T_KEY_TOKENS ];
+    return "{$this->buildField($expressionField)} In {$expressionValue[T_KEY_VALUE]}";
   }
 
   private function buildExpressionNotIn(
-    array $tokens
+    array $expressionNotIn
   ): string {
-    [ $expressionField, $expressionValue 
-    ] = $tokens[ T_KEY_TOKENS ];
-
-    $tableField = sprintf( "%s.%s", 
-      $expressionField[ T_KEY_TABLE ],
-      $expressionField[ T_KEY_FIELD ]
-    );    
-
-    return sprintf( "%s Not In %s", $tableField, $expressionValue[ T_KEY_VALUE ]);;
+    [ $expressionField, $expressionValue ] = $expressionNotIn[T_KEY_TOKENS];
+    return "{$this->buildField($expressionField)} Not In {$expressionValue[ T_KEY_VALUE ]}";
   }  
 
   private function buildExpressionLike(
-    array $tokens
+    array $expressionLike
   ): string {
-    [ $expressionField, $expressionValue 
-    ] = $tokens[ T_KEY_TOKENS ];
-
-    $tableField = sprintf( "%s.%s", 
-      $expressionField[ T_KEY_TABLE ],
-      $expressionField[ T_KEY_FIELD ]
-    );
-
+    [ $expressionField, $expressionValue ] = $expressionLike[T_KEY_TOKENS];
     return is_array( $expressionValue[ T_KEY_VALUE ])
-      ? sprintf( "%s Like %s", $tableField, join( "", $expressionValue[ T_KEY_VALUE ]))
-      : sprintf( "%s Like %s", $tableField, join( "", $expressionValue[ T_KEY_VALUE ]));
+      ? sprintf( "%s Like %s", $this->buildField($expressionField), join( "", $expressionValue[ T_KEY_VALUE ]))
+      : sprintf( "%s Like %s", $this->buildField($expressionField), join( "", $expressionValue[ T_KEY_VALUE ]));
   }
 
   private function buildExpressionNotLike(
@@ -323,8 +293,7 @@ extends ExpressionUtil
     [ $expressionField, $expressionValue 
     ] = $expressionNotLike[ T_KEY_TOKENS ];
 
-    $expressionNotLikeField = "{$expressionField[T_KEY_TABLE]}.{$expressionField[T_KEY_FIELD]}";
-    return "{$expressionNotLikeField} Not Like {$expressionValue[T_KEY_VALUE][0]}";
+    return "{$this->buildField($expressionField)} Not Like {$expressionValue[T_KEY_VALUE][0]}";
   }
   
   private function buildExpressionNegative(
@@ -333,9 +302,15 @@ extends ExpressionUtil
     [ $expressionChild ] = $expressionNegative[ T_KEY_TOKENS ];
     
     if( $expressionChild[ T_KEY_OBJECT ] === T_EXPRESSION_SUBQUERY ){
-      return "Not {$this->buildLoop( $expressionNegative[ T_KEY_TOKENS ])}";
-    } else return "{$this->buildLoop( $expressionNegative[ T_KEY_TOKENS ])}";
+      return "Not {$this->buildLoop($expressionChild)}";
+    } else return "{$this->buildLoop($expressionChild)}";
   }
+
+  private function buildExpressionGroup(
+    array $expressionGroup
+  ): string {
+    return "({$this->buildLoop($expressionGroup[T_KEY_TOKENS])})";
+  }  
 
   private function buildExpressionBetween(
     array $expressionBetween
@@ -343,33 +318,25 @@ extends ExpressionUtil
     [ $expressionField, $expressionValueStart, $expressionValueEnd 
     ] = $expressionBetween[ T_KEY_TOKENS ];
 
-    $tableField = sprintf( "%s.%s", 
-      $expressionField[ T_KEY_TABLE ],
-      $expressionField[ T_KEY_FIELD ]
-    );    
-
-    return "{$tableField} Between {$expressionValueStart[T_KEY_VALUE]} And {$expressionValueEnd[T_KEY_VALUE]}";
+    return "{$this->buildField($expressionField)} Between {$expressionValueStart[T_KEY_VALUE]} And {$expressionValueEnd[T_KEY_VALUE]}";
   }
 
   private function buildExpressionSubQuery(
-    array $expressionSubQuery,
-    string|null $parent = null
+    array $expressionSubQuery
   ): string {
     $expressionSubQueryBuild = $this->buildLoop( $expressionSubQuery[ T_KEY_TOKENS ]);
-    return "{$expressionSubQuery[T_KEY_METHOD]} ( Select 1 From {$expressionSubQuery[T_KEY_TABLE]} Where {$expressionSubQueryBuild})";
+    return "{$expressionSubQuery[T_KEY_METHODS]} ( Select 1 From {$expressionSubQuery[T_KEY_TABLE]} Where {$expressionSubQueryBuild})";
   }
 
   private function buildExpressionUnary(
-    array $expressionUnary,
-    string|null $parent = null
+    array $expressionUnary
   ): string {
     [ $expressionField ] = $expressionUnary[ T_KEY_TOKENS ];
     return "{$expressionField[T_KEY_TABLE]}.{$expressionField[T_KEY_FIELD]}";
   }
 
   private function buildLoop(
-    array $tokens,
-    string|null $parent = null
+    array $tokens
   ): string {
     foreach( $tokens as $key => $token){
       $tokens[ $key ] = match( $token[ T_KEY_OBJECT ]){

@@ -1,11 +1,8 @@
 <?php
 
-use Websyspro\Entity\Repository;
-use Websyspro\Entity\Shareds\ClosureUtil;
-use Websyspro\Test\Crm\Entitys\ItemPropostaEntity;
 use Websyspro\Test\Crm\Entitys\PropostaEntity;
-use Websyspro\Entity\Shareds\ExpressionWhere;
 use Websyspro\Test\Enums\Status;
+use Websyspro\Entity\Repository;
 
 $start = microtime( true );
 
@@ -33,27 +30,17 @@ $closure = fn( PropostaEntity $i ) => (
   // && $i->IsActive === false 
 );
 
-//print_r(ExtractFromFN::get( $closure )->tokens);
-
-// $expressoinNode = new ExpressionNode(
-//   ExtractFromFN::get( $closure )->tokens, new Collection(), $closure
-// );
-
-// for( $i = 0; $i <= 50; $i++ ){
-//   ClosureUtil::getEntityStructure( PropostaEntity::class );
-// }
 
 $repository = new Repository( PropostaEntity::class );
 $repository->where( fn( PropostaEntity $i ) => 
-  !$i->IsDeleted && $i->Status !== [
-    Status::ContestadoPeloGerente,
-    Status::ContestadoPeloPlanejamento
-  ] && $i->NomeProposta === 'ALAMBARI%' );
-$repository->all();
+  $i->IsActive && !$i->IsDeleted && $i->ConsultorVendasEspeciaisId != null && $i->NomeProposta === "MARACANAU - Frio - 1"
+);
+$rows = $repository->all();
 
 $leftTimer = number_format(( microtime( true ) - $start ) * 1000, 6, ",", "." );
-echo "\nExecute timer: {$leftTimer}(ms)";
+echo "Execute timer: {$leftTimer}(ms)\n";
 
-// print_r( ClosureUtil::getParams( $closure ));
+print_r( $rows );
+
 // var_dump( $expressionWhere->sqlBuild());
 // print_r( $expressionWhere );
