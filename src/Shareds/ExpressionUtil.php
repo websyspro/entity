@@ -6,6 +6,7 @@ use Websyspro\Entity\Decorations\Columns\Datetime;
 use ReflectionFunction;
 use Closure;
 use function ord, count, is_string, is_array, in_array, array_slice, sprintf, defined;
+use Websyspro\Entity\Enums\MetaType;
 
 define( "T_START_PARENTESES", 40 );
 define( "T_END_PARENTESES", 41 );
@@ -73,6 +74,8 @@ define( "T_KEY_ACTION", "action" );
 define( "T_KEY_IS_NOT", "isnot" );
 define( "T_KEY_ARGS", "args" );
 define( "T_KEY_ENTITY", "entity" );
+define( "T_KEY_COLUMNS", "columns" );
+define( "T_KEY_COLUMNS_ALIAS", "columnsAlias" );
 define( "T_KEY_FIELD", "field" );
 define( "T_KEY_ALIAS", "alias" );
 define( "T_KEY_ISLIST", "islist" );
@@ -82,7 +85,8 @@ define( "T_KEY_NUMBER", "number" );
 define( "T_KEY_NAME", "name" );
 define( "T_KEY_VARIABLE", "variable" );
 define( "T_KEY_INSTANCE", "instance" );
-define( "T_KEY_CACHE", "instance" );
+define( "T_KEY_CACHE", "cache" );
+define( "T_KEY_CACHE_TOKENS", "cache-tokens" );
 
 define( "T_KEY_NO", "no" );
 define( "T_KEY_YES", "yes" );
@@ -102,7 +106,7 @@ define( "T_EVENTS_LIST", [ "any" => "Exists" ]);
 
 class ExpressionUtil
 {
-  public string $cacheName;
+  public string $cacheOrm;
 
   public function find(
     array $tokens,
@@ -467,8 +471,12 @@ class ExpressionUtil
   public function cache(
     array $tokens
   ): string {
+    if( file_exists( BASEDIR_APP . "/cache" ) === false ){
+      mkdir( BASEDIR_APP . "/cache" );
+    }
+
     return sprintf( "%s/cache/cache-orm-%s.php", 
-      BASEDIR_APP, $this->cacheName = md5( serialize( $tokens ))
+      BASEDIR_APP, $this->cacheOrm = md5( serialize( $tokens ))
     );
   }
 
@@ -492,13 +500,15 @@ class ExpressionUtil
   public function loadCache(
   ): array {
     return require sprintf( "%s/cache/cache-orm-%s.php", 
-      BASEDIR_APP, $this->cacheName
+      BASEDIR_APP, $this->cacheOrm
     );
   }  
   
   public function tokensAll(
     Closure $closure,
-    array $tokens = []
+    string $entity,
+    array $tokens = [],
+    array $tokensContext = []
   ): array {
     $tokens = $this->tokensByReflection(
       ClosureUtil::getReflectFunction(
@@ -506,16 +516,25 @@ class ExpressionUtil
       )
     );
 
-    for($i=0; $i < count($tokens); $i++){
-      $tokens[$i] = is_array( $tokens[ $i ]) 
-        ? $this->createToken( $tokens[ $i ]) 
-        : $this->createToken( $tokens[ $i ]);
-    }
+    if( Cache::exist( T_KEY_CACHE_TOKENS, $tokens )){
+      return Cache::load( T_KEY_CACHE_TOKENS, $tokens );
+    } else {
+      for($i=0; $i < count($tokens); $i++){
+        $tokensContext[$i] = is_array( $tokens[ $i ]) 
+          ? $this->createToken( $tokens[ $i ]) 
+          : $this->createToken( $tokens[ $i ]);
+      }
 
-    $tokens = $this->dropWriteSpace($tokens);
-    $tokens = $this->dropInitialInvalids($tokens);
-    $tokens = $this->dropEndInvalids($tokens);
-    return $tokens; 
+      $tokensContext = $this->dropWriteSpace($tokensContext);
+      $tokensContext = $this->dropInitialInvalids($tokensContext);
+      $tokensContext = $this->dropEndInvalids($tokensContext);
+      return Cache::save( T_KEY_CACHE_TOKENS, $tokens, [
+        T_KEY_ENTITY => $entity::meta(MetaType::Query)->entity,
+        T_KEY_COLUMNS => $entity::meta(MetaType::Query)->columns,
+        T_KEY_COLUMNS_ALIAS => $entity::meta(MetaType::Query)->alias, 
+        T_KEY_TOKENS => $tokensContext
+      ]);
+    }
   }  
 
   public function isLogical(

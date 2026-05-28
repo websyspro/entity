@@ -6,37 +6,48 @@ use Closure;
 use ReflectionFunction;
 use function sprintf, is_array;
 
-class ExpressionWhere
-extends ExpressionUtil
+class ExpressionWhere extends ExpressionUtil
 {
   public ReflectionFunction $reflectionFunction;
   public array $context = [];
 
   public function __construct(
-    Closure $closure
+    string $entity,
+    Closure $closure,
   ){
-    $closure = ClosureUtil::addClosure( $closure);
-    $this->preCompile( $closure );
+    $this->preCompile($entity, ClosureUtil::addClosure($closure));
   }
 
   private function preCompile(
+    string $entity,
     Closure $closure
   ): void {
-    $tokens = $this->tokensAll( $closure );
+    [ T_KEY_ENTITY => $entity, 
+      T_KEY_TOKENS => $tokens,
+      T_KEY_COLUMNS => $columns,
+      T_KEY_COLUMNS_ALIAS => $columnsAlias,
+    ] = $this->tokensAll($closure, $entity);
 
-    if( $this->existsCache( $tokens )){
-      $this->context = $this->loadCache();
+    if( Cache::exist(T_KEY_CACHE, $tokens)){
+      $this->context = Cache::load(T_KEY_CACHE, $tokens);
     } else {
-      $this->context = $this->createExpressionNode(
-        $this->getContext( $tokens ), $this->getScopes( $tokens, $closure ), $closure
-      );
+      $this->context = [
+        T_KEY_ENTITY => $entity,
+        T_KEY_COLUMNS => $columns,
+        T_KEY_COLUMNS_ALIAS => $columnsAlias,
+        T_KEY_TOKENS => $this->createExpressionNode(
+          $this->getContext( $tokens ), $this->getScopes( 
+            $tokens, $closure 
+          ), $closure
+        )
+      ];
   
       if( empty( $this->context ) === false ){
-        $this->saveCache( $tokens, $this->context );
+        Cache::save(T_KEY_CACHE, $tokens, $this->context);
       } 
     }
-  }  
-
+  } 
+  
   private function createExpressionNode(
     array $tokens,
     array $scopes,
@@ -49,7 +60,7 @@ extends ExpressionUtil
 
     return [
       T_KEY_OBJECT => T_EXPRESSION_NODE,
-      T_KEY_TOKENS => $tokens
+      T_KEY_TOKENS => $tokens,
     ];
   }
 
@@ -230,6 +241,25 @@ extends ExpressionUtil
 
     return $tokens;
   }
+
+  private function posCompileTokens(
+    array $tokens,
+    array $scopes,
+    Closure $closure,
+  ): array {
+    foreach($tokens as $key => $token){
+      $tokens[$key] = match( $this->getExpressionType( $token )){
+        T_IS_EXPRESSION_NEGATIVE => $this->createExpressionNegative( $token, $scopes, $closure ),
+        T_IS_EXPRESSION_GROUP => $this->createExpressionGroup( $token, $scopes, $closure ),
+        T_IS_EXPRESSION_SUBQUERY => $this->createExpressionSubQuery( $token, $scopes, $closure ),  
+        T_IS_EXPRESSION_LOGICAL => $this->createExpressionLogical( $token ),
+        T_IS_EXPRESSION_UNARY => $this->createExpressionUnary( $token, $scopes, $closure ),
+        T_IS_EXPRESSION_COMPARE => $this->createExpressionCompare( $token, $scopes, $closure )
+      };
+    }
+
+    return $tokens;
+  }  
   
   private function buildField(
     array $tokensFromField
@@ -244,8 +274,8 @@ extends ExpressionUtil
     array $expressionLogical
   ): string {
     return $expressionLogical[T_KEY_TOKENS];
-  }  
-
+  } 
+  
   private function buildExpressionCompare(
     array $expressionCompare
   ): string|null {
@@ -266,6 +296,15 @@ extends ExpressionUtil
 
     return null;
   }
+
+  private function buildExpressionBetween(
+    array $expressionBetween
+  ): string {
+    [ $expressionField, $expressionValueStart, $expressionValueEnd 
+    ] = $expressionBetween[ T_KEY_TOKENS ];
+
+    return "{$this->buildField($expressionField)} Between {$expressionValueStart[T_KEY_VALUE]} And {$expressionValueEnd[T_KEY_VALUE]}";
+  }  
 
   private function buildExpressionIn(
     array $expressionIn
@@ -297,39 +336,23 @@ extends ExpressionUtil
     ] = $expressionNotLike[ T_KEY_TOKENS ];
 
     return "{$this->buildField($expressionField)} Not Like {$expressionValue[T_KEY_VALUE][0]}";
-  }
-  
+  }  
+
   private function buildExpressionNegative(
     array $expressionNegative
   ): string {
     [ $expressionChild ] = $expressionNegative[ T_KEY_TOKENS ];
     
     if( $expressionChild[ T_KEY_OBJECT ] === T_EXPRESSION_SUBQUERY ){
-      return "Not {$this->buildLoop($expressionChild)}";
-    } else return "{$this->buildLoop($expressionChild)}";
-  }
+      return "Not {$this->posCompile($expressionChild)}";
+    } else return "{$this->posCompile($expressionChild)}";
+  }  
 
   private function buildExpressionGroup(
     array $expressionGroup
   ): string {
-    return "({$this->buildLoop($expressionGroup[T_KEY_TOKENS])})";
+    return "({$this->posCompile($expressionGroup[T_KEY_TOKENS])})";
   }  
-
-  private function buildExpressionBetween(
-    array $expressionBetween
-  ): string {
-    [ $expressionField, $expressionValueStart, $expressionValueEnd 
-    ] = $expressionBetween[ T_KEY_TOKENS ];
-
-    return "{$this->buildField($expressionField)} Between {$expressionValueStart[T_KEY_VALUE]} And {$expressionValueEnd[T_KEY_VALUE]}";
-  }
-
-  private function buildExpressionSubQuery(
-    array $expressionSubQuery
-  ): string {
-    $expressionSubQueryBuild = $this->buildLoop( $expressionSubQuery[ T_KEY_TOKENS ]);
-    return "{$expressionSubQuery[T_KEY_METHODS]} ( Select 1 From {$expressionSubQuery[T_KEY_ENTITY]} Where {$expressionSubQueryBuild})";
-  }
 
   private function buildExpressionUnary(
     array $expressionUnary
@@ -338,7 +361,14 @@ extends ExpressionUtil
     return "{$expressionField[T_KEY_ENTITY]}.{$expressionField[T_KEY_FIELD]}";
   }
 
-  private function buildLoop(
+  private function buildExpressionSubQuery(
+    array $expressionSubQuery
+  ): string {
+    $expressionSubQueryBuild = $this->posCompile( $expressionSubQuery[ T_KEY_TOKENS ]);
+    return "{$expressionSubQuery[T_KEY_METHODS]} ( Select 1 From {$expressionSubQuery[T_KEY_ENTITY]} Where {$expressionSubQueryBuild})";
+  }  
+
+  private function posCompile(
     array $tokens
   ): string {
     foreach( $tokens as $key => $token){
@@ -349,10 +379,10 @@ extends ExpressionUtil
         T_EXPRESSION_IN => $this->buildExpressionIn( $token ),
         T_EXPRESSION_NOT_IN => $this->buildExpressionNotIn( $token ),
         T_EXPRESSION_LIKE => $this->buildExpressionLike( $token ),
+        T_EXPRESSION_NOT_LIKE => $this->buildExpressionNotLike( $token ),
         T_EXPRESSION_NEGATIVE => $this->buildExpressionNegative( $token ),
         T_EXPRESSION_GROUP => $this->buildExpressionGroup( $token ),
         T_EXPRESSION_UNARY => $this->buildExpressionUnary( $token ),
-        T_EXPRESSION_NOT_LIKE => $this->buildExpressionNotLike( $token ),
         T_EXPRESSION_SUBQUERY => $this->buildExpressionSubQuery( $token ),
           default => $token[ T_KEY_OBJECT ]
       };
@@ -363,7 +393,11 @@ extends ExpressionUtil
 
   public function sqlBuild(
   ): string {
-    return $this->buildLoop(
+    // $this->posCompileTokens(
+    //   $this->context[ T_KEY_TOKENS ]
+    // );
+
+    return $this->posCompile(
       $this->context[ T_KEY_TOKENS ]
     );
   }

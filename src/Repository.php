@@ -21,16 +21,7 @@ class Repository
 
   public function __construct(
     public string $entity
-  ){
-    $this->startups();
-  }
-
-  private function startups(
-  ): void {
-    // if( class_exists( $this->entity )){
-    //   $this->entityStructure = $this->entity::meta( MetaType::Query );
-    // }
-  }
+  ){}
 
   private function tableAlias(
   ): string {
@@ -52,7 +43,7 @@ class Repository
   ): Repository {
     if( isset( $this->expressionWhere ) === false ){
       $this->expressionWhere = new ExpressionWhere(
-        $this->closureWhere = $closure
+        $this->entity, $this->closureWhere = $closure
       );
     }
 
