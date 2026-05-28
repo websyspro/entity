@@ -35,11 +35,12 @@ $repository->where( fn( PropostaEntity $i ) =>
   // )
   // && $i->IsActive === false   
 );
-// $rows = $repository->all();
+$rows = $repository->all();
 
 
 
 
 $leftTimer = number_format(( microtime( true ) - $start ) * 1000, 6, ",", "." );
 echo "Execute timer: {$leftTimer}(ms)\n\n";
-print_r( $repository->expressionWhere );
+
+print_r( $rows );

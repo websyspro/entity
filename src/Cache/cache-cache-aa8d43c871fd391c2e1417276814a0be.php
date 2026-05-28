@@ -39,27 +39,11 @@ return array (
   'tokens' => 
   array (
     'object' => 'ExpressionNode',
-    'scopes' => 
-    array (
-      0 => 
-      array (
-        'instance' => 'Websyspro\\Test\\Crm\\Entitys\\PropostaEntity',
-        'variable' => '$i',
-      ),
-    ),
     'tokens' => 
     array (
       0 => 
       array (
         'object' => 'ExpressionCompare',
-        'scopes' => 
-        array (
-          0 => 
-          array (
-            'instance' => 'Websyspro\\Test\\Crm\\Entitys\\PropostaEntity',
-            'variable' => '$i',
-          ),
-        ),
         'tokens' => 
         array (
           0 => 
@@ -84,16 +68,11 @@ return array (
           ),
           2 => 
           array (
-            'object' => 'ExpressionValue',
-            'islist' => 'no',
-            'tokens' => 
+            0 => 
             array (
-              0 => 
-              array (
-                'number' => 49,
-                'value' => '1',
-                'type' => 'UNKNOWN',
-              ),
+              'number' => 49,
+              'value' => '1',
+              'type' => 'UNKNOWN',
             ),
           ),
         ),
@@ -106,14 +85,6 @@ return array (
       2 => 
       array (
         'object' => 'ExpressionCompare',
-        'scopes' => 
-        array (
-          0 => 
-          array (
-            'instance' => 'Websyspro\\Test\\Crm\\Entitys\\PropostaEntity',
-            'variable' => '$i',
-          ),
-        ),
         'tokens' => 
         array (
           0 => 
@@ -138,16 +109,11 @@ return array (
           ),
           2 => 
           array (
-            'object' => 'ExpressionValue',
-            'islist' => 'no',
-            'tokens' => 
+            0 => 
             array (
-              0 => 
-              array (
-                'number' => 0,
-                'value' => '',
-                'type' => 'UNKNOWN',
-              ),
+              'number' => 0,
+              'value' => '',
+              'type' => 'UNKNOWN',
             ),
           ),
         ),
@@ -160,14 +126,6 @@ return array (
       4 => 
       array (
         'object' => 'ExpressionCompare',
-        'scopes' => 
-        array (
-          0 => 
-          array (
-            'instance' => 'Websyspro\\Test\\Crm\\Entitys\\PropostaEntity',
-            'variable' => '$i',
-          ),
-        ),
         'tokens' => 
         array (
           0 => 
@@ -192,16 +150,11 @@ return array (
           ),
           2 => 
           array (
-            'object' => 'ExpressionValue',
-            'islist' => 'no',
-            'tokens' => 
+            0 => 
             array (
-              0 => 
-              array (
-                'number' => 313,
-                'value' => 'null',
-                'type' => 'T_STRING',
-              ),
+              'number' => 313,
+              'value' => 'null',
+              'type' => 'T_STRING',
             ),
           ),
         ),
@@ -214,14 +167,6 @@ return array (
       6 => 
       array (
         'object' => 'ExpressionCompare',
-        'scopes' => 
-        array (
-          0 => 
-          array (
-            'instance' => 'Websyspro\\Test\\Crm\\Entitys\\PropostaEntity',
-            'variable' => '$i',
-          ),
-        ),
         'tokens' => 
         array (
           0 => 
@@ -246,16 +191,11 @@ return array (
           ),
           2 => 
           array (
-            'object' => 'ExpressionValue',
-            'islist' => 'no',
-            'tokens' => 
+            0 => 
             array (
-              0 => 
-              array (
-                'number' => 320,
-                'value' => '"MARACANAU - Frio - 1"',
-                'type' => 'T_CONSTANT_ENCAPSED_STRING',
-              ),
+              'number' => 320,
+              'value' => '"MARACANAU - Frio - 1"',
+              'type' => 'T_CONSTANT_ENCAPSED_STRING',
             ),
           ),
         ),

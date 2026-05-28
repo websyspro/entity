@@ -52,15 +52,16 @@ define( "T_IS_EXPRESSION_EQUAL_NOT_LIKE", "Not Like" );
 define( "T_IS_EXPRESSION_UNARY_IS_NOT_YES", "0" );
 define( "T_IS_EXPRESSION_UNARY_IS_NOT_NO", "1" );
 
-define( "T_IS_EXPRESSION_NEGATIVE", 1 );
-define( "T_IS_EXPRESSION_GROUP", 2 );
-define( "T_IS_EXPRESSION_SUBQUERY", 3 );
-define( "T_IS_EXPRESSION_LOGICAL", 4 );
-define( "T_IS_EXPRESSION_UNARY", 5 );
-define( "T_IS_EXPRESSION_COMPARE", 6 );
-define( "T_IS_EXPRESSION_FIELD", 7 );
-define( "T_IS_EXPRESSION_EQUAL", 8 );
-define( "T_IS_EXPRESSION_VALUE", 9 );
+define( "T_IS_EXPRESSION_NODE", 1 );
+define( "T_IS_EXPRESSION_NEGATIVE", 2 );
+define( "T_IS_EXPRESSION_GROUP", 3 );
+define( "T_IS_EXPRESSION_SUBQUERY", 4 );
+define( "T_IS_EXPRESSION_LOGICAL", 5 );
+define( "T_IS_EXPRESSION_UNARY", 6 );
+define( "T_IS_EXPRESSION_COMPARE", 7 );
+define( "T_IS_EXPRESSION_FIELD", 8 );
+define( "T_IS_EXPRESSION_EQUAL", 9 );
+define( "T_IS_EXPRESSION_VALUE", 10 );
 
 define( "T_FIELD_AND_FIELD", 1 );
 define( "T_FIELD_AND_VALUE", 2 );
@@ -800,18 +801,17 @@ class ExpressionUtil
       ? explode( ",", trim( $expressionRight[ T_KEY_TOKENS ], "[]" )) 
       : [ $expressionRight[ T_KEY_TOKENS ] ];
 
-    // $values = array_map(
-    //   fn( string $value ) => $this->parseValueType(
-    //     $closure, $expressionLeft, $value
-    //   ), $values
-    // );
+    $values = array_map(
+      fn( string $value ) => $this->parseValueType(
+        $closure, $expressionLeft, $value
+      ), $values
+    );
 
     return [
       T_KEY_OBJECT => T_EXPRESSION_VALUE,
       T_KEY_ISLIST => $expressionRight[ T_KEY_ISLIST ],
-      T_KEY_VALUE => $values
-      // T_KEY_VALUE => $expressionRight[ T_KEY_ISLIST ] === T_KEY_YES
-      //     ? sprintf(  "(%s)", join(", ", $values)) : join( "", $values ) 
+      T_KEY_VALUE => $expressionRight[ T_KEY_ISLIST ] === T_KEY_YES
+          ? sprintf(  "(%s)", join(", ", $values)) : join( "", $values ) 
     ];
   }
 
@@ -826,8 +826,8 @@ class ExpressionUtil
     [ $expressionLeft, $expressionEqual, $expressionRight ] = $tokens;
     if( $expressionLeft[ T_KEY_OBJECT ] === T_EXPRESSION_FIELD ){
       if( $expressionRight[ T_KEY_OBJECT ] === T_EXPRESSION_VALUE ){
-        // $expressionEqual = $this->adjustEqualFieldWithValue( $expressionEqual, $expressionRight );
-        // $expressionRight = $this->parseValue( $closure, $expressionLeft, $expressionRight );
+        $expressionEqual = $this->adjustEqualFieldWithValue( $expressionEqual, $expressionRight );
+        $expressionRight = $this->parseValue( $closure, $expressionLeft, $expressionRight );
         return [ $expressionLeft, $expressionEqual, $expressionRight ];
       }
     }

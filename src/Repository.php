@@ -25,7 +25,7 @@ class Repository
 
   private function tableAlias(
   ): string {
-    return $this->entityStructure->entity[ 'alias' ];
+    return $this->expressionWhere->context['entity']['alias'];
   }
 
   private function addParam(
@@ -74,10 +74,8 @@ class Repository
 
   public function all(
   ): array {
-    // return Database::query(
-    //   $this->sqlAll(), $this->params
-    // );
-
-    return [];
+    return Database::query(
+      $this->sqlAll(), $this->params
+    );
   }
 }

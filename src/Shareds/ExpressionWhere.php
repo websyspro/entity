@@ -12,10 +12,14 @@ class ExpressionWhere extends ExpressionUtil
   public array $context = [];
 
   public function __construct(
-    string $entity,
-    Closure $closure,
+    public string $entity,
+    public Closure $closure,
   ){
-    $this->preCompile($entity, ClosureUtil::addClosure($closure));
+    $this->preCompile(
+      $this->entity, ClosureUtil::addClosure(
+        $this->closure
+      )
+    );
   }
 
   private function preCompile(
@@ -202,30 +206,9 @@ class ExpressionWhere extends ExpressionUtil
     array $tokens
   ): array {
     [ $token ] = $tokens;
-    
-    return [
-      T_KEY_OBJECT => T_EXPRESSION_EQUAL,
-      T_KEY_TOKENS => $token
-    ];
+    return [ T_KEY_OBJECT => T_EXPRESSION_EQUAL, T_KEY_TOKENS => $token ];
   }  
 
-  private function createExpressionValue(
-    Closure $closure,
-    array $tokens
-  ): array {
-    $isList = $this->isExpressionValueList( $tokens );
-    $tokens = $this->dropCurlOpenAndNotDot( $tokens );
-    // $tokens = $this->updateTokensVariable( $tokens, $closure );
-    // $tokens = $this->updateTokensEnums( $tokens, $closure );
-    // $tokens = $this->adjustValues( $tokens );
-
-    return [
-      T_KEY_OBJECT => T_EXPRESSION_VALUE,
-      T_KEY_ISLIST => $isList,
-      T_KEY_TOKENS => $tokens
-    ];
-  }  
-  
   private function loopCompareTokens(
     Closure $closure,
     array $scopes,
@@ -234,26 +217,55 @@ class ExpressionWhere extends ExpressionUtil
     foreach($tokens as $key => $token){
       $tokens[ $key ] = match( $this->getExpressionCompareType( $token )){
         T_IS_EXPRESSION_FIELD => $this->createExpressionField( $token, $scopes, $closure ),
-        T_IS_EXPRESSION_EQUAL => $this->createExpressionEqual( $token),
-        T_IS_EXPRESSION_VALUE => $this->createExpressionValue( $closure, $token )
+        T_IS_EXPRESSION_EQUAL => $this->createExpressionEqual( $token ),
+          default => $token 
       };
     }
 
     return $tokens;
   }
 
+  private function posCompileCompareValue(
+    array $tokens
+  ): array {
+    $isList = $this->isExpressionValueList( $tokens );
+    $tokens = $this->dropCurlOpenAndNotDot( $tokens );
+    $tokens = $this->updateTokensVariable( $tokens, $this->closure );
+    $tokens = $this->updateTokensEnums( $tokens, $this->closure );
+    $tokens = $this->adjustValues( $tokens );
+
+    return [ 'object' => T_EXPRESSION_VALUE, 'islist' => $isList, 'tokens' => $tokens ];
+  }  
+
+  private function posCompileCompareTokensLoop(
+    array $tokens
+  ): array {
+    foreach($tokens as $i => $token){
+      if( $token[ 'object' ] === 'ExpressionValue' ){
+        $tokens[ $i ] = $this->posCompileCompareValue( $token[ 'tokens' ]); 
+      }
+    }
+
+    return $tokens;
+  }
+
+  private function posCompileCompareTokens(
+    array $expressionCompare
+  ): array {
+    $expressionCompare[ 'tokens' ] = $this->posCompileCompareTokensLoop( $expressionCompare[ 'tokens' ]);
+    $expressionCompare[ 'tokens' ] = $this->adjustCompareParserValue( $this->closure, $expressionCompare[ 'tokens' ]);
+    return $expressionCompare;
+  }
+
   private function posCompileTokens(
     array $tokens
   ): array {
-    foreach($tokens as $key => $token){
-      // $tokens[$key] = match( $this->getExpressionType( $token )){
-      //   T_IS_EXPRESSION_NEGATIVE => $this->createExpressionNegative( $token, $scopes, $closure ),
-      //   T_IS_EXPRESSION_GROUP => $this->createExpressionGroup( $token, $scopes, $closure ),
-      //   T_IS_EXPRESSION_SUBQUERY => $this->createExpressionSubQuery( $token, $scopes, $closure ),  
-      //   T_IS_EXPRESSION_LOGICAL => $this->createExpressionLogical( $token ),
-      //   T_IS_EXPRESSION_UNARY => $this->createExpressionUnary( $token, $scopes, $closure ),
-      //   T_IS_EXPRESSION_COMPARE => $this->createExpressionCompare( $token, $scopes, $closure )
-      // };
+    if( $tokens[ "object" ] === "ExpressionNode" ){
+      foreach( $tokens[ "tokens" ] as $i => $token ){
+        if( $tokens[ "tokens" ][$i][ "object" ] === "ExpressionCompare" ){
+          $tokens[ "tokens" ][$i] = $this->posCompileCompareTokens( $tokens[ "tokens" ][$i] );
+        }
+      }
     }
 
     return $tokens;
@@ -391,12 +403,7 @@ class ExpressionWhere extends ExpressionUtil
 
   public function sqlBuild(
   ): string {
-    $this->posCompileTokens(
-      $this->context[ T_KEY_TOKENS ]
-    );
-
-    return $this->posCompile(
-      $this->context[ T_KEY_TOKENS ]
-    );
+    $posCompileTokens = $this->posCompileTokens($this->context[ 'tokens' ]);
+    return $this->posCompile( $posCompileTokens[ 'tokens' ]);
   }
 }
