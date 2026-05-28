@@ -86,7 +86,7 @@ define( "T_KEY_NUMBER", "number" );
 define( "T_KEY_NAME", "name" );
 define( "T_KEY_VARIABLE", "variable" );
 define( "T_KEY_INSTANCE", "instance" );
-define( "T_KEY_CACHE", "cache" );
+define( "T_KEY_CACHE_ORM", "orm" );
 define( "T_KEY_CACHE_TOKENS", "cache-tokens" );
 
 define( "T_KEY_NO", "no" );

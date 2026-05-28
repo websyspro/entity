@@ -16,9 +16,8 @@ class ExpressionWhere extends ExpressionUtil
     public Closure $closure,
   ){
     $this->preCompile(
-      $this->entity, ClosureUtil::addClosure(
-        $this->closure
-      )
+      $this->entity, 
+      $this->closure
     );
   }
 
@@ -32,8 +31,8 @@ class ExpressionWhere extends ExpressionUtil
       T_KEY_COLUMNS_ALIAS => $columnsAlias,
     ] = $this->tokensAll($closure, $entity);
 
-    if( Cache::exist(T_KEY_CACHE, $tokens)){
-      $this->context = Cache::load(T_KEY_CACHE, $tokens);
+    if( Cache::exist(T_KEY_CACHE_ORM, $tokens)){
+      $this->context = Cache::load(T_KEY_CACHE_ORM, $tokens);
     } else {
       $this->context = [
         T_KEY_ENTITY => $entity,
@@ -47,7 +46,7 @@ class ExpressionWhere extends ExpressionUtil
       ];
   
       if( empty( $this->context ) === false ){
-        Cache::save(T_KEY_CACHE, $tokens, $this->context);
+        Cache::save(T_KEY_CACHE_ORM, $tokens, $this->context);
       } 
     }
   } 
@@ -207,6 +206,12 @@ class ExpressionWhere extends ExpressionUtil
   ): array {
     [ $token ] = $tokens;
     return [ T_KEY_OBJECT => T_EXPRESSION_EQUAL, T_KEY_TOKENS => $token ];
+  }
+  
+  private function createExpressionValue(
+    array $tokens
+  ): array {
+    return [ 'object' => T_EXPRESSION_VALUE, 'tokens' => $tokens ];
   }  
 
   private function loopCompareTokens(
@@ -218,7 +223,7 @@ class ExpressionWhere extends ExpressionUtil
       $tokens[ $key ] = match( $this->getExpressionCompareType( $token )){
         T_IS_EXPRESSION_FIELD => $this->createExpressionField( $token, $scopes, $closure ),
         T_IS_EXPRESSION_EQUAL => $this->createExpressionEqual( $token ),
-          default => $token 
+        T_IS_EXPRESSION_VALUE => $this->createExpressionValue( $token )
       };
     }
 
@@ -403,7 +408,7 @@ class ExpressionWhere extends ExpressionUtil
 
   public function sqlBuild(
   ): string {
-    $posCompileTokens = $this->posCompileTokens($this->context[ 'tokens' ]);
+    $posCompileTokens = $this->posCompileTokens( $this->context[ 'tokens' ]);
     return $this->posCompile( $posCompileTokens[ 'tokens' ]);
   }
 }
