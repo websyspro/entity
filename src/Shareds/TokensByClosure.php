@@ -821,20 +821,22 @@ class TokensByClosure
         : $this->createExpValue( $right )
     ];
 
-    $leftEvents = $left[ 'object' ] === 'ExpValue' 
+    $compareEvents = $left[ 'object' ] === 'ExpValue' 
       ? $right : $left;
 
-    $leftEvents = array_filter(
-      $leftEvents[ 'events'], 
+    $compareEvents = array_filter(
+      $compareEvents[ 'events'], 
         fn( array $event ) => $event['type'] === 'compare'
     );  
 
-    if( empty( $leftEvents )){
+    if( empty( $compareEvents )){
       if( $left[ 'object' ] === 'ExpValue' ){
         $equal = $this->equalReverse( $equal );
         return [ $right, $equal, $left ];
       } else return [ $left, $equal, $right ]; 
     } else {
+      // Todo para implementar Events
+      // StartWith, EndWith e Contains
       return $left[ 'object' ] === 'ExpValue'
         ? [ $right ] : [ $left ];
     }
