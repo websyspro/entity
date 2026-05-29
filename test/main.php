@@ -9,13 +9,23 @@ class UserRepository
 {
   public function __construct(){}
 
+  public function getItems(    
+  ): array {
+    return [];
+  }
+
   public function getAll(
   ): array {
-    $tokensByClosure = new TokensByClosure(fn( PropostaEntity $i ) => (
-        $i->IsActive == true && 
+    $tokensByClosure = new TokensByClosure(
+      fn( PropostaEntity $i ) => (
+        $i->IsActive == true &&
         $i->IsDeleted == false &&
-        $i->ConsultorVendasEspeciaisId != null &&
-        $i->Id == [ '0303AE33-D883-43C5-262B-08DBD9497C02' ]
+        $i->Id == [
+          '0303AE33-D883-43C5-262B-08DBD9497C02',
+          '0303AE33-D883-43C5-262B-08DBD9497C02',
+          '0303AE33-D883-43C5-262B-08DBD9497C02',
+          '0303AE33-D883-43C5-262B-08DBD9497C02'
+        ]
       )
     );
 
@@ -27,5 +37,5 @@ $UserRepository = new UserRepository();
 $getAll = $UserRepository->getAll();
 
 $end = ( microtime( true ) - $start ) * 1000;
-echo "Timer: {$end}";
+echo "Timer: {$end}\n";
 print_r($getAll);

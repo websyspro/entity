@@ -5,7 +5,7 @@ namespace Websyspro\Entity\Shareds;
 use Closure;
 use ReflectionFunction;
 
-use function array_slice, in_array, sprintf;
+use function ord, array_slice, in_array, sprintf, is_string, count;
 
 define( 'T_START_PARENTESES', 40 );
 define( 'T_END_PARENTESES', 41 );
@@ -94,15 +94,12 @@ class TokensByClosure
     string|array $tokenArgs
   ): array {
     [ $number, $value ] = is_string( $tokenArgs ) 
-      ? [ ord( $tokenArgs ), $tokenArgs ] 
-      : $tokenArgs;
+      ? [ ord( $tokenArgs ), $tokenArgs ] : $tokenArgs;
 
     return [
       'type' => $number,
       'text' => $value,
-      'name' => $this->namberToken(
-        $number
-      )
+      'name' => $this->namberToken($number)
     ];
   }  
 
@@ -230,8 +227,8 @@ class TokensByClosure
 
     $this->scopes = array_map(
       fn(array $scope) => [
-        'instance' => $scope[0]['text'],
-        'variable' => $scope[1]['text']
+        'instance' => $scope[0][ 'text' ],
+        'variable' => $scope[1][ 'text' ]
       ], array_chunk( $this->scopes, 2 )
     );
   }
@@ -241,11 +238,11 @@ class TokensByClosure
     int $parenteses = 0
   ): array {
     for($i=0; $i<count($tokens); $i++){
-      if( $tokens[$i]['type'] === T_START_PARENTESES ){
+      if($tokens[$i]['type'] === T_START_PARENTESES){
         $parenteses++;
       }
 
-      if( $tokens[$i]['type'] === T_END_PARENTESES ){
+      if($tokens[$i]['type'] === T_END_PARENTESES){
         $parenteses--;
 
         if($parenteses < 0){
@@ -284,11 +281,10 @@ class TokensByClosure
     $this->defineMethod();
     $this->defineClass();
     $this->defineScopes();
-    $this->defineScopes();
     $this->defineBody();
 
     return [ 
-      'classe'  => $this->classe,
+      'classe' => $this->classe,
       'method' => $this->method,
       'scopes' => $this->scopes, 
       'tokens' => $this->tokens,
