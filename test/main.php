@@ -1,46 +1,31 @@
 <?php
 
-// use Websyspro\Test\Crm\Entitys\ItemPropostaEntity;
-use Websyspro\Test\Crm\Entitys\ItemPropostaEntity;
+use Websyspro\Entity\Shareds\TokensByClosure;
 use Websyspro\Test\Crm\Entitys\PropostaEntity;
-// use Websyspro\Test\Enums\Status;
-use Websyspro\Entity\Repository;
-use Websyspro\Test\Enums\Status;
 
-$start = microtime( true );
+$start = microtime(true);
 
-$escolaA = "Minha Escola A";
-$escolaB = "Minha Escola B";
+class UserRepository
+{
+  public function __construct(){}
 
-$startDate = '01/01/2026';
-$concate = "JOIN";
+  public function getAll(
+  ): array {
+    $tokensByClosure = new TokensByClosure(fn( PropostaEntity $i ) => (
+        $i->IsActive == true && 
+        $i->IsDeleted == false &&
+        $i->ConsultorVendasEspeciaisId != null &&
+        $i->Id == [ '0303AE33-D883-43C5-262B-08DBD9497C02' ]
+      )
+    );
 
+    return $tokensByClosure->getClosure();
+  }
+}
 
-$repository = new Repository( PropostaEntity::class );
-$repository->where( fn( PropostaEntity $i ) =>
-  $i->IsActive && !$i->IsDeleted && $i->ConsultorVendasEspeciaisId != null && $i->NomeProposta === "MARACANAU - Frio - 1"
-  // && $i->Created >= $startDate && '01/31/2026' >= $i->Created
-  // $i->NomeProposta === [ 'Item 1 ' . $concate, "{$escolaA}", Status::Aprovada->value, Status::RevisaoGerentePendente, $escolaB, 12 ]
-  // && $i->NomeProposta->trim()->upper()->contains( 'Item 1 ' . $concate )
-  // && $i->NomeProposta === '%TESTEMERSON'
-  // && !$i->IsActive
-  // && $i->Status === Status::Aprovada
-  // && $i->IsDeleted === false 
-  // && ( $i->PrazoFaturamento === 9098767 || ( $i->PrazoFaturamento === 11191 ))
-  // && $i->Created >= $startDate
-  // && $i->IsActive === true 
-  // && '01/31/2026' >= $i->Created
-  // && !$i->itemsProposta->any( fn( ItemPropostaEntity $o ) => 
-  //   $o->PropostaId === $i->Id && $o->IsActive === true && $o->IsDeleted === false && $i->NomeContato !== 'EMERSON%'
-  // )
-  // && $i->IsActive === false   
-);
-$rows = $repository->all();
+$UserRepository = new UserRepository();
+$getAll = $UserRepository->getAll();
 
-
-
-
-$leftTimer = number_format(( microtime( true ) - $start ) * 1000, 6, ",", "." );
-echo "Execute timer: {$leftTimer}(ms)\n\n";
-
-print_r( $rows );
+$end = ( microtime( true ) - $start ) * 1000;
+echo "Timer: {$end}";
+print_r($getAll);

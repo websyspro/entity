@@ -157,12 +157,8 @@ class ExpressionWhere extends ExpressionUtil
     $tokens = $this->parserTokensCompare( $tokens );
     $tokens = $this->loopCompareTokens( $closure, $scopes, $tokens );
     $tokens = $this->adjustComparePositions( $tokens );
-    // $tokens = $this->adjustCompareParserValue( $closure, $tokens );
 
-    return [
-      T_KEY_OBJECT => T_EXPRESSION_COMPARE,
-      T_KEY_TOKENS => $tokens
-    ];
+    return [ T_KEY_OBJECT => T_EXPRESSION_COMPARE, T_KEY_TOKENS => $tokens ];
   }  
 
   private function preCompileTokens(

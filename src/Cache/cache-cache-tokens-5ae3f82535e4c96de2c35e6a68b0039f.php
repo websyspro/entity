@@ -94,105 +94,135 @@ return array (
     ),
     9 => 
     array (
+      'number' => 289,
+      'value' => '==',
+      'type' => 'T_IS_EQUAL',
+    ),
+    10 => 
+    array (
+      'number' => 313,
+      'value' => 'true',
+      'type' => 'T_STRING',
+    ),
+    11 => 
+    array (
       'number' => 286,
       'value' => '&&',
       'type' => 'T_BOOLEAN_AND',
     ),
-    10 => 
-    array (
-      'number' => 33,
-      'value' => '!',
-      'type' => 'T_NOT',
-    ),
-    11 => 
+    12 => 
     array (
       'number' => 317,
       'value' => '$i',
       'type' => 'T_VARIABLE',
     ),
-    12 => 
+    13 => 
     array (
       'number' => 390,
       'value' => '->',
       'type' => 'T_OBJECT_OPERATOR',
     ),
-    13 => 
+    14 => 
     array (
       'number' => 313,
       'value' => 'IsDeleted',
       'type' => 'T_STRING',
     ),
-    14 => 
+    15 => 
+    array (
+      'number' => 289,
+      'value' => '==',
+      'type' => 'T_IS_EQUAL',
+    ),
+    16 => 
+    array (
+      'number' => 313,
+      'value' => 'false',
+      'type' => 'T_STRING',
+    ),
+    17 => 
     array (
       'number' => 286,
       'value' => '&&',
       'type' => 'T_BOOLEAN_AND',
     ),
-    15 => 
+    18 => 
     array (
       'number' => 317,
       'value' => '$i',
       'type' => 'T_VARIABLE',
     ),
-    16 => 
+    19 => 
     array (
       'number' => 390,
       'value' => '->',
       'type' => 'T_OBJECT_OPERATOR',
     ),
-    17 => 
+    20 => 
     array (
       'number' => 313,
       'value' => 'ConsultorVendasEspeciaisId',
       'type' => 'T_STRING',
     ),
-    18 => 
+    21 => 
     array (
       'number' => 290,
       'value' => '!=',
       'type' => 'T_IS_NOT_EQUAL',
     ),
-    19 => 
+    22 => 
     array (
       'number' => 313,
       'value' => 'null',
       'type' => 'T_STRING',
     ),
-    20 => 
+    23 => 
     array (
       'number' => 286,
       'value' => '&&',
       'type' => 'T_BOOLEAN_AND',
     ),
-    21 => 
+    24 => 
     array (
       'number' => 317,
       'value' => '$i',
       'type' => 'T_VARIABLE',
     ),
-    22 => 
+    25 => 
     array (
       'number' => 390,
       'value' => '->',
       'type' => 'T_OBJECT_OPERATOR',
     ),
-    23 => 
+    26 => 
     array (
       'number' => 313,
-      'value' => 'NomeProposta',
+      'value' => 'Id',
       'type' => 'T_STRING',
     ),
-    24 => 
+    27 => 
     array (
-      'number' => 291,
-      'value' => '===',
-      'type' => 'T_IS_IDENTICAL',
+      'number' => 289,
+      'value' => '==',
+      'type' => 'T_IS_EQUAL',
     ),
-    25 => 
+    28 => 
+    array (
+      'number' => 91,
+      'value' => '[',
+      'type' => 'T_START_BRACKET',
+    ),
+    29 => 
     array (
       'number' => 320,
-      'value' => '"MARACANAU - Frio - 1"',
+      'value' => '\'0303AE33-D883-43C5-262B-08DBD9497C02\'',
       'type' => 'T_CONSTANT_ENCAPSED_STRING',
+    ),
+    30 => 
+    array (
+      'number' => 93,
+      'value' => ']',
+      'type' => 'T_END_BRACKET',
     ),
   ),
 );

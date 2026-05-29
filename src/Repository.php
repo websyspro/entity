@@ -19,6 +19,8 @@ class Repository
 
   public array $params = [];
 
+  public float $start;
+
   public function __construct(
     public string $entity
   ){}
@@ -41,6 +43,8 @@ class Repository
   public function where(
     Closure $closure
   ): Repository {
+    $this->start = microtime( true );
+
     if( isset( $this->expressionWhere ) === false ){
       $this->expressionWhere = new ExpressionWhere(
         $this->entity, $this->closureWhere = $closure
@@ -74,8 +78,21 @@ class Repository
 
   public function all(
   ): array {
-    return Database::query(
+
+    // $timerAst = ( microtime( true ) - $this->start ) * 1000;    
+    // echo "Time required to execute the AST: {$timerAst}(ms)\n";
+
+    // $this->start = microtime( true );
+
+    $rows = Database::query(
       $this->sqlAll(), $this->params
     );
+
+    // $timerQuery = ( microtime( true ) - $this->start ) * 1000;
+
+    // echo "Time to execute the SQL query: {$timerQuery}(ms)\n"; 
+    // echo "Total processing time: " . $timerAst + $timerQuery . "(ms)\n"; 
+
+    return $rows;
   }
 }

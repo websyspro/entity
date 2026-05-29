@@ -61,9 +61,9 @@ return array (
             'object' => 'ExpressionEqual',
             'tokens' => 
             array (
-              'number' => 61,
-              'value' => '===',
-              'type' => 'T_EQUAL',
+              'number' => 289,
+              'value' => '==',
+              'type' => 'T_IS_EQUAL',
             ),
           ),
           2 => 
@@ -73,9 +73,9 @@ return array (
             array (
               0 => 
               array (
-                'number' => 49,
-                'value' => '1',
-                'type' => 'UNKNOWN',
+                'number' => 313,
+                'value' => 'true',
+                'type' => 'T_STRING',
               ),
             ),
           ),
@@ -106,9 +106,9 @@ return array (
             'object' => 'ExpressionEqual',
             'tokens' => 
             array (
-              'number' => 61,
-              'value' => '===',
-              'type' => 'T_EQUAL',
+              'number' => 289,
+              'value' => '==',
+              'type' => 'T_IS_EQUAL',
             ),
           ),
           2 => 
@@ -118,9 +118,9 @@ return array (
             array (
               0 => 
               array (
-                'number' => 0,
-                'value' => '',
-                'type' => 'UNKNOWN',
+                'number' => 313,
+                'value' => 'false',
+                'type' => 'T_STRING',
               ),
             ),
           ),
@@ -185,7 +185,7 @@ return array (
           array (
             'object' => 'ExpressionField',
             'entity' => 'Proposta',
-            'field' => 'NomeProposta',
+            'field' => 'Id',
             'type' => 'Websyspro\\Entity\\Decorations\\Columns\\Text',
             'methods' => 
             array (
@@ -196,9 +196,9 @@ return array (
             'object' => 'ExpressionEqual',
             'tokens' => 
             array (
-              'number' => 291,
-              'value' => '===',
-              'type' => 'T_IS_IDENTICAL',
+              'number' => 289,
+              'value' => '==',
+              'type' => 'T_IS_EQUAL',
             ),
           ),
           2 => 
@@ -208,9 +208,21 @@ return array (
             array (
               0 => 
               array (
+                'number' => 91,
+                'value' => '[',
+                'type' => 'T_START_BRACKET',
+              ),
+              1 => 
+              array (
                 'number' => 320,
-                'value' => '"MARACANAU - Frio - 1"',
+                'value' => '\'0303AE33-D883-43C5-262B-08DBD9497C02\'',
                 'type' => 'T_CONSTANT_ENCAPSED_STRING',
+              ),
+              2 => 
+              array (
+                'number' => 93,
+                'value' => ']',
+                'type' => 'T_END_BRACKET',
               ),
             ),
           ),
