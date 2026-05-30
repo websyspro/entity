@@ -4,7 +4,7 @@ define( "BASEDIR", __DIR__ );
 define( "BASEDIR_APP", BASEDIR . "/src" );
 
 if(!defined( "CACHE_DISABLED" )) 
-  define( "CACHE_DISABLED", true );
+  define( "CACHE_DISABLED", false );
 if(!defined( "HOSTNAME" )) 
   define( "HOSTNAME", "localhost" );
 if(!defined( "DATABASE" )) 

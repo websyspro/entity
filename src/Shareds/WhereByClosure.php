@@ -28,7 +28,7 @@ define( 'T_GREATER_THAN', 62 );
 define( 'T_LESS_THAN', 60 );
 define( 'T_NOT', 33 );
 
-class TokensByClosure
+class WhereByClosure
 {
   private ReflectionFunction $reflectionFunction;
   private string|array $tokens;
@@ -85,7 +85,6 @@ class TokensByClosure
       if( $token['type'] === T_GREATER_THAN ) return $i;
       if( $token['type'] === T_LESS_THAN ) return $i;
     }
-
 
     return -1;
   }  
@@ -199,7 +198,7 @@ class TokensByClosure
       fn(string|array $token) => (
         $this->defineToken($token)
       ), array_slice( token_get_all( 
-          implode( '', $this->rows)
+          implode( '', $this->rows )
         ), 1
       )
     );
@@ -535,7 +534,7 @@ class TokensByClosure
     return array_merge( $scopes, $this->defineScopesParse( $tokens ) );
   }
 
-  private function bodyBySubQuery(
+  private function tokensBySubQuery(
     array $tokens = []
   ): array {
     $tokens = array_slice( $tokens, $this->findType( $tokens, T_DOUBLE_ARROW ) + 1);
@@ -586,74 +585,61 @@ class TokensByClosure
   }  
 
   private function createExpNode(
+    string $parent,
     array $tokens = [],
-    array $scopes = []
+    array $scopes = [],
   ): array {
     $tokens = $this->groupByLogical( $tokens );
-    $tokens = $this->parserTokens( $tokens, $scopes );
-    return [ 'object' => 'ExpNode', 'scopes' => $scopes, 'tokens' => $tokens ];
+    $tokens = $this->parserTokens( 'ExpNode', $tokens, $scopes );
+    return [ 'object' => 'ExpNode', 'parent' => $parent, 'scopes' => $scopes, 'tokens' => $tokens ];
   }
 
   private function createExpNeg(
+    string $parent,
     array $tokens = [],
     array $scopes = []
   ): array {
     $tokens = $this->groupByLogical( $tokens );
-    $tokens = $this->parserTokens( $tokens, $scopes );    
-    return [ 'object' => 'ExpNeg', 'scopes' => $scopes, 'tokens' => $tokens ];
+    $tokens = $this->parserTokens( 'ExpNeg', $tokens, $scopes );    
+    return [ 'object' => 'ExpNeg', 'parent' => $parent, 'scopes' => $scopes, 'tokens' => $tokens ];
   }   
 
   private function createExpGroup(
+    string $parent,
     array $tokens = [],
     array $scopes = []
   ): array {
     $tokens = $this->groupByLogical( $tokens );
-    $tokens = $this->parserTokens( $tokens, $scopes );
+    $tokens = $this->parserTokens( 'ExpGroup', $tokens, $scopes );
     $tokens = $this->simplesTokens( $tokens );
-    return [ 'object' => 'ExpGroup', 'scopes' => $scopes, 'tokens' => $tokens ];
+    return [ 'object' => 'ExpGroup', 'parent' => $parent, 'scopes' => $scopes, 'tokens' => $tokens ];
   }
   
   private function createExpSubQuery(
+    string $parent,
     string|null $event,
     array $scopes = [],
     array $tokens = [],
   ): array {
     $tokens = $this->groupByLogical( $tokens );
-    $tokens = $this->parserTokens( $tokens, $scopes );
-    return [ 'object' => 'ExpSubQuery', 'event' => $event, 'scopes' => $scopes, 'tokens' => $tokens ];
+    $tokens = $this->parserTokens( 'ExpSubQuery', $tokens, $scopes );
+    return [ 'object' => 'ExpSubQuery', 'parent' => $parent, 'event' => $event, 'scopes' => $scopes, 'tokens' => $tokens ];
   }
 
   private function createExpLog(
+    string $parent,
     array $tokens = []
   ): array {
-    return [ 'object' => 'ExpLog', 'tokens' => $tokens ];
+    return [ 'object' => 'ExpLog', 'parent' => $parent, 'tokens' => $tokens ];
   }
   
-  private function createExpCompareByUnaryToFalse(
-    array $tokens = []
-  ): array {
-    $tokens = $this->removerNot( $tokens );
-    $tokens[] = $this->defineToken( '==' );
-    $tokens[] = $this->defineToken( 'false' );
-    return $tokens;
-  }
-
-  private function createExpCompareByUnaryToTrue(
-    array $tokens = []
-  ): array {
-    $tokens[] = $this->defineToken( '==' );
-    $tokens[] = $this->defineToken( 'true' );
-    return $tokens;
-  }  
-
   private function createExpUnary(
+    string $parent,
     array $tokens = [],
     array $scopes = []
   ): array {
-    $tokens = $this->hasNegative( $tokens )
-      ? $this->createExpCompareByUnaryToFalse( $tokens )
-      : $this->createExpCompareByUnaryToTrue( $tokens );
-    return $this->createExpCompare( $tokens, $scopes );
+    $tokens = $this->createExpField( $tokens, $scopes );  
+    return [ 'object' => 'ExpUnary', 'parent' => $parent, 'scopes' => $scopes, 'tokens' => $tokens ];
   }
 
   private function hasField(
@@ -781,12 +767,12 @@ class TokensByClosure
   private function createExpValue(
     array $tokens = []
   ): array {
-    $list = $this->findType(
+    $islist = $this->findType(
       array_slice( $tokens, 0, 1 ),
         T_START_BRACKET
     ) !== -1;
 
-    return [ 'object' => 'ExpValue', 'list' => $list, 'tokens' => $tokens ];
+    return [ 'object' => 'ExpValue', 'islist' => $islist, 'tokens' => $tokens ];
   }
 
   private function equalReverse(
@@ -821,11 +807,11 @@ class TokensByClosure
         : $this->createExpValue( $right )
     ];
 
-    $compareEvents = $left[ 'object' ] === 'ExpValue' 
+    $compareEvents = $left['object'] === 'ExpValue' 
       ? $right : $left;
 
     $compareEvents = array_filter(
-      $compareEvents[ 'events'], 
+      $compareEvents['events'], 
         fn( array $event ) => $event['type'] === 'compare'
     );  
 
@@ -834,57 +820,52 @@ class TokensByClosure
         $equal = $this->equalReverse( $equal );
         return [ $right, $equal, $left ];
       } else return [ $left, $equal, $right ]; 
-    } else {
-      // Todo para implementar Events
-      // StartWith, EndWith e Contains
-      return $left[ 'object' ] === 'ExpValue'
-        ? [ $right ] : [ $left ];
-    }
+    } else return $left[ 'object' ] === 'ExpValue'
+      ? [ $right ] : [ $left ];
   }
 
   private function createExpCompare(
+    string $parent,
     array $tokens = [],
-    array $scopes = []
+    array $scopes = [],
   ): array {
-    if( $this->hasUnary( $tokens )){
-      return $this->createExpUnary( $tokens, $scopes );
-    }
-
     $tokens = $this->groupByEqual( $tokens );
     $tokens = $this->createExpFieldOrValue( $tokens, $scopes );
-    return [ 'object' => 'ExpCompare', 'scopes' => $scopes, 'tokens' => $tokens ];
+    return [ 'object' => 'ExpCompare', 'parent' => $parent, 'scopes' => $scopes, 'tokens' => $tokens ];
   }  
 
   private function parserTokens(
+    string $parent,
     array $tokens = [],
-    array $scopes = []
+    array $scopes = [],
   ): array {
     foreach( $tokens as $i => $token ){
       if( $this->hasNegative( $token )){
-        $tokens[$i] = $this->hasSubQuery( $token )
-          ? $this->createExpNeg( $this->removerNot( $token ), $scopes )
-          : $this->createExpCompare( $token, $scopes );
+        $tokens[$i] = $this->createExpNeg( 
+          $parent, $this->removerNot( $token ), $scopes
+        );
       } else
       if( $this->hasGroup( $token )){
         $tokens[$i] = $this->createExpGroup( 
-          $this->removerParentesesFromGroup( $token ), $scopes
+          $parent, $this->removerParentesesFromGroup( $token ), $scopes
         );
       } else
       if( $this->hasSubQuery( $token )){
         $tokens[$i] = $this->createExpSubQuery( 
-          $this->eventBySubQuery( $token ),
+          $parent, 
+          $this->eventBySubQuery( $token ), 
           $this->scopesBySubQuery( $token, $scopes ),
-          $this->bodyBySubQuery( $token )
+          $this->tokensBySubQuery( $token )
         );
       } else
       if( $this->hasLogincal( $token )){
-        $tokens[$i] = $this->createExpLog( $token );
+        $tokens[$i] = $this->createExpLog( $parent, $token );
       } else
       if( $this->hasCompare( $token )){
-        $tokens[$i] = $this->createExpCompare( $token, $scopes );
+        $tokens[$i] = $this->createExpCompare( $parent, $token, $scopes );
       } else 
       if( $this->hasUnary( $token )){
-        $tokens[$i] = $this->createExpUnary( $token, $scopes );
+        $tokens[$i] = $this->createExpUnary( $parent, $token, $scopes );
       }
     }
 
@@ -894,12 +875,10 @@ class TokensByClosure
   private function simplesTokens(
     array $tokens = []
   ): array {
-
-
     return $tokens;
   }
 
-  private function defineBody(
+  private function defineTokens(
   ): void {
     $this->tokens = $this->removerEnds(
       array_slice( $this->content(), $this->findType(
@@ -908,29 +887,56 @@ class TokensByClosure
     );
 
     $this->tokens = $this->createExpNode(
-      $this->tokens, $this->scopes
+      'ExpInit', $this->tokens, $this->scopes
     );
   }
 
-  public function getClosure(
+  private function cacheName(
+  ): string {
+    return "UserRepository@getAll";
+    // return sprintf( 
+    //   '%s@%s', $this->classe, $this->method
+    // );
+  }
+
+  private function saveArgs(
+    array $contexts = []
   ): array {
-    $this->defineReflectFunction();
-    $this->defineTokensFromFile();
-    $this->defineTokensAll();
-    $this->defineUses();
-    $this->defineClass();
-    $this->defineMethod();
-    $this->defineCaches();
-    $this->defineScopes();
-    $this->defineBody();
-    
-    return [ 
+    if( $this->caches === 'yes' ){
+      Cache::save( $contexts, 'orm', $this->cacheName());
+    }
+
+    return $contexts;
+  }
+
+  private function getArgs(
+  ): array {
+    return $this->saveArgs([ 
       'uses'   => $this->uses,
       'classe' => $this->classe,
       'method' => $this->method,
       'caches' => $this->caches,
       'scopes' => $this->scopes, 
       'tokens' => $this->tokens,
-    ];
+    ]);    
+  }
+
+  public function getClosure(
+  ): array {
+    $this->defineReflectFunction();
+    $this->defineTokensFromFile();
+    $this->defineClass();
+    $this->defineMethod();
+    $this->defineCaches();
+    
+    if( Cache::exist( 'orm', $this->cacheName())){
+      return Cache::load( 'orm', $this->cacheName());
+    } else {
+      $this->defineTokensAll();
+      $this->defineUses();
+      $this->defineScopes();
+      $this->defineTokens();
+      return $this->getArgs();
+    }
   }
 }

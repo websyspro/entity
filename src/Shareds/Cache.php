@@ -18,32 +18,32 @@ class Cache
   }
 
   public static function file(
-    string $cacheName,
-    array $cacheValue = [] 
+    string $type,
+    string $cacheName 
   ): string {
-    return sprintf( "%s/cache-%s-%s.php", 
-      Cache::cacheDirectory(), $cacheName, md5( serialize( $cacheValue ))
+    return sprintf( "%s/%s-%s.php", 
+      Cache::cacheDirectory(), $type, md5( $cacheName )
     );
   }
 
   public static function exist(
-    string $cacheName,
-    array $cacheValue = [] 
+    string $type,
+    string $cacheName
   ): bool {
     if(CACHE_DISABLED === true){
       return false;
     }
 
-    return file_exists(Cache::file($cacheName, $cacheValue));
+    return file_exists( Cache::file( $type, $cacheName ));
   }
   
   public static function save(
+    array $cacheContext, 
+    string $type,
     string $cacheName,
-    array $cacheValue = [],
-    array $cacheContext = [] 
   ): array {
     file_put_contents( 
-      Cache::file($cacheName, $cacheValue), sprintf(
+      Cache::file( $type, $cacheName ), sprintf(
         "<?php\n\nreturn %s;", var_export($cacheContext, true)
       ), LOCK_EX
     );
@@ -52,9 +52,9 @@ class Cache
   }
   
   public static function load(
-    string $cacheName,
-    array $cacheValue = []
+    string $type,
+    string $cacheName
   ): array {
-    return require Cache::file($cacheName, $cacheValue);
+    return require Cache::file( $type, $cacheName );
   }  
 }
