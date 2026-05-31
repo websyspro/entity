@@ -6,6 +6,7 @@ use Closure;
 use ReflectionAttribute;
 use ReflectionClass;
 use ReflectionProperty;
+use Websyspro\Entity\Decorations\BaseEntity;
 use Websyspro\Entity\Decorations\ColumnName;
 use Websyspro\Entity\Decorations\Columns\Date;
 use Websyspro\Entity\Decorations\Columns\Datetime;
@@ -23,11 +24,25 @@ use Websyspro\Entity\Decorations\EntityName;
 use Websyspro\Entity\Decorations\Generations\AutoIncrement;
 use Websyspro\Entity\Decorations\Requireds\NotNull;
 use Websyspro\Entity\Decorations\Statistics\Index;
-use function in_array, count, is_array, is_object;
+use function in_array, count, is_array, is_object, sprintf;
+
+/* defined consts to objects */
+define( 'T_Entity', 'entity' );
+define( 'T_Columns', 'columns' );
+define( 'T_Types', 'types' );
+define( 'T_Alias', 'alias' );
+define( 'T_Indexes', 'indexes' );
+define( 'T_Uniques', 'uniques' );
+define( 'T_Foreign_Keys', 'foreign_keys' );
+define( 'T_Primary_Keys', 'primary_keys' );
+define( 'T_Not_Nulls', 'not_nulls' );
+define( 'T_Auto_Increments', 'auto_increments' );  
+
 
 class EntityStructure
 {
-  public ReflectionClass $reflectionClass;
+  public ReflectionClass $reflectionClassBase;
+  public ReflectionClass $reflectionClassChild;
   public array $attributes = [];
   public array $contexts = [];
 
@@ -69,18 +84,34 @@ class EntityStructure
 
     unset( $closure );
     return $array;
-  }  
+  }
+
+  private function getGroupByNumber(
+    string $contextsLabel,
+     array $contexts,
+     array $contextsArr = []
+  ): array {
+    foreach($contexts as $key => $group){
+      $contextsArr[$group][] = $key;
+    }
+    
+    return $this->map(
+      $contextsArr, fn(array $items) => sprintf(
+        '%s_%s', $contextsLabel, join( '_', $items )
+      )
+    );
+  }
 
   private function getReflection(
   ): void {
-    $this->reflectionClass = new ReflectionClass($this->class);
+    $this->reflectionClassBase = new ReflectionClass(BaseEntity::class);
+    $this->reflectionClassChild = new ReflectionClass($this->class);
   }
 
   private function getReflectionAttributes(
   ): void {
-    $properties = $this->reflectionClass->getProperties(
-      ReflectionProperty::IS_PUBLIC
-    );
+    $properties = $this->reflectionClassChild
+      ->getProperties(ReflectionProperty::IS_PUBLIC);
 
     if( empty($properties) === false ){
       foreach($properties as $property){
@@ -97,7 +128,7 @@ class EntityStructure
 
   private function getReflectionEntity(
   ): void {
-    $attributeEntityNameArr = $this->reflectionClass
+    $attributeEntityNameArr = $this->reflectionClassChild
       ->getAttributes(EntityName::class);
 
       if(count($attributeEntityNameArr) === 1){
@@ -111,7 +142,7 @@ class EntityStructure
             explode( '\\', $this->class )
           );
 
-          $this->contexts['entity'] = [ 
+          $this->contexts[T_Entity] = [ 
             $entityNameInstance->name, str_replace(
               "Entity", "", $entityNameInstanceTable
             )
@@ -119,6 +150,30 @@ class EntityStructure
         }
       }
     }  
+  }
+
+  private function getColumns(
+    ReflectionClass $reflectionClass
+  ): array {
+    return $this->map(
+      $reflectionClass->getProperties(
+        ReflectionProperty::IS_PUBLIC
+      ), fn( ReflectionProperty $p ) => $p->name
+    );
+  }
+
+  private function getReflectionColumns(
+    array $columnsBase = [],
+    array $columnsChilds = []
+  ): void {
+    $columnsBase = $this->getColumns($this->reflectionClassBase);
+    $columnsChilds = $this->getColumns($this->reflectionClassChild);
+    
+    $this->contexts[T_Columns] = [
+      ...$this->where( $columnsBase, fn(string $column) => $column === reset($columnsBase)),
+      ...$this->where( $columnsChilds, fn(string $column) => !in_array($column, $columnsBase)),
+      ...$this->where( $columnsBase, fn(string $column) => $column !== reset($columnsBase))
+    ];
   }
 
   private function getReflectionTypes(
@@ -132,7 +187,7 @@ class EntityStructure
       ]);
 
       if( $isColumnType === true ){
-        $this->contexts['types'][
+        $this->contexts[T_Types][
           $attribute[0]->name
         ] = $attribute[1]->getName();
       }
@@ -157,58 +212,71 @@ class EntityStructure
   
   private function getReflectionAlias(
   ): void {
-    $this->contexts['alias'] = $this->map(
+    $this->contexts[T_Alias] = $this->map(
       $this->getReflectionByAttribute(
         ColumnName::class, true
-      ), fn() => 1
+      ), fn(ColumnName  $columnName ) => $columnName->columnName
     );
   }  
 
   private function getReflectionIndex(
   ): void {
-    $this->contexts['indexes'] = $this->getReflectionByAttribute(
-      Index::class, true
+    $this->contexts[T_Indexes] = $this->map(
+      $this->getReflectionByAttribute(
+        Index::class, true
+      ), fn(Index $index) => $index->indexGroup 
     );
+
+    $this->contexts[T_Indexes] = $this->getGroupByNumber(
+      T_Indexes, $this->contexts[T_Indexes]
+    );    
   }
 
   private function getReflectionUniques(
+    array $contexts = []
   ): void {
-    $this->contexts['uniques'] = $this->getReflectionByAttribute(
-      Unique::class, true
+    $this->contexts[T_Uniques] = $this->map(
+      $this->getReflectionByAttribute(
+        Unique::class, true
+      ), fn(Unique $unique) => $unique->uniqueGroup 
+    );
+
+    $this->contexts[T_Uniques] = $this->getGroupByNumber(
+      T_Uniques, $this->contexts[T_Uniques]
     );
   } 
   
   private function getReflectionForeignKeys(
   ): void {
-    $this->contexts['foreignKeys'] = $this->getReflectionByAttribute(
+    $this->contexts[T_Foreign_Keys] = $this->getReflectionByAttribute(
       ForeignKey::class, true
     );
   }
 
   private function getReflectionPrimaryKeys(
   ): void {
-    $this->contexts['primaryKeys'] = $this->map(
+    $this->contexts[T_Primary_Keys] = $this->map(
       $this->getReflectionByAttribute(
         PrimaryKey::class, false
-      ), fn() => true
+      ), fn(mixed $_, string $key) => $key
     );
   }
 
   private function getReflectionNotNulls(
   ): void {
-    $this->contexts['notNulls'] = $this->map(
+    $this->contexts[T_Not_Nulls] = $this->map(
       $this->getReflectionByAttribute(
         NotNull::class, false
-      ), fn() => true
+      ), fn(mixed $_, string $key) => $key
     );
   }
   
   private function getReflectionAutoIncrements(
   ): void {
-    $this->contexts['autoIncrements'] = $this->map(
+    $this->contexts[T_Auto_Increments] = $this->map(
       $this->getReflectionByAttribute(
         AutoIncrement::class, false
-      ), fn() => true
+      ), fn(mixed $_, string $key) => $key
     );
   }  
 
@@ -217,6 +285,7 @@ class EntityStructure
     $this->getReflection();
     $this->getReflectionAttributes();
     $this->getReflectionEntity();
+    $this->getReflectionColumns();
     $this->getReflectionTypes();
     $this->getReflectionAlias();
     $this->getReflectionIndex();
@@ -227,7 +296,8 @@ class EntityStructure
     $this->getReflectionAutoIncrements();
 
     /* clear variable(s) */
-    unset($this->reflectionClass);
+    unset($this->reflectionClassChild);
+    unset($this->reflectionClassBase);
     unset($this->attributes);
     unset($this->entity);
     unset($this->class);

@@ -5,6 +5,7 @@ use Websyspro\Entity\Shareds\ExpressionWhere;
 use Websyspro\Entity\Shareds\WhereByClosure;
 use Websyspro\Test\Crm\Entitys\ItemPropostaEntity;
 use Websyspro\Test\Crm\Entitys\PropostaEntity as Props;
+use Websyspro\Test\Edocente\Entitys\PostEntity;
 use Websyspro\Test\Entitys\BoxEntity;
 use Websyspro\Test\Enums\Status;
 use function Websyspro\Entity\Shareds\initWhere;
