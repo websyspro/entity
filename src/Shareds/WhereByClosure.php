@@ -3,10 +3,10 @@
 namespace Websyspro\Entity\Shareds;
 
 use Closure;
-use ReflectionFunction;
+// use ReflectionFunction;
 
-use function ord, array_slice, in_array, sprintf, is_string, count;
-use Websyspro\Entity\Enums\MetaType;
+// use function ord, array_slice, in_array, sprintf, is_string, count;
+// use Websyspro\Entity\Enums\MetaType;
 
 define( 'T_START_PARENTESES', 40 );
 define( 'T_END_PARENTESES', 41 );
@@ -30,14 +30,14 @@ define( 'T_NOT', 33 );
 
 class WhereByClosure
 {
-  private ReflectionFunction $reflectionFunction;
-  private string|array $tokens;
-  private array $scopes;
-  private array $uses;
-  private array $rows;
-  private string $classe;
-  private string $method;
-  private string $caches;
+  // private ReflectionFunction $reflectionFunction;
+  // private string|array $tokens = [];
+  // private array $scopes = [];
+  // private array $uses = [];
+  // private array $rows = [];
+  // private string $classe = '';
+  // private string $method = '';
+  // private string $caches = '';
   
   public function __construct(
     public Closure $closure
@@ -891,34 +891,22 @@ class WhereByClosure
     );
   }
 
-  private function cacheName(
-  ): string {
-    return "UserRepository@getAll";
-    // return sprintf( 
-    //   '%s@%s', $this->classe, $this->method
-    // );
-  }
-
   private function saveArgs(
     array $contexts = []
   ): array {
-    if( $this->caches === 'yes' ){
-      Cache::save( $contexts, 'orm', $this->cacheName());
-    }
-
     return $contexts;
   }
 
   private function getArgs(
   ): array {
-    return $this->saveArgs([ 
+    return [ 
       'uses'   => $this->uses,
       'classe' => $this->classe,
       'method' => $this->method,
       'caches' => $this->caches,
       'scopes' => $this->scopes, 
       'tokens' => $this->tokens,
-    ]);    
+    ];    
   }
 
   public function getClosure(
@@ -926,17 +914,12 @@ class WhereByClosure
     $this->defineReflectFunction();
     $this->defineTokensFromFile();
     $this->defineClass();
-    $this->defineMethod();
-    $this->defineCaches();
-    
-    if( Cache::exist( 'orm', $this->cacheName())){
-      return Cache::load( 'orm', $this->cacheName());
-    } else {
-      $this->defineTokensAll();
-      $this->defineUses();
-      $this->defineScopes();
-      $this->defineTokens();
-      return $this->getArgs();
-    }
+    // $this->defineMethod();
+    // $this->defineCaches();
+    // $this->defineTokensAll();
+    // $this->defineUses();
+    // $this->defineScopes();
+    $this->defineTokens();
+    return $this->getArgs();
   }
 }

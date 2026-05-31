@@ -2,59 +2,87 @@
 
 namespace Websyspro\Entity\Shareds;
 
-use function sprintf;
+use function sprintf, in_array, count;
 
 class Cache
 {
   private const string CACHE_DIRETOCTORY_DEFAULT = "Cache";
 
-  private static function cacheDirectory(
+  private static function path(
+    string|null $file = null
   ): string {
-    if(is_dir(BASEDIR_APP . DIRECTORY_SEPARATOR . Cache::CACHE_DIRETOCTORY_DEFAULT) === false){
-      mkdir(BASEDIR_APP . DIRECTORY_SEPARATOR . Cache::CACHE_DIRETOCTORY_DEFAULT, 0777, true);
+    $path = BASEDIR_APP . DIRECTORY_SEPARATOR . Cache::CACHE_DIRETOCTORY_DEFAULT;
+
+    if(is_dir($path) === false){
+      mkdir($path, 0777, true);
     }
     
-    return BASEDIR_APP . DIRECTORY_SEPARATOR . Cache::CACHE_DIRETOCTORY_DEFAULT;
+    return $file !== null 
+      ? $path . DIRECTORY_SEPARATOR . $file 
+      : $path;
   }
 
   public static function file(
-    string $type,
-    string $cacheName 
+    string $name,
+    array $context
   ): string {
     return sprintf( "%s/%s-%s.php", 
-      Cache::cacheDirectory(), $type, md5( $cacheName )
+      Cache::path(), 
+      md5( $name ), md5( serialize( $context ))
     );
   }
 
   public static function exist(
-    string $type,
-    string $cacheName
+    string $name,
+    array $contexts
   ): bool {
     if(CACHE_DISABLED === true){
       return false;
     }
 
-    return file_exists( Cache::file( $type, $cacheName ));
+    $findName = self::path( 
+      sprintf('%s-*.php', md5( $name ))
+    );
+    
+    $finds = glob( $findName );
+    if( count( $finds ) !== 0 ){
+      return true;
+    }
+
+    return false;
   }
   
   public static function save(
-    array $cacheContext, 
-    string $type,
-    string $cacheName,
+    string $name,
+    array $contexts
   ): array {
     file_put_contents( 
-      Cache::file( $type, $cacheName ), sprintf(
-        "<?php\n\nreturn %s;", var_export($cacheContext, true)
+      Cache::file( $name, $contexts ), sprintf(
+        "<?php\n\nreturn %s;", var_export($contexts, true)
       ), LOCK_EX
     );
 
-    return $cacheContext;
+    return $contexts;
   }
+
+  public static function delete(
+    string $name
+  ): void {
+    foreach( scandir( self::path()) as $file ){
+      if( in_array( $file, [ '.', '..' ])){
+        continue;
+      }
+
+      if( str_starts_with( $file, md5($name))){
+        unlink( self::path() . DIRECTORY_SEPARATOR . $file );
+      }
+    }
+  }  
   
   public static function load(
-    string $type,
-    string $cacheName
+    string $name,
+    array $contexts
   ): array {
-    return require Cache::file( $type, $cacheName );
+    return require Cache::file( $name, $contexts );
   }  
 }

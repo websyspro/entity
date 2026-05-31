@@ -62,9 +62,9 @@ class AbstractEntity
 
             if( $entityName instanceof EntityName ){
               self::$cacheEntity[ static::class ] = [
-                'class' => static::class,
-                'alias' => $table,
-                'table' => $entityName->name
+                static::class,
+                $table,
+                $entityName->name
               ];
             }
           }
