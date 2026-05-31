@@ -917,7 +917,7 @@ class WhereByClosure
     // $this->defineMethod();
     // $this->defineCaches();
     // $this->defineTokensAll();
-    // $this->defineUses();
+    $this->defineUses();
     // $this->defineScopes();
     $this->defineTokens();
     return $this->getArgs();

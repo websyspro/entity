@@ -2,177 +2,240 @@
 
 namespace Websyspro\Entity\Shareds;
 
-use Websyspro\Entity\Decorations\Constraints\ForeignKey;
-use Websyspro\Entity\Decorations\Constraints\Unique;
-use Websyspro\Entity\Decorations\Statistics\Index;
-use Websyspro\Entity\Interfaces\ForeignKeyItem;
-use Websyspro\Entity\Decorations\ColumnName;
-use Websyspro\Entity\Enums\AttributeType;
-use Websyspro\Entity\Enums\MetaType;
+use Closure;
 use ReflectionAttribute;
+use ReflectionClass;
+use ReflectionProperty;
+use Websyspro\Entity\Decorations\ColumnName;
+use Websyspro\Entity\Decorations\Columns\Date;
+use Websyspro\Entity\Decorations\Columns\Datetime;
+use Websyspro\Entity\Decorations\Columns\Decimal;
+use Websyspro\Entity\Decorations\Columns\Enum;
+use Websyspro\Entity\Decorations\Columns\Flag;
+use Websyspro\Entity\Decorations\Columns\LongText;
+use Websyspro\Entity\Decorations\Columns\Number;
+use Websyspro\Entity\Decorations\Columns\Text;
+use Websyspro\Entity\Decorations\Columns\Time;
+use Websyspro\Entity\Decorations\Constraints\ForeignKey;
+use Websyspro\Entity\Decorations\Constraints\PrimaryKey;
+use Websyspro\Entity\Decorations\Constraints\Unique;
+use Websyspro\Entity\Decorations\EntityName;
+use Websyspro\Entity\Decorations\Generations\AutoIncrement;
+use Websyspro\Entity\Decorations\Requireds\NotNull;
+use Websyspro\Entity\Decorations\Statistics\Index;
+use function in_array, count, is_array, is_object;
 
 class EntityStructure
 {
-  public array $entity = [];
-  public array $columns = [];
-  public array $alias = [];
-  public array $types = [];
-  public array $indexes = [];
-  public array $uniques = [];  
-  public array $foreigns = [];
-  public array $primaryKey = [];
-  public array $requireds = [];
-  public array $autoIncrements = [];
+  public ReflectionClass $reflectionClass;
+  public array $attributes = [];
+  public array $contexts = [];
 
   public function __construct(
-    array $entity,
-    array $columns = [],
-    array $types = [],
-    array $alias = [],
-    array $indexes = [],
-    array $uniques = [],
-    array $foreigns = [],
-    array $primaryKey = [],
-    array $requireds = [],
-    array $autoIncrements = []
-  ){
-    $this->defineEntity( $entity );
-    $this->defineColumns( $columns );
-    $this->defineAlias( $alias );
-    $this->defineTypes( $types );
-    $this->definePrimaryKey( $primaryKey );
-    $this->defineIndexes( $indexes );
-    $this->defineUniques( $uniques );
-    $this->defineForeigns( $foreigns );
-    $this->defineRequireds( $requireds );
-    $this->defineAutoIncrements( $autoIncrements );
-  }
+    public string $class
+  ){}
 
-  private function defineEntity(
-    array $entity
-  ): void {
-    $this->entity = $entity;
-  }  
-
-  private function defineColumns(
-    array $columns = [],
-  ): void {
-    $this->columns = $columns;
-  }
-
-  private function defineAlias(
-    array $alias = [],
-  ): void {
-    foreach( $alias as $columnName => $alia ){
-      if( $alia instanceof ColumnName ){
-        $this->alias[ $columnName ] = $alia->columnName;
+  public static function where(
+    array|object $array,
+    Closure $closure,
+    array $arrayFromArry = []
+  ): array {
+    foreach($array as $key => $val){
+      if(is_numeric($key)){
+        $closure($val, $key) ? $arrayFromArry[] = $val : [];
+      } else {
+        $closure($val, $key) ? $arrayFromArry[$key] = $val : [];
       }
     }
-  }  
 
-  private function defineTypes(
-    array $types = []
-  ): void {
-    $this->types = $types;
+    unset( $array );
+    return $arrayFromArry;
   }
 
-  private function getGroupName(
-    array $columns,
-    array $accumulates,
-    AttributeType $attributeType
-  ): array {
-    if( sizeof( $columns ) === 0 ){
-      return [];
+  public static function map(
+    array|object $array,
+    Closure $closure
+  ): array|object {
+    if(is_array($array)){
+      foreach($array as $key => $val){
+        $array[$key] = $closure($val, $key);
+      }
+    } else
+    if(is_object($array)){
+      foreach($array as $key => $val){
+        $array->{$key} = $closure($val, $key);
+      }      
     }
 
-    foreach( $columns as $columnName => $column ){
-      if( $column instanceof Index ){
-        if( isset( $column->indexGroup )){
-          $accumulates[ $column->indexGroup ][] = $columnName;
-        } else
-        if( $column instanceof Unique ){
-          $accumulates[ $column->uniqueGroup ][] = $columnName;
+    unset( $closure );
+    return $array;
+  }  
+
+  private function getReflection(
+  ): void {
+    $this->reflectionClass = new ReflectionClass($this->class);
+  }
+
+  private function getReflectionAttributes(
+  ): void {
+    $properties = $this->reflectionClass->getProperties(
+      ReflectionProperty::IS_PUBLIC
+    );
+
+    if( empty($properties) === false ){
+      foreach($properties as $property){
+        $attributes = $property->getAttributes();
+
+        if( empty($attributes) === false ){
+          foreach($attributes as $attribute){
+            $this->attributes[] = [$property, $attribute];
+          }
         }
       }
     }
-
-    foreach( $accumulates as $key => $accumulate ){
-      $accumulates[ $key ] = sprintf(
-        "%s_%s", match( $attributeType ){
-          AttributeType::indexes => "Index", 
-          AttributeType::uniques => "Unique"
-        }, implode( "_", $accumulate ) 
-      );
-    }
-
-    return $accumulates;
   }
 
-  private function definePrimaryKey(
-    array $primaryKeys = []
+  private function getReflectionEntity(
   ): void {
-    foreach( $primaryKeys as $columnName => $primaryKey ){
-      if( $primaryKey instanceof ReflectionAttribute ){
-        $this->primaryKey[ $columnName ] = $columnName;
+    $attributeEntityNameArr = $this->reflectionClass
+      ->getAttributes(EntityName::class);
+
+      if(count($attributeEntityNameArr) === 1){
+        [ $entityName ] = $attributeEntityNameArr;
+
+        if($entityName instanceof ReflectionAttribute){
+        $entityNameInstance = $entityName->newInstance();
+        
+        if($entityNameInstance instanceof EntityName){
+          [ $entityNameInstanceTable ] = array_reverse(
+            explode( '\\', $this->class )
+          );
+
+          $this->contexts['entity'] = [ 
+            $entityNameInstance->name, str_replace(
+              "Entity", "", $entityNameInstanceTable
+            )
+          ];
+        }
+      }
+    }  
+  }
+
+  private function getReflectionTypes(
+  ): void {
+    foreach($this->attributes as $attribute){
+      $isColumnType = in_array($attribute[1]->getName(), [
+        Date::class, Datetime::class, Time::class,
+        Decimal::class, Number::class,
+        Text::class, LongText::class,
+        Enum::class, Flag::class,
+      ]);
+
+      if( $isColumnType === true ){
+        $this->contexts['types'][
+          $attribute[0]->name
+        ] = $attribute[1]->getName();
       }
     }
   }
 
-  private function defineIndexes(
-    array $indexes = []
+  private function getReflectionByAttribute(
+    string $findAttribute,
+      bool $isNewInstance = false,
+     array $attributesArr = [] 
+  ): array {
+    foreach($this->attributes as $attribute){
+      if( $attribute[1]->getName() === $findAttribute ){
+        $attributesArr[$attribute[0]->name] = $isNewInstance 
+          ? $attribute[1]->newInstance() 
+          : $attribute[1];
+      }
+    }
+
+    return $attributesArr;
+  } 
+  
+  private function getReflectionAlias(
   ): void {
-    $this->indexes = $this->getGroupName( 
-      $indexes, [], AttributeType::indexes
+    $this->contexts['alias'] = $this->map(
+      $this->getReflectionByAttribute(
+        ColumnName::class, true
+      ), fn() => 1
+    );
+  }  
+
+  private function getReflectionIndex(
+  ): void {
+    $this->contexts['indexes'] = $this->getReflectionByAttribute(
+      Index::class, true
     );
   }
 
-  private function defineUniques(
-    array $uniques = []
+  private function getReflectionUniques(
   ): void {
-    $this->uniques = $this->getGroupName( 
-      $uniques, [], AttributeType::uniques
+    $this->contexts['uniques'] = $this->getReflectionByAttribute(
+      Unique::class, true
+    );
+  } 
+  
+  private function getReflectionForeignKeys(
+  ): void {
+    $this->contexts['foreignKeys'] = $this->getReflectionByAttribute(
+      ForeignKey::class, true
     );
   }
 
-  private function defineForeigns(
-    array $foreigns = []
+  private function getReflectionPrimaryKeys(
   ): void {
-    foreach( $foreigns as $key => $foreignKey ){
-      if( $foreignKey instanceof ForeignKey ){
-        if( class_exists( $foreignKey->entityReference )){
-          $entityStructure = $foreignKey->entityReference::meta( MetaType::Query );    
-          
-          if( $entityStructure instanceof EntityStructure ){
-            $referenteTable = $entityStructure->entity[ 'table' ];
-            $referenteKey = reset( $entityStructure->primaryKey );
-
-            $this->foreigns[ $foreignKey->entityReference ] = [
-              'table' => $this->entity[ 'table' ], 'key' => $key,
-              'referenceTable' => $referenteTable, 'referenceKey' => $referenteKey
-            ];
-          }
-        }        
-      }
-    }
+    $this->contexts['primaryKeys'] = $this->map(
+      $this->getReflectionByAttribute(
+        PrimaryKey::class, false
+      ), fn() => true
+    );
   }
 
-  private function defineRequireds(
-    array $requireds = []
+  private function getReflectionNotNulls(
   ): void {
-    foreach( $requireds as $columnName => $required ){
-      if( $required instanceof ReflectionAttribute ){
-        $this->requireds[ $columnName ] = $columnName;
-      }
-    }
+    $this->contexts['notNulls'] = $this->map(
+      $this->getReflectionByAttribute(
+        NotNull::class, false
+      ), fn() => true
+    );
   }
+  
+  private function getReflectionAutoIncrements(
+  ): void {
+    $this->contexts['autoIncrements'] = $this->map(
+      $this->getReflectionByAttribute(
+        AutoIncrement::class, false
+      ), fn() => true
+    );
+  }  
 
-  private function defineAutoIncrements(
-    array $autoIncrements = []
+  private function startups(
   ): void {
-    foreach( $autoIncrements as $columnName => $autoIncrement ){
-      if( $autoIncrement instanceof ReflectionAttribute ){
-        $this->autoIncrements[ $columnName ] = $columnName;
-      }
-    }
-  }
+    $this->getReflection();
+    $this->getReflectionAttributes();
+    $this->getReflectionEntity();
+    $this->getReflectionTypes();
+    $this->getReflectionAlias();
+    $this->getReflectionIndex();
+    $this->getReflectionUniques();
+    $this->getReflectionForeignKeys();
+    $this->getReflectionPrimaryKeys();
+    $this->getReflectionNotNulls();
+    $this->getReflectionAutoIncrements();
+
+    /* clear variable(s) */
+    unset($this->reflectionClass);
+    unset($this->attributes);
+    unset($this->entity);
+    unset($this->class);
+  }  
+
+  public function get(
+  ): mixed {
+    $this->startups();
+    return $this;
+  }  
 }

@@ -4,7 +4,7 @@ namespace Websyspro\Entity\Shareds;
 
 use Closure;
 use ReflectionFunction;
-use function count, array_slice, is_string, in_array, ord, is_array;
+use function count, array_slice, is_string, in_array, ord, is_array, is_object, sprintf;
 use Websyspro\Entity\Enums\MetaType;
 
 /* defined consts to tokens */
@@ -80,8 +80,28 @@ class ExpressionWhere
       }
     }
 
+    unset( $array );
     return $arrayFromArry;
   }
+
+  public static function map(
+    array|object $array,
+    Closure $closure
+  ): array|object {
+    if(is_array($array)){
+      foreach($array as $key => $val){
+        $array[$key] = $closure($val, $key);
+      }
+    } else
+    if(is_object($array)){
+      foreach($array as $key => $val){
+        $array->{$key} = $closure($val, $key);
+      }      
+    }
+
+    unset( $closure );
+    return $array;
+  }  
 
   private function indexOf(
     array $tokens,
@@ -138,13 +158,13 @@ class ExpressionWhere
       $this->tokens = file( $this->reflectionFunction->getFileName());
 
       if( count( $this->tokens ) !== 0 ){
-        $this->tokens = array_map(
-          function(string $token){
+        $this->tokens = $this->map(
+          $this->tokens, function(string $token){
             $strPos = strpos($token, '//');
             return $strPos 
               ? substr($token, 0, $strPos)
               : $token;
-          }, $this->tokens
+          }, 
         );
       }
     }
@@ -152,20 +172,20 @@ class ExpressionWhere
 
   private function getUsesRows(
   ): void {
-    $this->uses = array_filter(
+    $this->uses = $this->where(
       $this->tokens, fn(string $token) => (
         str_starts_with( trim( $token), 'use')
       )
     );
 
-    $this->uses = array_values(
-      array_map( fn(string $token) => (
+    $this->uses = $this->map( 
+      $this->uses, fn(string $token) => (
         str_replace([ 'use',';' ], '', $token)
-      ), $this->uses )
+      )
     );
 
-    $this->uses = array_map(
-      function(string $token){
+    $this->uses = $this->map(
+      $this->uses, function(string $token){
         if( strpos($token, 'as') !== false ){
           [ $use, $key ] = explode( 'as', $token );
           return [ trim($use), trim($key)];
@@ -176,16 +196,16 @@ class ExpressionWhere
             trim( implode( '\\', array_slice($useImplits, -1)))
           ];
         }
-      }, $this->uses
+      }
     );
   }
 
   private function getUse(
     string $variable
   ): string|null {
-    [ $uses ] = array_values( array_filter(
+    [ $uses ] = $this->where(
       $this->uses, fn(array $use) => $use[1] === $variable
-    ));
+    );
 
     return $uses[0] ?? null;
   }
@@ -279,7 +299,7 @@ class ExpressionWhere
     return $tokens;
   }
   
-  private function createContext(
+  private function getContext(
     array $contexts = []
   ): array {
     return $this->getContextsNotEnds(
@@ -306,20 +326,19 @@ class ExpressionWhere
       ), 1
     );
 
-    $this->contexts = array_map(
-      fn(string|array $token) => (
+    $this->contexts = $this->map(
+      $this->contexts, fn(string|array $token) => (
         $this->createToken($token)
-      ), $this->contexts
+      )
     );
 
-    $this->contexts = array_filter(
+    $this->contexts = $this->where(
       $this->contexts, fn(array $token) => !in_array( 
         $token[0], [ T_WHITESPACE, T_CURLY_OPEN, T_END_BRACE, T_DOT ]
       )
     );
 
-    $this->contexts = array_values($this->contexts);
-    $this->contexts = $this->createContext($this->contexts);
+    $this->contexts = $this->getContext($this->contexts);
   }
 
   private function getScopesByContext(
@@ -333,8 +352,8 @@ class ExpressionWhere
       )), [ T_COMMA ]
     );
 
-    $scopes = array_map(
-      function(array $scope){
+    $scopes = $this->map(
+      $scopes, function(array $scope){
         [ $instance, $variable ] = $scope;
         $instance = $this->getUse(
           $instance[1]
@@ -348,13 +367,13 @@ class ExpressionWhere
           // )->entity[1], 
           $variable[1]
         ];
-      }, $scopes
+      }
     );
 
     return [ ...$scopesPaarent, ...$scopes ];
   }
 
-  private function groupByLogicals(
+  private function getGroupByLogicals(
     array $tokens
   ): array {
     return $this->groupByTypes(
@@ -362,7 +381,7 @@ class ExpressionWhere
     );
   }
 
-  private function groupByEquals(
+  private function getGroupByTypes(
     array $tokens
   ): array {
     return $this->groupByTypes(
@@ -475,7 +494,7 @@ class ExpressionWhere
       )
     );
 
-    $tokens = $this->groupByLogicals($tokens);
+    $tokens = $this->getGroupByLogicals($tokens);
     // TODO for agrupar compare for to Between
     return $tokens;
   }
@@ -546,26 +565,26 @@ class ExpressionWhere
     foreach($contexts as $i => $tokens){
       if($this->isDenying($tokens)){
         $contexts[$i] = [T_EXP_DENYING, $parent, $scopes, $this->getParser(
-          T_EXP_DENYING, $this->groupByLogicals(array_slice( $tokens, 1 )), $scopes
+          T_EXP_DENYING, $this->getGroupByLogicals(array_slice( $tokens, 1 )), $scopes
         )];
       } else if($this->isGroup($tokens)){
-        $tokens = $this->groupByLogicals( array_slice( $tokens, 1, -1 ));
+        $tokens = $this->getGroupByLogicals( array_slice( $tokens, 1, -1 ));
+        $tokens = $this->getParser(T_EXP_GROUP, $tokens, $scopes);
         // TODO for agrupar compare for to Between
-        $contexts[$i] = [T_EXP_GROUP, $parent, $scopes, $this->getParser(
-          T_EXP_GROUP, $tokens, $scopes
-        )];
+        $contexts[$i] = [T_EXP_GROUP, $parent, $scopes, $tokens];
       } else if($this->isSubQuery($tokens)){
         [ $_ ,$method ] = $this->getSubQueryMethod($tokens);
-        $tokens = $this->createContext($tokens);
+        $tokens = $this->getContext($tokens);
         $scopes = $this->getScopesByContext($tokens, [], $scopes);
         $tokens = $this->getTokensByContext($tokens);
         $tokens = $this->getParser(T_EXP_SUBQUERY, $tokens, $scopes);
+        // TODO for agrupar compare for to Between
         $contexts[$i] = [T_EXP_SUBQUERY, $parent, $method, $scopes, $tokens];
       } else if($this->isLogical($tokens)){
         [ $token ] = $tokens;
         $contexts[$i] = [T_EXP_LOGICAL, $parent, $token];
       } else if($this->isCompare($tokens)){
-        $tokens = $this->groupByEquals($tokens);
+        $tokens = $this->getGroupByTypes($tokens);
         $tokens = $this->getParseFieldAndValue( $scopes, $tokens );
         $contexts[$i] = [T_EXP_COMPARE, $parent, $scopes, $tokens];
       } else if($this->isUnary( $tokens )){
@@ -584,6 +603,8 @@ class ExpressionWhere
     $this->tokens = $this->getParser(
       T_EXP_INITIAL, $this->tokens, $this->scopes
     );
+
+    // TODO for agrupar compare for to Between
 
     /* clear variable(s) */
     unset($this->reflectionFunction);

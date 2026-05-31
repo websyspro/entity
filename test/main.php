@@ -1,9 +1,11 @@
 <?php
 
+use Websyspro\Entity\Shareds\EntityStructure;
 use Websyspro\Entity\Shareds\ExpressionWhere;
 use Websyspro\Entity\Shareds\WhereByClosure;
 use Websyspro\Test\Crm\Entitys\ItemPropostaEntity;
 use Websyspro\Test\Crm\Entitys\PropostaEntity as Props;
+use Websyspro\Test\Entitys\BoxEntity;
 use Websyspro\Test\Enums\Status;
 use function Websyspro\Entity\Shareds\initWhere;
 
@@ -45,10 +47,14 @@ class UserRepository
   }
 }
 
-$UserRepository = new UserRepository();
-$getAll = $UserRepository->getAll();
+// $UserRepository = new UserRepository();
+// $getAll = $UserRepository->getAll();
+
+$entityStructure = new EntityStructure(BoxEntity::class);
+$get = $entityStructure->get();
 
 $end = (hrtime(true) - $start) / 1_000_000;;
 echo "Timer: {$end}(ms)\n";
-print_r($getAll);
+print_r($get);
+// print_r($getAll);
 echo "\nTimer: {$end}(ms)";
