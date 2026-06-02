@@ -197,7 +197,7 @@ class EntityStructure
   private function getReflectionTypes(
   ): void {
     foreach($this->attributes as $attribute){
-      $isColumnType = in_array($attribute[1]->getName(), [
+      $isColumnType = in_array( $attribute[1]->getName(), [
         Date::class, Datetime::class, Time::class,
         Decimal::class, Number::class,
         Text::class, LongText::class,
@@ -220,8 +220,7 @@ class EntityStructure
     foreach($this->attributes as $attribute){
       if( $attribute[1]->getName() === $findAttribute ){
         $attributesArr[$attribute[0]->name] = $isNewInstance 
-          ? $attribute[1]->newInstance() 
-          : $attribute[1];
+          ? $attribute[1]->newInstance() : $attribute[1];
       }
     }
 
@@ -251,7 +250,6 @@ class EntityStructure
   }
 
   private function getReflectionUniques(
-    array $contexts = []
   ): void {
     $this->contexts[T_Uniques] = $this->map(
       $this->getReflectionByAttribute(
@@ -316,13 +314,9 @@ class EntityStructure
     );
   } 
   
-  private function getCacheName(
+  private function getCache(
   ): string {
-    [ $entityName ] = array_reverse(
-      explode( '\\', $this->class )
-    );
-
-    return md5( strtolower( $entityName));
+    return md5( strtolower( $this->class));
   }
 
   private function startups(
@@ -348,7 +342,7 @@ class EntityStructure
 
   public function get(
   ): mixed {
-    $hashFile = $this->getCacheName();
+    $hashFile = $this->getCache();
     if( Cache::exist( $hashFile )){
       $this->contexts = Cache::load( $hashFile );
     } else {

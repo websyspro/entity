@@ -4,7 +4,7 @@ namespace Websyspro\Entity\Shareds;
 
 use Closure;
 use ReflectionFunction;
-use function count, array_slice, is_string, in_array, ord, is_array, is_object, sprintf;
+use function count, array_slice, is_string, in_array, ord, is_array, is_object, sprintf, defined;
 
 /* defined consts to tokens */
 define( 'T_START_PARENTESES', 40 );
@@ -46,6 +46,7 @@ class ExpressionWhere
   public array $scopes = [];
   public array $contexts = [];
   public array $tokens = [];
+  public array $statics = []; 
   public string $cacheClassKey;
   public string $cacheMethodKey; 
   public ReflectionFunction $reflectionFunction;
@@ -210,6 +211,12 @@ class ExpressionWhere
     return $uses[0] ?? null;
   }
 
+  private function getStatics(
+  ): void {
+    $this->statics = $this->reflectionFunction
+      ->getStaticVariables();
+  }
+
   private function getCacheKey(
     int $i = 0
   ): void {
@@ -265,7 +272,7 @@ class ExpressionWhere
     [ $number, $value ] = is_string( $tokenArgs ) 
       ? [ ord( $tokenArgs ), $tokenArgs ] : $tokenArgs;
 
-    return [ $number, $value, $this->namberToken($number)];
+    return [ $number, trim($value, '"\''), $this->namberToken($number)];
   }
   
   public function getContextsNotEnds(
@@ -400,7 +407,8 @@ class ExpressionWhere
   }
 
   private function isField(
-    array $tokens = []
+    array $tokens = [],
+    array $scopes = []
   ): bool {
     if( count( $tokens ) < 3 ){
       return false;
@@ -408,6 +416,15 @@ class ExpressionWhere
 
     [ $tokenA, $tokenB, $tokenC 
     ] = $tokens;
+
+    
+    $scopes = $this->where(
+      $scopes, fn(array $scope) => $scope[2] === $tokenA[1]
+    );
+    
+    if( empty( $scopes )){
+      return false;
+    }
     
     return $tokenA[0] === T_VARIABLE 
         && $tokenB[0] === T_OBJECT_OPERATOR
@@ -472,11 +489,11 @@ class ExpressionWhere
   ): array {
     [ $left, $equal, $right ] = $tokens;
     [ $left, $equal, $right ] = [ 
-      $this->isField($left) 
+      $this->isField($left, $scopes) 
         ? $this->getField($scopes, $left) 
         : $this->getValue($left),
           $this->getEqual($equal),
-      $this->isField($right) 
+      $this->isField($right, $scopes) 
         ? $this->getField($scopes, $right) 
         : $this->getValue($right)
     ];
@@ -498,7 +515,6 @@ class ExpressionWhere
     );
 
     $tokens = $this->getGroupByLogicals($tokens);
-    // TODO for agrupar compare for to Between
     return $tokens;
   }
 
@@ -632,11 +648,11 @@ class ExpressionWhere
   ): array {
     foreach($contexts as $i => $tokens){
       if($this->isDenying($tokens)){
-        $contexts[$i] = [T_EXP_DENYING, $parent, $scopes, $this->getParser(
-          T_EXP_DENYING, $this->getGroupByLogicals(array_slice( $tokens, 1 )), $scopes
-        )];
+        $tokens = $this->getGroupByLogicals(array_slice( $tokens, 1 ));
+        $tokens = $this->getParser(T_EXP_DENYING, $tokens, $scopes);
+        $contexts[$i] = [T_EXP_DENYING, $parent, $scopes, $tokens];
       } else if($this->isGroup($tokens)){
-        $tokens = $this->getGroupByLogicals( array_slice( $tokens, 1, -1 ));
+        $tokens = $this->getGroupByLogicals(array_slice( $tokens, 1, -1 ));
         $tokens = $this->getParser(T_EXP_GROUP, $tokens, $scopes);
         $tokens = $this->getParserImplode($tokens);
         $contexts[$i] = [T_EXP_GROUP, $parent, $scopes, $tokens];
@@ -673,7 +689,7 @@ class ExpressionWhere
   private function getCache(
   ): string {
     return sprintf(
-      'orm-%s-%s', 
+      'orm-where-%s-%s', 
       md5($this->cacheClassKey),
       md5($this->cacheMethodKey)
     );
@@ -683,6 +699,7 @@ class ExpressionWhere
   ): void {
     unset($this->reflectionFunction);
     unset($this->contexts);
+    unset($this->statics);
     unset($this->closure);
   }
 
@@ -708,6 +725,7 @@ class ExpressionWhere
       ]     
     );
 
+    $this->tokens = $this->getParserValues($this->tokens);
     $this->getBuildClear();
   }
 
@@ -719,44 +737,256 @@ class ExpressionWhere
         ] = Cache::load( $this->getCache());
         if( $hash === md5(serialize($this->contexts))){
           $this->scopes = $context['scopes'];
-          $this->tokens = $context['tokens'];
+          $this->tokens = $this->getParserValues($context['tokens']);
           $this->getBuildClear();
         } else $this->getBuildsDirect();
       } else $this->getBuildsDirect();
     } else $this->getBuildsDirect();
   }
 
-  // TODO exemplo updateTokensVariable
   private function startupVariable(
-    array $tokens
+    array $contexts,
+    array $statics
   ): array {
-    return $tokens;
+    for($i=0; $i < count($contexts); $i++){
+      [ $_, $value ] = $contexts[$i];
+      
+      if( is_array( $statics )){
+        $staticValue = $statics[
+          trim($value, '$')
+        ] ?? null;
+      } else
+      if( is_object( $statics )){
+        $staticValue = $statics->{
+          trim($value, '$')
+        } ?? null;
+      }
+      
+      if( $staticValue !== null ){
+        if( is_string( $staticValue )){
+          $contexts[$i] = [
+            T_STRING, 
+            $staticValue,
+            token_name(T_STRING)
+          ];
+        } else
+        if( is_object( $staticValue )){
+          $statics = $staticValue;
+          array_splice( $contexts, $i, 2 ); $i--;
+        } else
+        if( is_array( $staticValue )){
+          $statics = $staticValue;
+          $tokensOuts = array_splice($contexts, $i, 4);
+          array_splice( $contexts, $i, 0, [ $tokensOuts[ 2 ]]); $i--;
+        }
+      }
+    }
+
+    return $contexts;
   }
 
-  // TODO exemplo updateTokensEnums
-  private function startupEnums(
-    array $tokens
+  public function isEnumValueWithProperty(
+    array $contexts
+  ): bool {
+    if(count($contexts) < 5){
+      return false;
+    }
+
+    if(count($contexts) === 5){
+      [ $enum, $double, $case, $operator, $property ] = $contexts;
+        return $enum[0] === T_STRING 
+            && $double[0] === T_DOUBLE_COLON 
+            && $case[0] === T_STRING 
+            && $operator[0] === T_OBJECT_OPERATOR 
+            && $property[0] === T_STRING;
+    }
+
+    return false;
+  }
+  
+  public function isEnumValueNotProperty(
+    array $contexts
+  ): bool {
+    if(count($contexts) < 3){
+      return false;
+    }
+
+    if( count($contexts) === 3 ){
+      [ $enum, $double, $case ] = $contexts;
+        return $enum[0] === T_STRING 
+            && $double[0] === T_DOUBLE_COLON 
+            && $case[0] === T_STRING;
+    }
+
+    return false;
+  }
+  
+  private function updateEnumValue(
+    array $contexts,
+     bool $isWithProps
   ): array {
-    return $tokens;
+    if( $isWithProps ){
+      [ $enum, $_, $case, $_, $property ] = $contexts;
+    } else {
+      [ $enum, $_, $case ] = $contexts;
+    }
+
+    $useEnum = $this->where(
+      $this->uses, fn(array $use) => $use[1] === $enum[1]
+    );
+
+    if( $useEnum ){
+      [ $use ] = $useEnum;
+
+      $constantEnum = sprintf( "%s::%s", $use[0], $case[1]);
+      if( defined( $constantEnum )){
+        $enumCase = constant( $constantEnum );
+        if( isset( $property )){
+          return [
+            $property[0] === T_STRING
+              ? $enumCase->name 
+              : $enumCase->value,
+            token_name(T_STRING)
+          ];
+        } else return [
+          T_STRING, 
+          $enumCase->value,
+          token_name(T_STRING)
+        ];
+      }
+    }
+
+    return [ T_STRING, implode(
+      '', $this->map($contexts, fn(array $context) => $context[1])
+      ), token_name(T_STRING)
+    ];
+  }
+
+  private function startupEnums(
+    array $contexts
+  ): array {
+    for($i=0; $i < count($contexts); $i++){
+      $enumWithPropertys = array_slice($contexts, $i, 5);
+      $enumNotPropertys = array_slice($contexts, $i, 3);
+
+      $isEnumWithPropertys = $this->isEnumValueWithProperty($enumWithPropertys);
+      $isEnumNotPropertys = $this->isEnumValueNotProperty($enumNotPropertys);
+
+      if( $isEnumWithPropertys ){
+        $contexts[$i] = $this->updateEnumValue(
+          $enumWithPropertys, true
+        );
+      } else 
+      if( $isEnumNotPropertys ){
+        $contexts[$i] = $this->updateEnumValue(
+          $enumNotPropertys, false
+        );
+      }
+
+      if( $isEnumWithPropertys ){
+        array_splice( $contexts, $i + 1, 4 );
+      } else if( $isEnumNotPropertys ) {
+        array_splice( $contexts, $i + 1, 2 );
+      }
+    }
+
+    return $contexts;
+  }
+
+  private function startupParams(
+    array $contexts,
+    string $type
+  ): array {
+    return $contexts;
   }
   
   private function startupTypes(
-    array $tokens
+    array $contexts
   ): array {
+    [ $expType, $parentType, $scopes, $tokens 
+    ] = $contexts;
+
+    if( $expType === T_EXP_UNARY ){
+      return [ 
+        $expType,
+        $parentType,
+        $scopes, [
+          $tokens,
+          $this->createToken('=='),
+          [ T_STRING, 0, token_name( T_STRING )]
+        ]
+      ];
+    } else
+    if( $expType === T_EXP_BETWEEN ){
+      [ $tokenA, $tokenB, $tokenC 
+      ] = $tokens;
+
+      $tokenB[1] = $this->startupVariable($tokenB[1], $this->statics);
+      $tokenC[1] = $this->startupVariable($tokenC[1], $this->statics);
+      return [ $tokenA, $tokenB, $tokenC ];
+    } else
+    if( $expType === T_EXP_COMPARE ){
+      [ $tokenA, $tokenB, $tokenC 
+      ] = $tokens;
+
+      if( $tokenA[0] === T_EXP_FIELD ){
+        if( $tokenC[0] === T_EXP_VALUE ){
+          $tokenC[1] = $this->startupVariable($tokenC[1], $this->statics);
+          $tokenC[1] = $this->startupEnums($tokenC[1]);
+          $tokenC[1] = $this->startupParams($tokenC[1], $tokenA[3]);
+        }
+      } else
+      if( $tokenA[0] === T_EXP_VALUE ){
+        if( $tokenC[0] === T_EXP_FIELD ){
+          $tokenA[1] = $this->startupVariable($tokenA[1], $this->statics);
+          $tokenA[1] = $this->startupEnums($tokenA[1]);
+          $tokenA[1] = $this->startupParams($tokenA[1], $tokenC[3]);
+        }
+      }
+
+      return [ $tokenA, $tokenB, $tokenC ];
+    }
+
     return $tokens;
   }   
   
-  private function getValues(
-  ): void {}  
+  private function getParserValues(
+    array $contexts = []
+  ): array {
+    foreach($contexts as $i => $tokens){
+      [ $expType ] = $tokens;
+
+      if($expType === T_EXP_DENYING){
+        $contexts[$i][3] = $this->getParserValues($tokens[3]);
+      } else
+      if($expType === T_EXP_GROUP){
+        $contexts[$i][3] = $this->getParserValues($tokens[3]);
+      } else
+      if($expType === T_EXP_SUBQUERY){
+        $contexts[$i][4] = $this->getParserValues($tokens[4]);
+      } else
+      if($expType === T_EXP_UNARY){
+        $contexts[$i][3] = $this->startupTypes($tokens);
+      } else
+      if($expType === T_EXP_COMPARE){
+        $contexts[$i][3] = $this->startupTypes($tokens);
+      } else
+      if($expType === T_EXP_BETWEEN){
+        $contexts[$i][3] = $this->startupTypes($tokens);
+      }
+    }
+
+    return $contexts;
+  }
 
   private function startups(
   ): void {
     $this->getFileRows();
+    $this->getStatics();
     $this->getCacheKey();
     $this->getUsesRows();
     $this->getContexts();
     $this->getBuilds();
-    $this->getValues();
   }
 
   public function get(
