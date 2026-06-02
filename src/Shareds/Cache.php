@@ -2,87 +2,76 @@
 
 namespace Websyspro\Entity\Shareds;
 
-use function sprintf, in_array, count;
+use function sprintf;
 
 class Cache
 {
+  private static array $cacheContents = [];
   private const string CACHE_DIRETOCTORY_DEFAULT = "Cache";
 
   private static function path(
     string|null $file = null
   ): string {
-    $path = BASEDIR_APP . DIRECTORY_SEPARATOR . Cache::CACHE_DIRETOCTORY_DEFAULT;
-
-    if(is_dir($path) === false){
-      mkdir($path, 0777, true);
-    }
+    $path = implode( DIRECTORY_SEPARATOR, [
+      BASEDIR_APP, self::CACHE_DIRETOCTORY_DEFAULT
+    ]);
     
     return $file !== null 
-      ? $path . DIRECTORY_SEPARATOR . $file 
+      ? implode( DIRECTORY_SEPARATOR, [ $path, $file ])  
       : $path;
   }
 
   public static function file(
-    string $name,
-    array $context
+    string $file
   ): string {
-    return sprintf( "%s/%s-%s.php", 
-      Cache::path(), 
-      md5( $name ), md5( serialize( $context ))
+    return self::path(
+      "{$file}.php"
     );
   }
 
   public static function exist(
-    string $name,
-    array $contexts
+    string $file
   ): bool {
     if(CACHE_DISABLED === true){
       return false;
     }
 
-    $findName = self::path( 
-      sprintf('%s-*.php', md5( $name ))
+    return file_exists(
+      self::file( $file )
     );
-    
-    $finds = glob( $findName );
-    if( count( $finds ) !== 0 ){
-      return true;
-    }
-
-    return false;
   }
   
   public static function save(
-    string $name,
+    string $file,
     array $contexts
   ): array {
     file_put_contents( 
-      Cache::file( $name, $contexts ), sprintf(
-        "<?php\n\nreturn %s;", var_export($contexts, true)
+      self::path( "{$file}.php"), sprintf(
+        "<?php%s%sreturn %s;", PHP_EOL, PHP_EOL, var_export($contexts, true)
       ), LOCK_EX
     );
 
-    return $contexts;
+    self::$cacheContents[$file] = require self::file($file);
+    return self::$cacheContents[$file];
   }
 
   public static function delete(
-    string $name
+    string $file
   ): void {
-    foreach( scandir( self::path()) as $file ){
-      if( in_array( $file, [ '.', '..' ])){
-        continue;
-      }
-
-      if( str_starts_with( $file, md5($name))){
-        unlink( self::path() . DIRECTORY_SEPARATOR . $file );
-      }
+    unset(self::$cacheContents[$file]);
+    if(file_exists(self::file($file))){
+        unlink(self::file($file));
     }
   }  
   
   public static function load(
-    string $name,
-    array $contexts
+    string $file
   ): array {
-    return require Cache::file( $name, $contexts );
+    if(isset(self::$cacheContents[$file])){
+      return self::$cacheContents[$file];
+    }
+
+    self::$cacheContents[$file] = require self::file($file);
+    return self::$cacheContents[$file];
   }  
 }

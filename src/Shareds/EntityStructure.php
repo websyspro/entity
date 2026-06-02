@@ -63,7 +63,6 @@ class EntityStructure
       }
     }
 
-    unset( $array );
     return $arrayFromArry;
   }
 
@@ -82,7 +81,6 @@ class EntityStructure
       }      
     }
 
-    unset( $closure );
     return $array;
   }
 
@@ -131,12 +129,12 @@ class EntityStructure
     $attributeEntityNameArr = $this->reflectionClassChild
       ->getAttributes(EntityName::class);
 
-      if(count($attributeEntityNameArr) === 1){
-        [ $entityName ] = $attributeEntityNameArr;
+    if(count($attributeEntityNameArr) === 1){
+      [ $entityName ] = $attributeEntityNameArr;
 
-        if($entityName instanceof ReflectionAttribute){
+      if($entityName instanceof ReflectionAttribute){
         $entityNameInstance = $entityName->newInstance();
-        
+      
         if($entityNameInstance instanceof EntityName){
           [ $entityNameInstanceTable ] = array_reverse(
             explode( '\\', $this->class )
@@ -144,11 +142,20 @@ class EntityStructure
 
           $this->contexts[T_Entity] = [ 
             $entityNameInstance->name, str_replace(
-              "Entity", "", $entityNameInstanceTable
+              'Entity', '', $entityNameInstanceTable
             )
           ];
         }
       }
+    } else {
+      [ $entityNameInstanceTable ] = array_reverse(
+        explode( '\\', $this->class )
+      );
+
+      $this->contexts[T_Entity] = [ 
+        str_replace( 'Entity', '', $entityNameInstanceTable),
+        str_replace( 'Entity', '', $entityNameInstanceTable)
+      ];
     }  
   }
 
@@ -166,14 +173,25 @@ class EntityStructure
     array $columnsBase = [],
     array $columnsChilds = []
   ): void {
-    $columnsBase = $this->getColumns($this->reflectionClassBase);
-    $columnsChilds = $this->getColumns($this->reflectionClassChild);
+    $columnsBase = $this->getColumns(
+      $this->reflectionClassBase
+    );
     
-    $this->contexts[T_Columns] = [
-      ...$this->where( $columnsBase, fn(string $column) => $column === reset($columnsBase)),
-      ...$this->where( $columnsChilds, fn(string $column) => !in_array($column, $columnsBase)),
-      ...$this->where( $columnsBase, fn(string $column) => $column !== reset($columnsBase))
-    ];
+    $columnsChilds = $this->getColumns(
+      $this->reflectionClassChild
+    );
+    
+    $this->contexts[T_Columns] = array_merge(
+      $this->where( $columnsBase,
+        fn(string $column) => 
+          $column === reset($columnsBase)),
+      $this->where( $columnsChilds,
+        fn(string $column) =>
+          !in_array($column, $columnsBase)),
+      $this->where( $columnsBase,
+        fn(string $column) =>
+          $column !== reset($columnsBase))
+    );
   }
 
   private function getReflectionTypes(
@@ -251,6 +269,20 @@ class EntityStructure
     $this->contexts[T_Foreign_Keys] = $this->getReflectionByAttribute(
       ForeignKey::class, true
     );
+
+    $this->contexts[T_Foreign_Keys] = $this->map(
+      $this->contexts[T_Foreign_Keys], function(ForeignKey $foreignKey, string $key){
+        $entityReference = new EntityStructure(
+          $foreignKey->entityReference
+        );
+
+        return [ 
+          $this->contexts[T_Entity][0], $key,
+          $entityReference->get()->contexts[T_Entity][0],
+          $entityReference->get()->contexts[T_Primary_Keys][0]
+        ];
+      }
+    );
   }
 
   private function getReflectionPrimaryKeys(
@@ -259,6 +291,10 @@ class EntityStructure
       $this->getReflectionByAttribute(
         PrimaryKey::class, false
       ), fn(mixed $_, string $key) => $key
+    );
+
+    $this->contexts[T_Primary_Keys] = array_values(
+      $this->contexts[T_Primary_Keys]
     );
   }
 
@@ -278,7 +314,16 @@ class EntityStructure
         AutoIncrement::class, false
       ), fn(mixed $_, string $key) => $key
     );
-  }  
+  } 
+  
+  private function getCacheName(
+  ): string {
+    [ $entityName ] = array_reverse(
+      explode( '\\', $this->class )
+    );
+
+    return md5( strtolower( $entityName));
+  }
 
   private function startups(
   ): void {
@@ -299,13 +344,18 @@ class EntityStructure
     unset($this->reflectionClassChild);
     unset($this->reflectionClassBase);
     unset($this->attributes);
-    unset($this->entity);
-    unset($this->class);
   }  
 
   public function get(
   ): mixed {
-    $this->startups();
+    $hashFile = $this->getCacheName();
+    if( Cache::exist( $hashFile )){
+      $this->contexts = Cache::load( $hashFile );
+    } else {
+      $this->startups();
+      Cache::save( $hashFile, $this->contexts );
+    }
+    
     return $this;
   }  
 }

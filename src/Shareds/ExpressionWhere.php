@@ -5,7 +5,6 @@ namespace Websyspro\Entity\Shareds;
 use Closure;
 use ReflectionFunction;
 use function count, array_slice, is_string, in_array, ord, is_array, is_object, sprintf;
-use Websyspro\Entity\Enums\MetaType;
 
 /* defined consts to tokens */
 define( 'T_START_PARENTESES', 40 );
@@ -34,6 +33,7 @@ define( 'T_EXP_DENYING', 'ExpDenying' );
 define( 'T_EXP_GROUP', 'ExpGroup' );
 define( 'T_EXP_LOGICAL', 'ExpLogical' );
 define( 'T_EXP_COMPARE', 'ExpCompare' );
+define( 'T_EXP_BETWEEN', 'ExpBetween' );
 define( 'T_EXP_UNARY', 'ExpUnary' );
 define( 'T_EXP_SUBQUERY', 'ExpSubQuery' );
 define( 'T_EXP_FIELD', 'ExpField' );
@@ -359,12 +359,12 @@ class ExpressionWhere
           $instance[1]
         );
 
+        $metadata = new EntityStructure($instance);
+        $metadata = $metadata->get();
+
         return [ 
           $instance,
-          'table', 
-          // $instance::meta(
-          //   MetaType::Query
-          // )->entity[1], 
+          $metadata->contexts[T_Entity][0],
           $variable[1]
         ];
       }
@@ -429,8 +429,11 @@ class ExpressionWhere
 
     if(count( $scopes ) !== 0){
       [ $instance, $table ] = $scopes[0];
+      $metadata = new EntityStructure( $instance );
+      $metadata = $metadata->get();
+
       return [ T_EXP_FIELD, $table, $field, 
-        // $instance::meta(MetaType::Query)->types[ $field ]
+        $metadata->contexts['types'][$field]
       ];
     }
 
@@ -555,7 +558,72 @@ class ExpressionWhere
     array $tokens = []
   ): bool {
     return $this->isCompare($tokens) === false;
-  }  
+  }
+
+  private function getParserImplode(
+    array $tokens = []
+  ): array {
+    if(count($tokens) <= 2){
+      return $tokens;
+    }
+
+    for($i = 0; $i < count($tokens); $i++){
+      [ $compoareI, $parentI, $scopesI 
+      ] = $tokens[$i];
+
+      if($compoareI !== T_EXP_COMPARE){
+        continue;
+      }
+
+      [ $tokenALeftI, $_, $tokenCLeftI 
+      ] = $tokens[$i][3];      
+
+      for($j = $i + 1; $j < count($tokens); $j++){
+        [ $compoareJ ] = $tokens[$j];
+
+        if($compoareJ !== T_EXP_COMPARE){
+          continue;
+        }
+
+        [ $tokenLogPrev ] = $tokens[$j - 1][2];
+        [ $tokenALeftJ, $_, $tokenCLeftJ 
+        ] = $tokens[$j][3];
+
+        if($tokenALeftI[0] === T_EXP_FIELD){
+          if($tokenALeftJ[0] === T_EXP_FIELD){
+            if($tokenALeftI[1] === $tokenALeftJ[1]){
+              if($tokenALeftI[2] === $tokenALeftJ[2]){
+                $isTokenLogPrev = in_array(
+                  $tokenLogPrev, [ 
+                    T_LOGICAL_AND,
+                    T_BOOLEAN_AND
+                  ]
+                );
+
+                if( $isTokenLogPrev ){
+                  $tokens[$i] = [
+                    T_EXP_BETWEEN,
+                    $parentI,
+                    $scopesI, [
+                      $tokenALeftI,
+                      $tokenCLeftI,
+                      $tokenCLeftJ
+                    ]
+                  ];
+
+                  $isTokenLogPrev 
+                    ? array_splice($tokens, $j - 1, 2) 
+                    : array_splice($tokens, $j, 1);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    return $tokens;
+  }
   
   private function getParser(
     string $parent,
@@ -570,7 +638,7 @@ class ExpressionWhere
       } else if($this->isGroup($tokens)){
         $tokens = $this->getGroupByLogicals( array_slice( $tokens, 1, -1 ));
         $tokens = $this->getParser(T_EXP_GROUP, $tokens, $scopes);
-        // TODO for agrupar compare for to Between
+        $tokens = $this->getParserImplode($tokens);
         $contexts[$i] = [T_EXP_GROUP, $parent, $scopes, $tokens];
       } else if($this->isSubQuery($tokens)){
         [ $_ ,$method ] = $this->getSubQueryMethod($tokens);
@@ -578,7 +646,7 @@ class ExpressionWhere
         $scopes = $this->getScopesByContext($tokens, [], $scopes);
         $tokens = $this->getTokensByContext($tokens);
         $tokens = $this->getParser(T_EXP_SUBQUERY, $tokens, $scopes);
-        // TODO for agrupar compare for to Between
+        $tokens = $this->getParserImplode($tokens);
         $contexts[$i] = [T_EXP_SUBQUERY, $parent, $method, $scopes, $tokens];
       } else if($this->isLogical($tokens)){
         [ $token ] = $tokens;
@@ -596,29 +664,99 @@ class ExpressionWhere
     return $contexts;
   }
 
-  private function getBuilds(
+  private function isPossibleToCache(
+  ): bool {
+    return isset($this->cacheClassKey)
+        && isset($this->cacheMethodKey);
+  } 
+
+  private function getCache(
+  ): string {
+    return sprintf(
+      'orm-%s-%s', 
+      md5($this->cacheClassKey),
+      md5($this->cacheMethodKey)
+    );
+  }
+
+  private function getBuildClear(
+  ): void {
+    unset($this->reflectionFunction);
+    unset($this->contexts);
+    unset($this->closure);
+  }
+
+  private function getBuildsDirect(
   ): void {
     $this->scopes = $this->getScopesByContext($this->contexts);
     $this->tokens = $this->getTokensByContext($this->contexts);
-    $this->tokens = $this->getParser(
-      T_EXP_INITIAL, $this->tokens, $this->scopes
+    $this->tokens = $this->getParserImplode(
+      $this->getParser(
+        T_EXP_INITIAL, 
+        $this->tokens,
+        $this->scopes
+      )
     );
 
-    // TODO for agrupar compare for to Between
+    Cache::save(
+      $this->getCache(), [
+        'hash' => md5( serialize( $this->contexts)),
+        'context' => [
+          'scopes' => $this->scopes,
+          'tokens' => $this->tokens
+        ]
+      ]     
+    );
 
-    /* clear variable(s) */
-    unset($this->reflectionFunction);
-    unset($this->contexts);
-    unset($this->closure);   
+    $this->getBuildClear();
   }
+
+  private function getBuilds(
+  ): void {
+    if($this->isPossibleToCache()){
+      if(Cache::exist($this->getCache())){
+        [ 'hash' => $hash, 'context' => $context 
+        ] = Cache::load( $this->getCache());
+        if( $hash === md5(serialize($this->contexts))){
+          $this->scopes = $context['scopes'];
+          $this->tokens = $context['tokens'];
+          $this->getBuildClear();
+        } else $this->getBuildsDirect();
+      } else $this->getBuildsDirect();
+    } else $this->getBuildsDirect();
+  }
+
+  // TODO exemplo updateTokensVariable
+  private function startupVariable(
+    array $tokens
+  ): array {
+    return $tokens;
+  }
+
+  // TODO exemplo updateTokensEnums
+  private function startupEnums(
+    array $tokens
+  ): array {
+    return $tokens;
+  }
+  
+  private function startupTypes(
+    array $tokens
+  ): array {
+    return $tokens;
+  }   
+  
+  private function getValues(
+  ): void {}  
 
   private function startups(
   ): void {
     $this->getFileRows();
-    $this->getUsesRows();
     $this->getCacheKey();
+    $this->getUsesRows();
     $this->getContexts();
     $this->getBuilds();
+    $this->getValues();
   }
 
   public function get(
