@@ -33,27 +33,27 @@ class UserRepository
 
     $exp = new ExpressionWhere(fn( Props $p ) => (
         $p->NomeContato == [ "nome da escola: {$escolaB}", Status::Aprovada, Status::Aprovada->value ]
-        && $p->Updated == $perido->end
-        && $p->ComentarioArquivamento == $perido->end
-        && $p->Status == Status::Aprovada
-        && $p->NomeContato == $concate
-        && !$p->IsActive 
-        && $p->Created >= $dateStart
-        && 'TEST' >= $p->NomeContato
-        && $p->Created <= $dateEnd
-        && ( $escolaA == $p->NomeContato && ( $concate == $p->NomeContato )) 
-        && $p->Id == [
-          $guid,
-          '0303AE33-D883-43C5-262B-08DBD9497C02',
-          '0303AE33-D883-43C5-262B-08DBD9497C02',
-          '0303AE33-D883-43C5-262B-08DBD9497C04',
-          '0303AE33-D883-43C5-262B-08DBD9497C04',
-          '0303AE33-D883-43C5-262B-08DBD9497C05',
-          '0303AE33-D883-43C5-262B-08DBD9497C05'
-        ] 
-        && !$p->itemsProposta->any( fn(ItemPropostaEntity $i ) => (
-          $i->IsActive == true && $i->IsDeleted == false && $i->PropostaId == $p->Id
-        )) && !$p->IsActive
+        // && $p->Updated == $perido->end
+        // && $p->ComentarioArquivamento == $perido->end
+        // && $p->Status == Status::Aprovada
+        // && $p->NomeContato == $concate
+        // && !$p->IsActive 
+        // && $p->Created >= $dateStart
+        // && 'TEST' >= $p->NomeContato
+        // && $p->Created <= $dateEnd
+        // && ( $escolaA == $p->NomeContato && ( $concate == $p->NomeContato )) 
+        // && $p->Id == [
+        //   $guid,
+        //   '0303AE33-D883-43C5-262B-08DBD9497C02',
+        //   '0303AE33-D883-43C5-262B-08DBD9497C02',
+        //   '0303AE33-D883-43C5-262B-08DBD9497C04',
+        //   '0303AE33-D883-43C5-262B-08DBD9497C04',
+        //   '0303AE33-D883-43C5-262B-08DBD9497C05',
+        //   '0303AE33-D883-43C5-262B-08DBD9497C05'
+        // ] 
+        // && !$p->itemsProposta->any( fn(ItemPropostaEntity $i ) => (
+        //   $i->IsActive == true && $i->IsDeleted == false && $i->PropostaId == $p->Id
+        // )) && !$p->IsActive
       )
     );
 
