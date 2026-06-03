@@ -26,21 +26,19 @@ class UserRepository
     $guid = '0303AE33-D883-43C5-262B-111111111111';
 
     $perido = new stdClass();
-    $perido->start = [
-      "value" => "01/01/2024"
-    ];
+    $perido->start = [ "value" => "01/01/2024" ];
     $perido->end = "01/31/2024";
 
     $exp = new ExpressionWhere(fn( Props $p ) => (
-        $p->NomeContato == [ "nome da escola: {$escolaB}", Status::Aprovada, Status::Aprovada->value ]
+        $p->Created >= $dateStart
+        && $p->Created <= $dateEnd
+        // $p->NomeContato == [ "nome da escola: {$escolaB}", Status::Aprovada, Status::Aprovada->value ]
         // && $p->Updated == $perido->end
         // && $p->ComentarioArquivamento == $perido->end
         // && $p->Status == Status::Aprovada
         // && $p->NomeContato == $concate
         // && !$p->IsActive 
-        // && $p->Created >= $dateStart
         // && 'TEST' >= $p->NomeContato
-        // && $p->Created <= $dateEnd
         // && ( $escolaA == $p->NomeContato && ( $concate == $p->NomeContato )) 
         // && $p->Id == [
         //   $guid,

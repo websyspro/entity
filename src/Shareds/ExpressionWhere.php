@@ -5,6 +5,7 @@ namespace Websyspro\Entity\Shareds;
 use Closure;
 use ReflectionFunction;
 use function count, array_slice, is_string, in_array, ord, is_array, is_object, sprintf, defined;
+use Websyspro\Entity\Decorations\Columns\Datetime;
 
 /* defined consts to tokens */
 define( 'T_START_PARENTESES', 40 );
@@ -46,7 +47,8 @@ class ExpressionWhere
   public array $scopes = [];
   public array $contexts = [];
   public array $tokens = [];
-  public array $statics = []; 
+  public array $statics = [];
+  public array $params = [];
   public string $cacheClassKey;
   public string $cacheMethodKey; 
   public ReflectionFunction $reflectionFunction;
@@ -67,42 +69,6 @@ class ExpressionWhere
   ): int {
     return (--$number) - $decNumner;
   }
-
-  public static function where(
-    array|object $array,
-    Closure $closure,
-    array $arrayFromArry = []
-  ): array {
-    foreach($array as $key => $val){
-      if(is_numeric($key)){
-        $closure($val, $key) ? $arrayFromArry[] = $val : [];
-      } else {
-        $closure($val, $key) ? $arrayFromArry[$key] = $val : [];
-      }
-    }
-
-    unset( $array );
-    return $arrayFromArry;
-  }
-
-  public static function map(
-    array|object $array,
-    Closure $closure
-  ): array|object {
-    if(is_array($array)){
-      foreach($array as $key => $val){
-        $array[$key] = $closure($val, $key);
-      }
-    } else
-    if(is_object($array)){
-      foreach($array as $key => $val){
-        $array->{$key} = $closure($val, $key);
-      }      
-    }
-
-    unset( $closure );
-    return $array;
-  }  
 
   private function indexOf(
     array $tokens,
@@ -159,13 +125,13 @@ class ExpressionWhere
       $this->tokens = file( $this->reflectionFunction->getFileName());
 
       if( count( $this->tokens ) !== 0 ){
-        $this->tokens = $this->map(
-          $this->tokens, function(string $token){
+        $this->tokens = array_map(
+          function(string $token){
             $strPos = strpos($token, '//');
             return $strPos 
               ? substr($token, 0, $strPos)
               : $token;
-          }, 
+          }, $this->tokens 
         );
       }
     }
@@ -173,20 +139,22 @@ class ExpressionWhere
 
   private function getUsesRows(
   ): void {
-    $this->uses = $this->where(
-      $this->tokens, fn(string $token) => (
-        str_starts_with( trim( $token), 'use')
+    $this->uses = array_values(
+      array_filter(
+        $this->tokens, fn(string $token) => (
+          str_starts_with( trim( $token), 'use')
+        )
       )
     );
 
-    $this->uses = $this->map( 
-      $this->uses, fn(string $token) => (
+    $this->uses = array_map( 
+      fn(string $token) => (
         str_replace([ 'use',';' ], '', $token)
-      )
+      ), $this->uses
     );
 
-    $this->uses = $this->map(
-      $this->uses, function(string $token){
+    $this->uses = array_map(
+      function(string $token){
         if( strpos($token, 'as') !== false ){
           [ $use, $key ] = explode( 'as', $token );
           return [ trim($use), trim($key)];
@@ -197,15 +165,17 @@ class ExpressionWhere
             trim( implode( '\\', array_slice($useImplits, -1)))
           ];
         }
-      }
+      }, $this->uses
     );
   }
 
   private function getUse(
     string $variable
   ): string|null {
-    [ $uses ] = $this->where(
-      $this->uses, fn(array $use) => $use[1] === $variable
+    [ $uses ] = array_values(
+      array_filter(
+        $this->uses, fn(array $use) => $use[1] === $variable
+      )
     );
 
     return $uses[0] ?? null;
@@ -243,6 +213,7 @@ class ExpressionWhere
     int $namberToken
   ): string {
     return match( $namberToken ){
+       34 => 'T_ASP',
        40 => 'T_START_PARENTESES',
        41 => 'T_END_PARENTESES',
        91 => 'T_START_BRACKET',
@@ -272,7 +243,7 @@ class ExpressionWhere
     [ $number, $value ] = is_string( $tokenArgs ) 
       ? [ ord( $tokenArgs ), $tokenArgs ] : $tokenArgs;
 
-    return [ $number, trim($value, '"\''), $this->namberToken($number)];
+    return [ $number, $value, $this->namberToken($number)];
   }
   
   public function getContextsNotEnds(
@@ -333,15 +304,17 @@ class ExpressionWhere
       ), 1
     );
 
-    $this->contexts = $this->map(
-      $this->contexts, fn(string|array $token) => (
+    $this->contexts = array_map(
+      fn(string|array $token) => (
         $this->createToken($token)
-      )
+      ), $this->contexts
     );
 
-    $this->contexts = $this->where(
-      $this->contexts, fn(array $token) => !in_array( 
-        $token[0], [ T_WHITESPACE, T_CURLY_OPEN, T_END_BRACE, T_DOT ]
+    $this->contexts = array_values(
+      array_filter(
+        $this->contexts, fn(array $token) => !in_array( 
+          $token[0], [ T_WHITESPACE, T_CURLY_OPEN, T_END_BRACE, T_DOT ]
+        )
       )
     );
 
@@ -359,8 +332,8 @@ class ExpressionWhere
       )), [ T_COMMA ]
     );
 
-    $scopes = $this->map(
-      $scopes, function(array $scope){
+    $scopes = array_map(
+      function(array $scope){
         [ $instance, $variable ] = $scope;
         $instance = $this->getUse(
           $instance[1]
@@ -374,7 +347,7 @@ class ExpressionWhere
           $metadata->contexts[T_Entity][0],
           $variable[1]
         ];
-      }
+      }, $scopes
     );
 
     return [ ...$scopesPaarent, ...$scopes ];
@@ -418,7 +391,7 @@ class ExpressionWhere
     ] = $tokens;
 
     
-    $scopes = $this->where(
+    $scopes = array_filter(
       $scopes, fn(array $scope) => $scope[2] === $tokenA[1]
     );
     
@@ -430,6 +403,16 @@ class ExpressionWhere
         && $tokenB[0] === T_OBJECT_OPERATOR
         && $tokenC[0] === T_STRING;
   }
+
+  private function getType(
+    string $type
+  ): string {
+    [ $type ] = array_reverse(
+      explode( '\\', $type )
+    );
+
+    return $type;
+  }
   
   private function getField(
     array $scopes = [],
@@ -440,8 +423,10 @@ class ExpressionWhere
       $tokens[2][1]
     ];
 
-    $scopes = $this->where( $scopes, 
-      fn(array $scope) => $scope[2] === $variable
+    $scopes = array_values(
+      array_filter( $scopes, 
+        fn(array $scope) => $scope[2] === $variable
+      )
     );
 
     if(count( $scopes ) !== 0){
@@ -450,7 +435,7 @@ class ExpressionWhere
       $metadata = $metadata->get();
 
       return [ T_EXP_FIELD, $table, $field, 
-        $metadata->contexts['types'][$field]
+        $this->getType( $metadata->contexts['types'][$field] )
       ];
     }
 
@@ -478,7 +463,7 @@ class ExpressionWhere
   }  
 
   private function getValue(
-    array $tokens = []    
+    array $tokens = []
   ): array {
     return [T_EXP_VALUE, $tokens];
   }  
@@ -609,27 +594,31 @@ class ExpressionWhere
           if($tokenALeftJ[0] === T_EXP_FIELD){
             if($tokenALeftI[1] === $tokenALeftJ[1]){
               if($tokenALeftI[2] === $tokenALeftJ[2]){
-                $isTokenLogPrev = in_array(
-                  $tokenLogPrev, [ 
-                    T_LOGICAL_AND,
-                    T_BOOLEAN_AND
-                  ]
-                );
+                if($tokenALeftI[3] === $this->getType(Datetime::class)){
+                  if($tokenALeftJ[3] === $this->getType(Datetime::class)){
+                    $isTokenLogPrev = in_array(
+                      $tokenLogPrev, [ 
+                        T_LOGICAL_AND,
+                        T_BOOLEAN_AND
+                      ]
+                    );
 
-                if( $isTokenLogPrev ){
-                  $tokens[$i] = [
-                    T_EXP_BETWEEN,
-                    $parentI,
-                    $scopesI, [
-                      $tokenALeftI,
-                      $tokenCLeftI,
-                      $tokenCLeftJ
-                    ]
-                  ];
+                    if( $isTokenLogPrev ){
+                      $tokens[$i] = [
+                        T_EXP_BETWEEN,
+                        $parentI,
+                        $scopesI, [
+                          $tokenALeftI,
+                          $tokenCLeftI,
+                          $tokenCLeftJ
+                        ]
+                      ];
 
-                  $isTokenLogPrev 
-                    ? array_splice($tokens, $j - 1, 2) 
-                    : array_splice($tokens, $j, 1);
+                      $isTokenLogPrev 
+                        ? array_splice($tokens, $j - 1, 2) 
+                        : array_splice($tokens, $j, 1);
+                    }
+                  }
                 }
               }
             }
@@ -831,8 +820,10 @@ class ExpressionWhere
       [ $enum, $_, $case ] = $contexts;
     }
 
-    $useEnum = $this->where(
-      $this->uses, fn(array $use) => $use[1] === $enum[1]
+    $useEnum = array_values(
+      array_filter(
+        $this->uses, fn(array $use) => $use[1] === $enum[1]
+      )
     );
 
     if( $useEnum ){
@@ -843,22 +834,23 @@ class ExpressionWhere
         $enumCase = constant( $constantEnum );
         if( isset( $property )){
           return [
-            $property[0] === T_STRING
-              ? $enumCase->name 
-              : $enumCase->value,
+            T_STRING,
+            $property[0] === T_STRING && $property[1] === 'name'
+              ? $enumCase->name : $enumCase->value, token_name(T_STRING)
+          ];
+        } else {
+          return [
+            T_STRING, 
+            $enumCase->value,
             token_name(T_STRING)
           ];
-        } else return [
-          T_STRING, 
-          $enumCase->value,
-          token_name(T_STRING)
-        ];
+        }
       }
     }
 
     return [ T_STRING, implode(
-      '', $this->map($contexts, fn(array $context) => $context[1])
-      ), token_name(T_STRING)
+      '', array_map( fn(array $context) => $context[1], $contexts )
+      ), token_name( T_STRING )
     ];
   }
 
@@ -876,8 +868,7 @@ class ExpressionWhere
         $contexts[$i] = $this->updateEnumValue(
           $enumWithPropertys, true
         );
-      } else 
-      if( $isEnumNotPropertys ){
+      } else if( $isEnumNotPropertys ){
         $contexts[$i] = $this->updateEnumValue(
           $enumNotPropertys, false
         );
@@ -893,11 +884,54 @@ class ExpressionWhere
     return $contexts;
   }
 
+  private function createParams(
+    string $value
+  ): string {
+    $this->params[] = $value;
+    return '?';
+  }
+
   private function startupParams(
     array $contexts,
     string $type
-  ): array {
-    return $contexts;
+  ): array|string {
+    $contextsList = $contexts[0][0] === T_START_BRACKET
+                 && $contexts[count($contexts) - 1][0] === T_END_BRACKET;
+
+    if( $contextsList ){
+      $contextsListGroups = $this->groupByTypes(
+        array_slice($contexts, 1, -1), [
+          T_COMMA
+        ]
+      );
+
+      $contextsListGroups = array_map(
+        fn(array $tokens) => array_map(
+          fn(array $tokens) => $tokens[1], $tokens
+        ), $contextsListGroups
+      );
+
+      $contextsListGroups = array_map(
+        fn(array $tokens) => trim(
+          implode('', $tokens), '"\''
+        ), $contextsListGroups
+      );
+
+      $contextsListGroups = array_map(
+        fn( string $value) => $this->createParams(
+          //$type::$columnType->Encode($value)
+          $value
+        ), $contextsListGroups
+      );
+
+      return sprintf( '(%s)', implode(',', $contextsListGroups));
+    } else {
+      [ $value ] = $contexts;
+      return $this->createParams(
+        //$type::$columnType->Encode( $value[1])
+        $value[1]
+      );
+    };
   }
   
   private function startupTypes(
@@ -923,6 +957,8 @@ class ExpressionWhere
 
       $tokenB[1] = $this->startupVariable($tokenB[1], $this->statics);
       $tokenC[1] = $this->startupVariable($tokenC[1], $this->statics);
+      $tokenB[1] = $this->startupParams($tokenB[1], $tokenA[3]);
+      $tokenC[1] = $this->startupParams($tokenC[1], $tokenA[3]);      
       return [ $tokenA, $tokenB, $tokenC ];
     } else
     if( $expType === T_EXP_COMPARE ){
