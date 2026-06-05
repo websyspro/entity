@@ -418,15 +418,68 @@ class ExpressionWhere
 
     return $type;
   }
+
+  private function getFieldType(
+    string $instance,
+    string $field
+  ): string {
+    $metadata = new EntityStructure( $instance );
+    return $this->getType( $metadata->get()->contexts['types'][ $field ]);    
+  }
+
+  private function getFieldMethods(
+    array $contexts = []
+  ): array {
+    $methods = $this->groupByTypes(
+      array_slice( $contexts, 4 ), [
+        T_OBJECT_OPERATOR
+      ]
+    );
+
+    $methods = array_map(
+      function(array $contexts){
+        [ $name ] = $contexts;
+        $args = $this->groupByTypes(
+          array_slice(
+            $contexts, $this->inc(
+              $this->indexOf(
+                $contexts, T_START_PARENTESES
+              )
+            ), -1
+          ), [ T_COMMA ]
+        );
+
+        return [ $name[1], $args ];
+      }, $methods
+    );
+
+    $compareListMethods = [
+      'contains',
+      'startsWith',
+      'endsWith'
+    ];
+
+    $modifyMethods = array_filter(
+      $methods, fn(array $method) => in_array(
+        $method[0], $compareListMethods
+      ) === false
+    );
+
+    $compareMethods = array_filter(
+      $methods, fn(array $method) => in_array(
+        $method[0], $compareListMethods
+      ) === true
+    );
+
+    return [ array_values( $modifyMethods ), array_values( $compareMethods )];
+  }  
   
   private function getField(
     array $scopes = [],
-    array $tokens = [], 
+    array $contexts = [], 
   ): array {
-    [ $variable, $field ] = [
-      $tokens[0][1], 
-      $tokens[2][1]
-    ];
+    [ $_, $variable ] = $contexts[0];
+    [ $_, $field ] = $contexts[2];
 
     [ $scopes ] = array_values(
       array_filter( $scopes, 
@@ -434,12 +487,13 @@ class ExpressionWhere
       )
     );
 
-    [ $instance, $table ] = $scopes;
-    $metadata = new EntityStructure( $instance );
-    $metadata = $metadata->get();
-
-    return [ T_EXP_FIELD, $table, $field, 
-      $this->getType( $metadata->contexts['types'][$field] )
+    [ $instance, $table
+    ] = $scopes;
+    
+    return [ 
+      T_EXP_FIELD, $table, $field,
+      $this->getFieldType( $instance, $field ),
+      $this->getFieldMethods( $contexts )
     ];
   }
 
@@ -736,6 +790,50 @@ class ExpressionWhere
     return [ T_EXP_LOGICAL, $this->getLogical( $contexts )];
   }
 
+  private function verifyMethodCompare(
+    string $parent,
+    array $contexts = [],
+    array $contextsInGroup = []
+  ): array {
+    [ $expField, $expEqual, $expValue ] = $contexts;
+    [ $_, $_, $_, $_, $methods ] = $expField;
+    [ $_, $compareds ] = $methods;
+
+    if( count( $compareds ) === 0 ){
+      return [ T_EXP_COMPARE, $parent, $contexts ];
+    } else {
+      [ $compareName, $compareArgs ] = $compareds[0];
+
+      /* Transform to Compare Between */
+      if( in_array( $compareName, ['contains', 'startsWith', 'endsWith'])){
+        for($i=0; $i < count($compareArgs); $i++){
+          $contextsInGroup[] = [
+            T_EXP_COMPARE, T_EXP_GROUP, [
+              $expField,
+              $expEqual,
+              [ T_EXP_VALUE, match($compareName){
+                'contains' => array_merge(
+                  [[ T_STRING, '%', token_name( T_STRING )]], $compareArgs[$i],
+                  [[ T_STRING, '%', token_name( T_STRING )]]
+                ),
+                'startsWith' => array_merge(
+                  $compareArgs[$i], [[ T_STRING, '%', token_name( T_STRING )]]
+                ),
+                'endsWith' => array_merge(
+                  [[ T_STRING, '%', token_name( T_STRING )]], $compareArgs[$i]
+                )
+              }]
+            ]
+          ];
+        }
+
+        return [ T_EXP_GROUP, $parent, $contextsInGroup ];
+      } else {
+        return [ T_EXP_COMPARE, $parent, $contexts ];
+      }
+    }
+  }
+
   private function createExpTypeCompare(
     string $parent,
      array $scopes = [],
@@ -743,7 +841,8 @@ class ExpressionWhere
   ): array {
     $contexts = $this->getGroupByTypes( $contexts );
     $contexts = $this->getParseFieldAndValue( $scopes, $contexts );
-    $contexts = [ T_EXP_COMPARE, $parent, $contexts ];
+    $contexts = $this->verifyMethodCompare( $parent, $contexts );
+    // $contexts = [ T_EXP_COMPARE, $parent, $contexts ];
     return $contexts;
   }
 
@@ -754,7 +853,8 @@ class ExpressionWhere
   ): array {
     $contexts = $this->getField( $scopes, $contexts );
     $contexts = $this->getFieldByUnary( $parent, $contexts );
-    $contexts = [ T_EXP_COMPARE, $parent, $contexts ];
+    $contexts = $this->verifyMethodCompare( $parent, $contexts );
+    // $contexts = [ T_EXP_COMPARE, $parent, $contexts ];
     return $contexts;
   }  
   
@@ -1254,6 +1354,8 @@ class ExpressionWhere
   public function get(
   ): array {
     $this->startups();
+    print_r($this->tokens);
+    print_r($this->params);
     return [
       $this->getScriptTable(),
       $this->getParseWheres(

@@ -99,6 +99,8 @@ class Repository
 
   public function all(
   ): array {
+    print_r($this->getSqlAll());
+
     return DB::query(
       $this->getSqlAll(), 
       $this->getParams()
