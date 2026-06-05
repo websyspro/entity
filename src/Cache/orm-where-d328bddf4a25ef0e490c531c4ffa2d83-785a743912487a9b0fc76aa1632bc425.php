@@ -1,7 +1,7 @@
 <?php
 
 return array (
-  'hash' => 'aeaec3ca21ff52896b544d5144c9c02d',
+  'hash' => '4e2e174a636c574f47b4cc99a0a33242',
   'context' => 
   array (
     'scopes' => 
@@ -23,27 +23,47 @@ return array (
         array (
           0 => 
           array (
-            0 => 'Websyspro\\Test\\Crm\\Entitys\\PropostaEntity',
-            1 => 'Proposta',
-            2 => '$p',
-          ),
-        ),
-        3 => 
-        array (
-          0 => 
-          array (
-            0 => 'ExpBetween',
+            0 => 'ExpCompare',
             1 => 'ExpGroup',
             2 => 
             array (
               0 => 
               array (
-                0 => 'Websyspro\\Test\\Crm\\Entitys\\PropostaEntity',
+                0 => 'ExpField',
                 1 => 'Proposta',
-                2 => '$p',
+                2 => 'ComentarioArquivamento',
+                3 => 'Text',
+              ),
+              1 => 
+              array (
+                0 => 'ExpEqual',
+                1 => '==',
+              ),
+              2 => 
+              array (
+                0 => 'ExpValue',
+                1 => 
+                array (
+                  0 => 
+                  array (
+                    0 => 320,
+                    1 => 'Comentario Arquivamento%',
+                    2 => 'T_CONSTANT_ENCAPSED_STRING',
+                  ),
+                ),
               ),
             ),
-            3 => 
+          ),
+          1 => 
+          array (
+            0 => 'ExpLogical',
+            1 => 'And',
+          ),
+          2 => 
+          array (
+            0 => 'ExpBetween',
+            1 => 'ExpGroup',
+            2 => 
             array (
               0 => 
               array (

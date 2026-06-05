@@ -52,6 +52,7 @@ class ExpressionWhere
   public string $cacheClassKey;
   public string $cacheMethodKey; 
   public ReflectionFunction $reflectionFunction;
+  public ExpressionType $expressionType;
   
   public function __construct(
     public Closure $closure
@@ -243,6 +244,10 @@ class ExpressionWhere
     [ $number, $value ] = is_string( $tokenArgs ) 
       ? [ ord( $tokenArgs ), $tokenArgs ] : $tokenArgs;
 
+    if( in_array( $number, [ T_CONSTANT_ENCAPSED_STRING ])){
+      $value = trim( $value, '"\'' );
+    }  
+
     return [ $number, $value, $this->namberToken($number)];
   }
   
@@ -416,30 +421,45 @@ class ExpressionWhere
   
   private function getField(
     array $scopes = [],
-    array $tokens = []    
+    array $tokens = [], 
   ): array {
     [ $variable, $field ] = [
       $tokens[0][1], 
       $tokens[2][1]
     ];
 
-    $scopes = array_values(
+    [ $scopes ] = array_values(
       array_filter( $scopes, 
         fn(array $scope) => $scope[2] === $variable
       )
     );
 
-    if(count( $scopes ) !== 0){
-      [ $instance, $table ] = $scopes[0];
-      $metadata = new EntityStructure( $instance );
-      $metadata = $metadata->get();
+    [ $instance, $table ] = $scopes;
+    $metadata = new EntityStructure( $instance );
+    $metadata = $metadata->get();
 
-      return [ T_EXP_FIELD, $table, $field, 
-        $this->getType( $metadata->contexts['types'][$field] )
-      ];
-    }
+    return [ T_EXP_FIELD, $table, $field, 
+      $this->getType( $metadata->contexts['types'][$field] )
+    ];
+  }
 
-    return $tokens;
+  private function getFieldByUnary(
+    string $parent,
+    array $contexts = []
+  ): array {
+    $expValue = [ 
+      T_EXP_VALUE, [
+        [ 
+          T_STRING,
+          $parent === T_EXP_DENYING ? 0 : 1,
+          token_name(T_STRING)
+        ]
+      ]
+    ];
+
+    return [ $contexts, [ 
+      T_EXP_EQUAL, '=='
+    ], $expValue ];
   }
 
   private function equalReverse(
@@ -453,40 +473,52 @@ class ExpressionWhere
       T_LESS_THAN => $this->createToken( ">" ), 
         default => $token
     }];
-  }  
+  }
+
+  private function equalAdjusted(
+    array $contexts = []
+  ): array {
+    [ $type, $contexts ] = $contexts;
+    [ $_, $equal ] = $contexts;
+    return [ $type, $equal ];
+  }
 
   private function getEqual(
-    array $tokens = []    
+    array $contexts = []
   ): array {
-    [ $token ] = $tokens;
-    return [T_EXP_EQUAL, $token];
+    [ $contexts ] = $contexts;
+    return [ T_EXP_EQUAL, $contexts ];
   }  
 
   private function getValue(
     array $tokens = []
   ): array {
-    return [T_EXP_VALUE, $tokens];
+    return [ T_EXP_VALUE, $tokens ];
   }  
   
   private function getParseFieldAndValue(
-    array $scopes = [],
-    array $tokens = []
+     array $scopes = [],
+     array $contexts = []
   ): array {
-    [ $left, $equal, $right ] = $tokens;
+    [ $left, $equal, $right ] = $contexts;
     [ $left, $equal, $right ] = [ 
-      $this->isField($left, $scopes) 
-        ? $this->getField($scopes, $left) 
-        : $this->getValue($left),
-          $this->getEqual($equal),
-      $this->isField($right, $scopes) 
-        ? $this->getField($scopes, $right) 
-        : $this->getValue($right)
+      $this->isField( $left, $scopes ) 
+        ? $this->getField( $scopes, $left )
+        : $this->getValue( $left ),
+          $this->getEqual( $equal ),
+      $this->isField( $right, $scopes ) 
+        ? $this->getField( $scopes, $right ) 
+        : $this->getValue( $right )
     ];
 
     if($left[0] === T_EXP_VALUE){
-      $equal = $this->equalReverse($equal);
-      return [$right, $equal, $left];
-    } else return [$left, $equal, $right];
+      $equal = $this->equalReverse( $equal );
+      $equal = $this->equalAdjusted( $equal );
+      return [ $right, $equal, $left ];
+    } else {
+      $equal = $this->equalAdjusted( $equal );
+      return [$left, $equal, $right];
+    };
   }
 
   private function getTokensByContext(
@@ -518,7 +550,7 @@ class ExpressionWhere
   private function getSubQueryMethod(
     array $tokens = []    
   ): array|null {
-    [ $subQueryMethod ] = array_slice(
+    $subQueryMethod = array_slice(
       $tokens, $this->dec(
         $this->indexOf(
           $tokens, T_FN), 1
@@ -529,16 +561,18 @@ class ExpressionWhere
   }  
 
   private function isSubQuery(
-    array $tokens = []    
+    array $contexts = []    
   ): bool {
-    $subQueryMethod= $this->getSubQueryMethod($tokens);
-    return in_array( $subQueryMethod[1], ['any']);
+    [ $subQueryMethod ] = $this->getSubQueryMethod($contexts);
+    return in_array( $subQueryMethod[1], [ 'any' ]);
   }
   
   private function isLogical(
     array $tokens = []
   ): bool {
-    return in_array($tokens[0][0], [
+    [ $tokens ] = $tokens;
+    [ $log ] = $tokens;
+    return in_array( $log, [
       T_LOGICAL_AND, T_LOGICAL_OR, T_BOOLEAN_AND, T_BOOLEAN_OR 
     ]);
   }
@@ -562,61 +596,45 @@ class ExpressionWhere
   }
 
   private function getParserImplode(
-    array $tokens = []
+    array $contexts = []
   ): array {
-    if(count($tokens) <= 2){
-      return $tokens;
+    if( count( $contexts ) <= 2){
+      return $contexts;
     }
 
-    for($i = 0; $i < count($tokens); $i++){
-      [ $compoareI, $parentI, $scopesI 
-      ] = $tokens[$i];
-
-      if($compoareI !== T_EXP_COMPARE){
+    for( $i = 0; $i < count( $contexts ); $i++ ){
+      [ $compareTypeI ] = $contexts[ $i ];
+      if( $compareTypeI !== T_EXP_COMPARE ){
         continue;
       }
 
-      [ $tokenALeftI, $_, $tokenCLeftI 
-      ] = $tokens[$i][3];      
+      [ $compareTypeI, $parentI, $contextsI ] = $contexts[ $i ];
+      [ $contextsALeftI, $_, $contextsCLeftI ] = $contextsI;      
 
-      for($j = $i + 1; $j < count($tokens); $j++){
-        [ $compoareJ ] = $tokens[$j];
-
-        if($compoareJ !== T_EXP_COMPARE){
+      for($j = $i + 1; $j < count($contexts); $j++){
+        [ $compareTypeJ ] = $contexts[$j];
+        if( $compareTypeJ !== T_EXP_COMPARE ){
           continue;
         }
 
-        [ $tokenLogPrev ] = $tokens[$j - 1][2];
-        [ $tokenALeftJ, $_, $tokenCLeftJ 
-        ] = $tokens[$j][3];
+        [ $_, $contextsLogPrev ] = $contexts[ $j - 1 ];
+        [ $contextsALeftJ, $_, $contextsCLeftJ ] = $contexts[$j][2];
+        
+        if($contextsALeftI[0] === T_EXP_FIELD){
+          if($contextsALeftJ[0] === T_EXP_FIELD){
+            if($contextsALeftI[1] === $contextsALeftJ[1]){
+              if($contextsALeftI[2] === $contextsALeftJ[2]){
+                if($contextsALeftI[3] === $this->getType(Datetime::class)){
+                  if($contextsALeftJ[3] === $this->getType(Datetime::class)){
+                    $isContextsLogPrev = $contextsLogPrev === 'And';
+                    if( $isContextsLogPrev ){
+                      $contexts[$i] = [ T_EXP_BETWEEN, $parentI, [
+                        $contextsALeftI, $contextsCLeftI, $contextsCLeftJ
+                      ]];
 
-        if($tokenALeftI[0] === T_EXP_FIELD){
-          if($tokenALeftJ[0] === T_EXP_FIELD){
-            if($tokenALeftI[1] === $tokenALeftJ[1]){
-              if($tokenALeftI[2] === $tokenALeftJ[2]){
-                if($tokenALeftI[3] === $this->getType(Datetime::class)){
-                  if($tokenALeftJ[3] === $this->getType(Datetime::class)){
-                    $isTokenLogPrev = in_array(
-                      $tokenLogPrev, [ 
-                        T_LOGICAL_AND,
-                        T_BOOLEAN_AND
-                      ]
-                    );
-
-                    if( $isTokenLogPrev ){
-                      $tokens[$i] = [
-                        T_EXP_BETWEEN,
-                        $parentI,
-                        $scopesI, [
-                          $tokenALeftI,
-                          $tokenCLeftI,
-                          $tokenCLeftJ
-                        ]
-                      ];
-
-                      $isTokenLogPrev 
-                        ? array_splice($tokens, $j - 1, 2) 
-                        : array_splice($tokens, $j, 1);
+                      $isContextsLogPrev 
+                        ? array_splice($contexts, $j - 1, 2) 
+                        : array_splice($contexts, $j, 1);
                     }
                   }
                 }
@@ -627,43 +645,133 @@ class ExpressionWhere
       }
     }
 
-    return $tokens;
+    return $contexts;
   }
+
+  private function getParseDenying(
+    string $parent,
+     array $contexts = [],
+  ): array {
+    [ $tokens ] = $contexts;
+    [ $type, $_, $tokens ] = $tokens;
+
+    return $type === T_EXP_SUBQUERY
+      ? [ T_EXP_DENYING, $parent, $contexts ]
+      : [ T_EXP_COMPARE, $parent, $tokens ];
+  }
+
+  private function getExpType(
+    array $contexts = []
+  ): string|null {
+    if( $this->isDenying( $contexts )){
+      return T_EXP_DENYING;
+    } else if( $this->isGroup( $contexts )){
+      return T_EXP_GROUP;
+    } else if( $this->isSubQuery( $contexts )){
+      return T_EXP_SUBQUERY;
+    } else if( $this->isLogical( $contexts )){
+      return T_EXP_LOGICAL;
+    } else if( $this->isCompare( $contexts )){
+      return T_EXP_COMPARE;
+    } else if( $this->isUnary( $contexts )){
+      return T_EXP_UNARY;
+    }
+      
+    return null;
+  }
+
+  private function createExpTypeDenying(
+    string $parent,
+     array $scopes = [],
+     array $contexts = []
+  ): array {
+    $contexts = $this->getGroupByLogicals(array_slice( $contexts, 1 ));
+    $contexts = $this->getParser( T_EXP_DENYING, $scopes, $contexts );
+    $contexts = $this->getParseDenying( $parent, $contexts );
+    return $contexts;
+  }
+
+  private function createExpTypeGroup(
+    string $parent,
+     array $scopes = [],
+     array $contexts = []
+  ): array {
+    $contexts = $this->getGroupByLogicals( array_slice( $contexts, 1, -1 ));
+    $contexts = $this->getParser( T_EXP_GROUP, $scopes, $contexts );
+    $contexts = $this->getParserImplode($contexts);
+    $contexts = [ T_EXP_GROUP, $parent, $contexts ];    
+    return $contexts;
+  }
+  
+  private function createExpTypeSubQuery(
+    string $parent,
+     array $scopes = [],
+     array $contexts = []
+  ): array {
+    [ $method ] = $this->getSubQueryMethod( $contexts );
+    $contexts = $this->getContext( $contexts );
+    $scopes = $this->getScopesByContext( $contexts, [], $scopes );
+    $contexts = $this->getTokensByContext( $contexts );
+    $contexts = $this->getParser( T_EXP_SUBQUERY, $scopes, $contexts );
+    $contexts = $this->getParserImplode( $contexts );
+    $contexts = [ T_EXP_SUBQUERY, $parent, $contexts, $method[ 1 ], $scopes];    
+    return $contexts;
+  }
+
+  private function getLogical(
+    array $contexts = []
+  ): string {
+    [ $type ] = $contexts;
+    return match( $type ){
+      T_BOOLEAN_AND, T_LOGICAL_AND => 'And',
+      T_BOOLEAN_OR, T_LOGICAL_OR => 'Or',
+        default => ''
+    };
+  }  
+  
+  private function createExpTypeLogical(
+     array $contexts = []
+  ): array {
+    [ $contexts ] = $contexts;
+    return [ T_EXP_LOGICAL, $this->getLogical( $contexts )];
+  }
+
+  private function createExpTypeCompare(
+    string $parent,
+     array $scopes = [],
+     array $contexts = [],
+  ): array {
+    $contexts = $this->getGroupByTypes( $contexts );
+    $contexts = $this->getParseFieldAndValue( $scopes, $contexts );
+    $contexts = [ T_EXP_COMPARE, $parent, $contexts ];
+    return $contexts;
+  }
+
+  private function createExpTypeUnary(
+    string $parent,
+     array $scopes = [],
+     array $contexts = []
+  ): array {
+    $contexts = $this->getField( $scopes, $contexts );
+    $contexts = $this->getFieldByUnary( $parent, $contexts );
+    $contexts = [ T_EXP_COMPARE, $parent, $contexts ];
+    return $contexts;
+  }  
   
   private function getParser(
     string $parent,
-     array $contexts = [],
-     array $scopes = [],    
+    array $scopes = [],   
+    array $contexts = [],
   ): array {
-    foreach($contexts as $i => $tokens){
-      if($this->isDenying($tokens)){
-        $tokens = $this->getGroupByLogicals(array_slice( $tokens, 1 ));
-        $tokens = $this->getParser(T_EXP_DENYING, $tokens, $scopes);
-        $contexts[$i] = [T_EXP_DENYING, $parent, $scopes, $tokens];
-      } else if($this->isGroup($tokens)){
-        $tokens = $this->getGroupByLogicals(array_slice( $tokens, 1, -1 ));
-        $tokens = $this->getParser(T_EXP_GROUP, $tokens, $scopes);
-        $tokens = $this->getParserImplode($tokens);
-        $contexts[$i] = [T_EXP_GROUP, $parent, $scopes, $tokens];
-      } else if($this->isSubQuery($tokens)){
-        [ $_ ,$method ] = $this->getSubQueryMethod($tokens);
-        $tokens = $this->getContext($tokens);
-        $scopes = $this->getScopesByContext($tokens, [], $scopes);
-        $tokens = $this->getTokensByContext($tokens);
-        $tokens = $this->getParser(T_EXP_SUBQUERY, $tokens, $scopes);
-        $tokens = $this->getParserImplode($tokens);
-        $contexts[$i] = [T_EXP_SUBQUERY, $parent, $method, $scopes, $tokens];
-      } else if($this->isLogical($tokens)){
-        [ $token ] = $tokens;
-        $contexts[$i] = [T_EXP_LOGICAL, $parent, $token];
-      } else if($this->isCompare($tokens)){
-        $tokens = $this->getGroupByTypes($tokens);
-        $tokens = $this->getParseFieldAndValue( $scopes, $tokens );
-        $contexts[$i] = [T_EXP_COMPARE, $parent, $scopes, $tokens];
-      } else if($this->isUnary( $tokens )){
-        $tokens = $this->getField($scopes, $tokens);
-        $contexts[$i] = [T_EXP_UNARY, $parent, $scopes, $tokens];
-      } 
+    foreach( $contexts as $i => $tokens ){
+      $contexts[ $i ] = match( $this->getExpType( $tokens )){
+        T_EXP_DENYING => $this->createExpTypeDenying( $parent, $scopes, $tokens ),
+        T_EXP_GROUP => $this->createExpTypeGroup( $parent, $scopes, $tokens ),
+        T_EXP_SUBQUERY => $this->createExpTypeSubQuery( $parent, $scopes, $tokens ),
+        T_EXP_LOGICAL => $this->createExpTypeLogical( $tokens ),
+        T_EXP_COMPARE => $this->createExpTypeCompare( $parent, $scopes, $tokens ),
+        T_EXP_UNARY => $this->createExpTypeUnary( $parent, $scopes, $tokens )
+      };
     }
 
     return $contexts;
@@ -677,16 +785,15 @@ class ExpressionWhere
 
   private function getCache(
   ): string {
-    return sprintf(
-      'orm-where-%s-%s', 
-      md5($this->cacheClassKey),
-      md5($this->cacheMethodKey)
-    );
+    $cacheClassKey = md5($this->cacheClassKey);
+    $cacheMethodKey = md5($this->cacheMethodKey);
+    return "orm-where-$cacheClassKey-$cacheMethodKey";
   }
 
   private function getBuildClear(
   ): void {
     unset($this->reflectionFunction);
+    unset($this->expressionType);
     unset($this->contexts);
     unset($this->statics);
     unset($this->closure);
@@ -699,8 +806,8 @@ class ExpressionWhere
     $this->tokens = $this->getParserImplode(
       $this->getParser(
         T_EXP_INITIAL, 
+        $this->scopes,
         $this->tokens,
-        $this->scopes
       )
     );
 
@@ -724,19 +831,28 @@ class ExpressionWhere
       if(Cache::exist($this->getCache())){
         [ 'hash' => $hash, 'context' => $context 
         ] = Cache::load( $this->getCache());
-        if( $hash === md5(serialize($this->contexts))){
+        if( $hash === md5( serialize( $this->contexts ))){
           $this->scopes = $context['scopes'];
-          $this->tokens = $this->getParserValues($context['tokens']);
+          $this->tokens = $this->getParserValues( $context['tokens']);
           $this->getBuildClear();
         } else $this->getBuildsDirect();
       } else $this->getBuildsDirect();
     } else $this->getBuildsDirect();
   }
 
+  private function startupEqual(
+    array $equals,
+    array $values
+  ): array {
+    return $equals;
+  }
+
   private function startupVariable(
     array $contexts,
     array $statics
   ): array {
+    [ $_, $contexts ] = $contexts;
+
     for($i=0; $i < count($contexts); $i++){
       [ $_, $value ] = $contexts[$i];
       
@@ -885,13 +1001,18 @@ class ExpressionWhere
   }
 
   private function createParams(
-    string $value
+    string $value,
+    string $type
   ): string {
-    $this->params[] = $value;
-    return '?';
+    if( strtolower( $value ) === 'null' ){
+      return 'Null';
+    } else {
+      $this->params[] = $this->expressionType->encode($value, $type);
+      return '?';
+    }
   }
 
-  private function startupParams(
+  private function getParams(
     array $contexts,
     string $type
   ): array|string {
@@ -918,101 +1039,199 @@ class ExpressionWhere
       );
 
       $contextsListGroups = array_map(
-        fn( string $value) => $this->createParams(
-          //$type::$columnType->Encode($value)
-          $value
-        ), $contextsListGroups
+        fn( string $value) => $this->createParams( $value, $type ), $contextsListGroups
       );
 
       return sprintf( '(%s)', implode(',', $contextsListGroups));
     } else {
-      [ $value ] = $contexts;
-      return $this->createParams(
-        //$type::$columnType->Encode( $value[1])
-        $value[1]
-      );
+      [ $_, $value ] = $contexts[0];
+      return $this->createParams( $value, $type );
     };
   }
-  
-  private function startupTypes(
-    array $contexts
+
+  private function getParserEqual(
+    array $contexts = [],
+    array $equal = []
   ): array {
-    [ $expType, $parentType, $scopes, $tokens 
-    ] = $contexts;
+    [ $type, $equal ] = $equal;
 
-    if( $expType === T_EXP_UNARY ){
-      return [ 
-        $expType,
-        $parentType,
-        $scopes, [
-          $tokens,
-          $this->createToken('=='),
-          [ T_STRING, 0, token_name( T_STRING )]
-        ]
-      ];
-    } else
-    if( $expType === T_EXP_BETWEEN ){
-      [ $tokenA, $tokenB, $tokenC 
-      ] = $tokens;
+    $equal = match( $equal ){
+      '===', '==' => '=',
+      '!==', '!=' => '<>',
+        default => $equal
+    };
 
-      $tokenB[1] = $this->startupVariable($tokenB[1], $this->statics);
-      $tokenC[1] = $this->startupVariable($tokenC[1], $this->statics);
-      $tokenB[1] = $this->startupParams($tokenB[1], $tokenA[3]);
-      $tokenC[1] = $this->startupParams($tokenC[1], $tokenA[3]);      
-      return [ $tokenA, $tokenB, $tokenC ];
-    } else
-    if( $expType === T_EXP_COMPARE ){
-      [ $tokenA, $tokenB, $tokenC 
-      ] = $tokens;
+    $contexts = implode( '', array_map(
+      fn(array $token) => $token[1], $contexts
+    ));
 
-      if( $tokenA[0] === T_EXP_FIELD ){
-        if( $tokenC[0] === T_EXP_VALUE ){
-          $tokenC[1] = $this->startupVariable($tokenC[1], $this->statics);
-          $tokenC[1] = $this->startupEnums($tokenC[1]);
-          $tokenC[1] = $this->startupParams($tokenC[1], $tokenA[3]);
-        }
-      } else
-      if( $tokenA[0] === T_EXP_VALUE ){
-        if( $tokenC[0] === T_EXP_FIELD ){
-          $tokenA[1] = $this->startupVariable($tokenA[1], $this->statics);
-          $tokenA[1] = $this->startupEnums($tokenA[1]);
-          $tokenA[1] = $this->startupParams($tokenA[1], $tokenC[3]);
-        }
-      }
+    $isModeLike = str_contains( $contexts, '%' );
+    $siModeNull = strtolower( $contexts ) === 'null';
+    $isModeList = str_starts_with( $contexts, '[' )
+               && str_ends_with( $contexts, ']' );
 
-      return [ $tokenA, $tokenB, $tokenC ];
+    if( $equal === '=' && $isModeLike ){
+      $equal = 'Like';
+    } else if( $equal === '<>' && $isModeLike ){
+      $equal = 'Not Like';
+    } else if( $equal === '=' && $isModeList ){
+      $equal = 'In';
+    } else if( $equal === '<>' && $isModeList ){
+      $equal = 'Not In';
+    } else if( $equal === '=' && $siModeNull ){
+      $equal = 'Is';
+    } else if( $equal === '<>' && $siModeNull ){
+      $equal = 'Is Not';
     }
 
-    return $tokens;
+    return [ $type, $equal ];
+  }
+
+  private function getParserValuesApply(
+    string $type,
+    array $contexts = []
+  ): array {
+    if( $type === T_EXP_BETWEEN ){
+      [ $field, $valueA, $valueB ] = $contexts;
+      [ $_, $_, $_, $type ] = $field; 
+      
+      $valueA = $this->startupVariable( $valueA, $this->statics );
+      $valueB = $this->startupVariable( $valueB, $this->statics );
+
+      return [ 
+        $field, [ 
+          T_EXP_VALUE, $this->getParams( $valueA, $type)
+        ], [ T_EXP_VALUE, $this->getParams( $valueB, $type )]
+      ];
+    } else
+    if( $type === T_EXP_COMPARE ){
+      [ $fieldOrValueA, $equal, $fieldOrValueB ] = $contexts;
+      if( $fieldOrValueA[0] === T_EXP_VALUE ){
+        [ $_, $_, $_, $type ] = $fieldOrValueB;
+        $fieldOrValueA = $this->startupVariable( $fieldOrValueA, $this->statics );
+        $fieldOrValueA = $this->startupEnums( $fieldOrValueA );        
+        return [ $fieldOrValueA, $this->getParserEqual( $fieldOrValueA, $equal ), $this->getParams( $fieldOrValueA, $type )];
+      } else 
+      if( $fieldOrValueB[0] === T_EXP_VALUE ){
+        [ $_, $_, $_, $type ] = $fieldOrValueA;
+        $fieldOrValueB = $this->startupVariable( $fieldOrValueB, $this->statics );
+        $fieldOrValueB = $this->startupEnums( $fieldOrValueB );
+        return [ $fieldOrValueA, $this->getParserEqual( $fieldOrValueB, $equal ), $this->getParams( $fieldOrValueB, $type )];
+      } else return [ $fieldOrValueA, $equal, $fieldOrValueB ];      
+    }
+
+    return [];
   }   
   
   private function getParserValues(
     array $contexts = []
   ): array {
-    foreach($contexts as $i => $tokens){
-      [ $expType ] = $tokens;
+    if( isset( $this->expressionType ) === false ){
+      $this->expressionType = new ExpressionType();
+    }
 
-      if($expType === T_EXP_DENYING){
-        $contexts[$i][3] = $this->getParserValues($tokens[3]);
-      } else
-      if($expType === T_EXP_GROUP){
-        $contexts[$i][3] = $this->getParserValues($tokens[3]);
-      } else
-      if($expType === T_EXP_SUBQUERY){
-        $contexts[$i][4] = $this->getParserValues($tokens[4]);
-      } else
-      if($expType === T_EXP_UNARY){
-        $contexts[$i][3] = $this->startupTypes($tokens);
-      } else
-      if($expType === T_EXP_COMPARE){
-        $contexts[$i][3] = $this->startupTypes($tokens);
-      } else
-      if($expType === T_EXP_BETWEEN){
-        $contexts[$i][3] = $this->startupTypes($tokens);
+    foreach( $contexts as $i => $tokens ){
+      [ $type ] = $tokens;
+      if( $type === T_EXP_LOGICAL ){
+        continue;
       }
+      
+      [ $type, $_, $tokens ] = $tokens;
+      $contexts[ $i ][ 2 ] = match( $type ){
+        T_EXP_COMPARE => $this->getParserValuesApply( T_EXP_COMPARE, $tokens ),
+        T_EXP_BETWEEN => $this->getParserValuesApply( T_EXP_BETWEEN, $tokens ),
+          default => $this->getParserValues( $tokens )
+      };
     }
 
     return $contexts;
+  }
+
+  private function getParseWheresGroup(
+    array $contexts = []    
+  ): string {
+    [ $_, $_, $contexts ] = $contexts;
+    return "({$this->getParseWheres($contexts)})";
+  }
+
+  private function getParseWheresDenying(
+    array $contexts = []    
+  ): string {
+    [ $_, $_, $contexts ] = $contexts;
+    return "Not {$this->getParseWheres($contexts)}";
+  }
+
+  private function getTableFromScope(
+    array $contexts = [] 
+  ): string {
+    [ $scope ] = array_reverse( $contexts );
+    [ $_, $table ] = $scope;
+    return $table;
+  }
+
+  private function getEventFromMethod(
+    string $event 
+  ): string {
+    return [
+      'any' => 'Exists'
+    ][$event];
+  }  
+  
+  private function getParseWheresSubQuery(
+    array $contexts = []    
+  ): string {
+    [ $_, $_, $contexts, $method, $scopes ] = $contexts;
+    return sprintf( "%s ( Select 1 From %s Where %s)", $this->getEventFromMethod($method), $this->getTableFromScope($scopes), $this->getParseWheres($contexts));
+  }
+
+  private function getParseWheresBetween(
+    array $contexts = []    
+  ): string {
+    [ $_, $_, $contexts ] = $contexts;
+    [ $field, $valueStart, $valueEnd ] = $contexts;
+    return sprintf( "%s.%s BetWeen %s And %s", $field[1], $field[2], $valueStart[1], $valueEnd[1] );
+  }  
+  
+  private function getParseWheresCompare(
+    array $contexts = []    
+  ): string {
+    [ $_, $_, $contexts ] = $contexts;
+    [ $contextsA, $equal, $contextsB ] = $contexts;
+
+    if( is_array( $contextsA ) && is_array( $contextsB )){
+      return sprintf( "%s.%s %s %s.%s", $contextsA[1], $contextsA[2], $equal[1], $contextsB[1], $contextsB[2] );
+    } else if( is_array( $contextsA ) && is_string( $contextsB )){
+      return sprintf( "%s.%s %s %s", $contextsA[1], $contextsA[2], $equal[1], $contextsB );
+    } else if( is_string( $contextsA ) && is_array( $contextsB )){
+      return sprintf( "%s %s %s.%s", $contextsB, $equal[1], $contextsA[1], $contextsA[2]);
+    }
+
+    return "T_EXP_COMPARE";
+  }
+
+  private function getParseWheresLogical(
+    array $contexts = []    
+  ): string {
+    [ $_, $contexts ] = $contexts;
+    return "{$contexts}";
+  }  
+
+  private function getParseWheres(
+    array $contexts = []
+  ): string {
+    foreach($contexts as $i => $tokens){
+      [ $type ] = $tokens;
+      $contexts[ $i ] = match( $type ){
+        T_EXP_GROUP => $this->getParseWheresGroup( $tokens ),
+        T_EXP_DENYING => $this->getParseWheresDenying( $tokens ),
+        T_EXP_SUBQUERY => $this->getParseWheresSubQuery( $tokens ),
+        T_EXP_BETWEEN => $this->getParseWheresBetween( $tokens ),
+        T_EXP_COMPARE => $this->getParseWheresCompare( $tokens ),
+        T_EXP_LOGICAL => $this->getParseWheresLogical( $tokens )
+      };
+    }
+
+    return join( ' ', $contexts );
   }
 
   private function startups(
@@ -1025,9 +1244,21 @@ class ExpressionWhere
     $this->getBuilds();
   }
 
+  private function getScriptTable(
+  ): string {
+    return $this->getTableFromScope(
+      $this->scopes
+    );
+  }
+
   public function get(
-  ): mixed {
+  ): array {
     $this->startups();
-    return $this;
+    return [
+      $this->getScriptTable(),
+      $this->getParseWheres(
+        $this->tokens
+      ), $this->params
+    ];
   }
 }

@@ -3,9 +3,8 @@
 namespace Websyspro\Entity\Core;
 
 use PDO;
-use PDOStatement;
 
-class Database
+class DB
 {
   private static PDO $handle;
   private static array $statements = [];
@@ -32,7 +31,7 @@ class Database
     return "sqlsrv:Server={$hostname};Database={$database}";
   }
 
-  public static function getDriver(
+  public static function driver(
   ): string|null {
     return self::connect()->getAttribute(
       PDO::ATTR_DRIVER_NAME
