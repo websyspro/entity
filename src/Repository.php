@@ -17,9 +17,8 @@ class Repository
   public string $table;
   public string $where;
   public array $whereParams = [];
-  private int $page;
-  private int $rowsPerPage;
-  private int $defaultRowsPerPage = 12;
+  private int $page = 1;
+  private int $rowsPerPage = 12;
 
   public function __construct(
     public string $entity
@@ -37,10 +36,10 @@ class Repository
   }
 
   public function paged(
-    int $page,
-    int $rowsPerPage
+    int $page = 1,
+    int $rowsPerPage = 12
   ): Repository {
-    $this->page = $page;
+    $this->page = $page - 1;
     $this->rowsPerPage = $rowsPerPage;
     return $this;
   }
@@ -62,25 +61,21 @@ class Repository
 
   private function getPage(
   ): int {
-    return isset( $this->page ) === false 
-      ? ( 1 - 1 ) * $this->getRowsPerPage() 
-      : ( $this->page - 1 ) * $this->getRowsPerPage();
+    return $this->page * $this->getRowsPerPage();
   }
 
   private function getRowsPerPage(
   ): int {
-    return isset( $this->rowsPerPage ) === false 
-      ? $this->defaultRowsPerPage 
-      : $this->rowsPerPage;
+    return $this->rowsPerPage;
   }
 
   private function getPaged(
   ): string|null {
     return sprintf(
       match( DB::driver() ){
-        'mysql' => 'Limit %1$s, %2$s',
+         'mysql' => 'Limit %1$s, %2$s',
         'sqlsrv' => 'Offset %1$s Rows Fetch Next %2$s Rows Only',
-        'pgsql' => 'Limit %2$s Offset %1$s'
+         'pgsql' => 'Limit %2$s Offset %1$s'
       }, $this->getPage(), $this->getRowsPerPage()
     );
   } 

@@ -1,7 +1,7 @@
 <?php
 
 return array (
-  'hash' => '35463656456cc51f601a4e6a723881fb',
+  'hash' => '231b0a5319e7bb34effc294bc55300bb',
   'context' => 
   array (
     'scopes' => 
@@ -37,6 +37,13 @@ return array (
                 array (
                   0 => 
                   array (
+                    0 => 
+                    array (
+                      0 => 'date',
+                      1 => 
+                      array (
+                      ),
+                    ),
                   ),
                   1 => 
                   array (
@@ -92,7 +99,7 @@ return array (
                   array (
                     0 => 'ExpField',
                     1 => 'Proposta',
-                    2 => 'NomeProposta',
+                    2 => 'ComentarioArquivamento',
                     3 => 'Text',
                     4 => 
                     array (
@@ -111,7 +118,7 @@ return array (
                               0 => 
                               array (
                                 0 => 320,
-                                1 => 'SAO JOAO DA PONTE-MG - 2',
+                                1 => 'DECLINOU',
                                 2 => 'T_CONSTANT_ENCAPSED_STRING',
                               ),
                             ),
@@ -139,7 +146,7 @@ return array (
                       1 => 
                       array (
                         0 => 320,
-                        1 => 'SAO JOAO DA PONTE-MG - 2',
+                        1 => 'DECLINOU',
                         2 => 'T_CONSTANT_ENCAPSED_STRING',
                       ),
                       2 => 

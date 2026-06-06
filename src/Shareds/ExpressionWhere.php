@@ -6,6 +6,7 @@ use Closure;
 use ReflectionFunction;
 use function count, array_slice, is_string, in_array, ord, is_array, is_object, sprintf, defined;
 use Websyspro\Entity\Decorations\Columns\Datetime;
+use Websyspro\Entity\Core\DB;
 
 /* defined consts to tokens */
 define( 'T_START_PARENTESES', 40 );
@@ -682,6 +683,10 @@ class ExpressionWhere
                   if($contextsALeftJ[3] === $this->getType(Datetime::class)){
                     $isContextsLogPrev = $contextsLogPrev === 'And';
                     if( $isContextsLogPrev ){
+                      $contextsALeftI[4] = [
+                        [[ "date", [] ]], []
+                      ];
+
                       $contexts[$i] = [ T_EXP_BETWEEN, $parentI, [
                         $contextsALeftI, $contextsCLeftI, $contextsCLeftJ
                       ]];
@@ -790,12 +795,12 @@ class ExpressionWhere
     return [ T_EXP_LOGICAL, $this->getLogical( $contexts )];
   }
 
-  private function verifyMethodCompare(
+  private function getVerifyMethodCompare(
     string $parent,
     array $contexts = [],
     array $contextsInGroup = []
   ): array {
-    [ $expField, $expEqual, $expValue ] = $contexts;
+    [ $expField, $expEqual ] = $contexts;
     [ $_, $_, $_, $_, $methods ] = $expField;
     [ $_, $compareds ] = $methods;
 
@@ -804,13 +809,18 @@ class ExpressionWhere
     } else {
       [ $compareName, $compareArgs ] = $compareds[0];
 
-      /* Transform to Compare Between */
+      /* Transform to Compare Like (%*%, *%, %*) */
       if( in_array( $compareName, ['contains', 'startsWith', 'endsWith'])){
-        for($i=0; $i < count($compareArgs); $i++){
+        for( $i=0; $i < count($compareArgs); $i++ ){
+          if( $i >= 1 ){
+            $contextsInGroup[] = $this->createExpTypeLogical([
+              [ T_LOGICAL_OR, 'Or', token_name( T_LOGICAL_OR )]
+            ]);
+          }
+
           $contextsInGroup[] = [
             T_EXP_COMPARE, T_EXP_GROUP, [
-              $expField,
-              $expEqual,
+              $expField, $expEqual,
               [ T_EXP_VALUE, match($compareName){
                 'contains' => array_merge(
                   [[ T_STRING, '%', token_name( T_STRING )]], $compareArgs[$i],
@@ -841,8 +851,7 @@ class ExpressionWhere
   ): array {
     $contexts = $this->getGroupByTypes( $contexts );
     $contexts = $this->getParseFieldAndValue( $scopes, $contexts );
-    $contexts = $this->verifyMethodCompare( $parent, $contexts );
-    // $contexts = [ T_EXP_COMPARE, $parent, $contexts ];
+    $contexts = $this->getVerifyMethodCompare( $parent, $contexts );
     return $contexts;
   }
 
@@ -853,8 +862,7 @@ class ExpressionWhere
   ): array {
     $contexts = $this->getField( $scopes, $contexts );
     $contexts = $this->getFieldByUnary( $parent, $contexts );
-    $contexts = $this->verifyMethodCompare( $parent, $contexts );
-    // $contexts = [ T_EXP_COMPARE, $parent, $contexts ];
+    $contexts = $this->getVerifyMethodCompare( $parent, $contexts );
     return $contexts;
   }  
   
@@ -938,13 +946,6 @@ class ExpressionWhere
         } else $this->getBuildsDirect();
       } else $this->getBuildsDirect();
     } else $this->getBuildsDirect();
-  }
-
-  private function startupEqual(
-    array $equals,
-    array $values
-  ): array {
-    return $equals;
   }
 
   private function startupVariable(
@@ -1144,8 +1145,8 @@ class ExpressionWhere
 
       return sprintf( '(%s)', implode(',', $contextsListGroups));
     } else {
-      [ $_, $value ] = $contexts[0];
-      return $this->createParams( $value, $type );
+      $contexts = array_map( fn(array $token) => $token[1], $contexts );
+      return $this->createParams( implode( '', $contexts ), $type );
     };
   }
 
@@ -1284,12 +1285,38 @@ class ExpressionWhere
     return sprintf( "%s ( Select 1 From %s Where %s)", $this->getEventFromMethod($method), $this->getTableFromScope($scopes), $this->getParseWheres($contexts));
   }
 
+  private function getMethodModify(
+    array $contexts
+  ): string {
+    if( count($contexts) < 5 ){
+      [ $_, $table, $field ] = $contexts;
+      return "{$table}.{$field}";
+    }
+
+    [ $_, $table, $field, $_, $methods ] = $contexts;
+    [ $methodsModifys ] = $methods;
+
+    $target = "{$table}.{$field}";
+    foreach( $methodsModifys as $method ){
+      [ $methodName ] = $method;
+
+      if( strtolower($methodName) === "date" ){
+        $target = match( DB::driver()){
+          'mysql' => "{$methodName}({$target})", 
+          'pgsql', 'sqlsrv' => "Cast({$target} As {$methodName})" 
+        };
+      }
+    }
+
+    return $target;
+  }
+
   private function getParseWheresBetween(
     array $contexts = []    
   ): string {
     [ $_, $_, $contexts ] = $contexts;
-    [ $field, $valueStart, $valueEnd ] = $contexts;
-    return sprintf( "%s.%s BetWeen %s And %s", $field[1], $field[2], $valueStart[1], $valueEnd[1] );
+    [ $contexts, $valueStart, $valueEnd ] = $contexts;
+    return sprintf( "%s BetWeen %s And %s", $this->getMethodModify($contexts), $valueStart[1], $valueEnd[1] );
   }  
   
   private function getParseWheresCompare(
@@ -1299,11 +1326,11 @@ class ExpressionWhere
     [ $contextsA, $equal, $contextsB ] = $contexts;
 
     if( is_array( $contextsA ) && is_array( $contextsB )){
-      return sprintf( "%s.%s %s %s.%s", $contextsA[1], $contextsA[2], $equal[1], $contextsB[1], $contextsB[2] );
+      return sprintf( "%s %s %s", $this->getMethodModify($contextsA), $equal[1], $this->getMethodModify($contextsB) );
     } else if( is_array( $contextsA ) && is_string( $contextsB )){
-      return sprintf( "%s.%s %s %s", $contextsA[1], $contextsA[2], $equal[1], $contextsB );
+      return sprintf( "%s %s %s", $this->getMethodModify($contextsA), $equal[1], $contextsB );
     } else if( is_string( $contextsA ) && is_array( $contextsB )){
-      return sprintf( "%s %s %s.%s", $contextsB, $equal[1], $contextsA[1], $contextsA[2]);
+      return sprintf( "%s %s %s", $contextsA, $equal[1], $this->getMethodModify($contextsB));
     }
 
     return "T_EXP_COMPARE";

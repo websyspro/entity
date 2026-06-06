@@ -20,7 +20,7 @@ class UserRepository
     $rep->where( fn( PropostaEntity $p ) => (
       $p->Created >= $dateStart 
       && $p->Created <= $dateEnd
-      && $p->NomeProposta->contains( 'SAO JOAO DA PONTE-MG - 2' )     
+      && $p->ComentarioArquivamento->contains( 'DECLINOU' )     
     ));
     $rep->paged( 1, 6 );
     return $rep->all();
@@ -28,8 +28,5 @@ class UserRepository
 }
 
 $UserRepository = new UserRepository();
-$getAll = $UserRepository->getAll("01/01/2024", "31/03/2024");
-
-// header('Content-Type: application/json; charset=utf-8');
-// echo json_encode($getAll);
+$getAll = $UserRepository->getAll("30/10/2023", "30/10/2023");
 print_r($getAll);
