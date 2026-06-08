@@ -1,7 +1,7 @@
 <?php
 
 return array (
-  'hash' => '231b0a5319e7bb34effc294bc55300bb',
+  'hash' => '36af0408801758e2604669ba63902160',
   'context' => 
   array (
     'scopes' => 
@@ -17,33 +17,135 @@ return array (
     array (
       0 => 
       array (
-        0 => 'ExpGroup',
+        0 => 'ExpBetween',
         1 => 'ExpIntial',
         2 => 
         array (
           0 => 
           array (
-            0 => 'ExpBetween',
-            1 => 'ExpGroup',
+            0 => 'ExpField',
+            1 => 'Proposta',
+            2 => 'Created',
+            3 => 'Datetime',
+            4 => 
+            array (
+              0 => 
+              array (
+                0 => 
+                array (
+                  0 => 'date',
+                  1 => 
+                  array (
+                  ),
+                ),
+              ),
+              1 => 
+              array (
+              ),
+            ),
+          ),
+          1 => 
+          array (
+            0 => 'ExpValue',
+            1 => 
+            array (
+              0 => 
+              array (
+                0 => 317,
+                1 => '$dateStart',
+                2 => 'T_VARIABLE',
+              ),
+            ),
+          ),
+          2 => 
+          array (
+            0 => 'ExpValue',
+            1 => 
+            array (
+              0 => 
+              array (
+                0 => 317,
+                1 => '$dateEnd',
+                2 => 'T_VARIABLE',
+              ),
+            ),
+          ),
+        ),
+      ),
+      1 => 
+      array (
+        0 => 'ExpLogical',
+        1 => 'And',
+      ),
+      2 => 
+      array (
+        0 => 'ExpCompare',
+        1 => 'ExpIntial',
+        2 => 
+        array (
+          0 => 
+          array (
+            0 => 'ExpField',
+            1 => 'Proposta',
+            2 => 'IsActive',
+            3 => 'Flag',
+            4 => 
+            array (
+              0 => 
+              array (
+              ),
+              1 => 
+              array (
+              ),
+            ),
+          ),
+          1 => 
+          array (
+            0 => 'ExpEqual',
+            1 => '==',
+          ),
+          2 => 
+          array (
+            0 => 'ExpValue',
+            1 => 
+            array (
+              0 => 
+              array (
+                0 => 313,
+                1 => 1,
+                2 => 'T_STRING',
+              ),
+            ),
+          ),
+        ),
+      ),
+      3 => 
+      array (
+        0 => 'ExpLogical',
+        1 => 'And',
+      ),
+      4 => 
+      array (
+        0 => 'ExpDenying',
+        1 => 'ExpIntial',
+        2 => 
+        array (
+          0 => 
+          array (
+            0 => 'ExpCompare',
+            1 => 'ExpDenying',
             2 => 
             array (
               0 => 
               array (
                 0 => 'ExpField',
                 1 => 'Proposta',
-                2 => 'Created',
-                3 => 'Datetime',
+                2 => 'IsDeleted',
+                3 => 'Flag',
                 4 => 
                 array (
                   0 => 
                   array (
-                    0 => 
-                    array (
-                      0 => 'date',
-                      1 => 
-                      array (
-                      ),
-                    ),
                   ),
                   1 => 
                   array (
@@ -52,16 +154,8 @@ return array (
               ),
               1 => 
               array (
-                0 => 'ExpValue',
-                1 => 
-                array (
-                  0 => 
-                  array (
-                    0 => 317,
-                    1 => '$dateStart',
-                    2 => 'T_VARIABLE',
-                  ),
-                ),
+                0 => 'ExpEqual',
+                1 => '==',
               ),
               2 => 
               array (
@@ -70,23 +164,78 @@ return array (
                 array (
                   0 => 
                   array (
-                    0 => 317,
-                    1 => '$dateEnd',
-                    2 => 'T_VARIABLE',
+                    0 => 313,
+                    1 => 0,
+                    2 => 'T_STRING',
                   ),
                 ),
               ),
             ),
           ),
+        ),
+      ),
+      5 => 
+      array (
+        0 => 'ExpLogical',
+        1 => 'And',
+      ),
+      6 => 
+      array (
+        0 => 'ExpCompare',
+        1 => 'ExpIntial',
+        2 => 
+        array (
+          0 => 
+          array (
+            0 => 'ExpField',
+            1 => 'Proposta',
+            2 => 'CreatedById',
+            3 => 'Text',
+            4 => 
+            array (
+              0 => 
+              array (
+              ),
+              1 => 
+              array (
+              ),
+            ),
+          ),
           1 => 
           array (
-            0 => 'ExpLogical',
-            1 => 'And',
+            0 => 'ExpEqual',
+            1 => '=',
           ),
           2 => 
           array (
+            0 => 'ExpValue',
+            1 => 
+            array (
+              0 => 
+              array (
+                0 => 320,
+                1 => '84850ECB-2443-442A-A9B0-4555C9421227',
+                2 => 'T_CONSTANT_ENCAPSED_STRING',
+              ),
+            ),
+          ),
+        ),
+      ),
+      7 => 
+      array (
+        0 => 'ExpLogical',
+        1 => 'And',
+      ),
+      8 => 
+      array (
+        0 => 'ExpDenying',
+        1 => 'ExpIntial',
+        2 => 
+        array (
+          0 => 
+          array (
             0 => 'ExpGroup',
-            1 => 'ExpGroup',
+            1 => 'ExpDenying',
             2 => 
             array (
               0 => 
@@ -99,12 +248,26 @@ return array (
                   array (
                     0 => 'ExpField',
                     1 => 'Proposta',
-                    2 => 'ComentarioArquivamento',
+                    2 => 'NomeProposta',
                     3 => 'Text',
                     4 => 
                     array (
                       0 => 
                       array (
+                        0 => 
+                        array (
+                          0 => 'trim',
+                          1 => 
+                          array (
+                          ),
+                        ),
+                        1 => 
+                        array (
+                          0 => 'upper',
+                          1 => 
+                          array (
+                          ),
+                        ),
                       ),
                       1 => 
                       array (
@@ -117,9 +280,9 @@ return array (
                             array (
                               0 => 
                               array (
-                                0 => 320,
-                                1 => 'DECLINOU',
-                                2 => 'T_CONSTANT_ENCAPSED_STRING',
+                                0 => 317,
+                                1 => '$startsWith',
+                                2 => 'T_VARIABLE',
                               ),
                             ),
                           ),
@@ -130,7 +293,7 @@ return array (
                   1 => 
                   array (
                     0 => 'ExpEqual',
-                    1 => '==',
+                    1 => '!=',
                   ),
                   2 => 
                   array (
@@ -145,9 +308,9 @@ return array (
                       ),
                       1 => 
                       array (
-                        0 => 320,
-                        1 => 'DECLINOU',
-                        2 => 'T_CONSTANT_ENCAPSED_STRING',
+                        0 => 317,
+                        1 => '$startsWith',
+                        2 => 'T_VARIABLE',
                       ),
                       2 => 
                       array (

@@ -707,18 +707,6 @@ class ExpressionWhere
     return $contexts;
   }
 
-  private function getParseDenying(
-    string $parent,
-     array $contexts = [],
-  ): array {
-    [ $tokens ] = $contexts;
-    [ $type, $_, $tokens ] = $tokens;
-
-    return $type === T_EXP_SUBQUERY
-      ? [ T_EXP_DENYING, $parent, $contexts ]
-      : [ T_EXP_COMPARE, $parent, $tokens ];
-  }
-
   private function getExpType(
     array $contexts = []
   ): string|null {
@@ -744,9 +732,9 @@ class ExpressionWhere
      array $scopes = [],
      array $contexts = []
   ): array {
-    $contexts = $this->getGroupByLogicals(array_slice( $contexts, 1 ));
+    $contexts = $this->getGroupByLogicals( array_slice( $contexts, 1 ));
     $contexts = $this->getParser( T_EXP_DENYING, $scopes, $contexts );
-    $contexts = $this->getParseDenying( $parent, $contexts );
+    $contexts = [ T_EXP_DENYING, $parent, $contexts ];
     return $contexts;
   }
 
@@ -795,7 +783,7 @@ class ExpressionWhere
     return [ T_EXP_LOGICAL, $this->getLogical( $contexts )];
   }
 
-  private function getVerifyMethodCompare(
+  private function getVerifyEventsCompare(
     string $parent,
     array $contexts = [],
     array $contextsInGroup = []
@@ -811,6 +799,10 @@ class ExpressionWhere
 
       /* Transform to Compare Like (%*%, *%, %*) */
       if( in_array( $compareName, ['contains', 'startsWith', 'endsWith'])){
+        if( $parent === T_EXP_DENYING ){
+          $expEqual[1] = "!=";
+        }
+
         for( $i=0; $i < count($compareArgs); $i++ ){
           if( $i >= 1 ){
             $contextsInGroup[] = $this->createExpTypeLogical([
@@ -851,7 +843,7 @@ class ExpressionWhere
   ): array {
     $contexts = $this->getGroupByTypes( $contexts );
     $contexts = $this->getParseFieldAndValue( $scopes, $contexts );
-    $contexts = $this->getVerifyMethodCompare( $parent, $contexts );
+    $contexts = $this->getVerifyEventsCompare( $parent, $contexts );
     return $contexts;
   }
 
@@ -862,7 +854,7 @@ class ExpressionWhere
   ): array {
     $contexts = $this->getField( $scopes, $contexts );
     $contexts = $this->getFieldByUnary( $parent, $contexts );
-    $contexts = $this->getVerifyMethodCompare( $parent, $contexts );
+    $contexts = $this->getVerifyEventsCompare( $parent, $contexts );
     return $contexts;
   }  
   
@@ -1259,7 +1251,11 @@ class ExpressionWhere
     array $contexts = []    
   ): string {
     [ $_, $_, $contexts ] = $contexts;
-    return "Not {$this->getParseWheres($contexts)}";
+    [ $tokens ] = $contexts;
+    
+    return $tokens[0] === T_EXP_SUBQUERY
+      ? "Not {$this->getParseWheres($contexts)}"
+      : "{$this->getParseWheres($contexts)}";
   }
 
   private function getTableFromScope(
@@ -1282,29 +1278,36 @@ class ExpressionWhere
     array $contexts = []    
   ): string {
     [ $_, $_, $contexts, $method, $scopes ] = $contexts;
-    return sprintf( "%s ( Select 1 From %s Where %s)", $this->getEventFromMethod($method), $this->getTableFromScope($scopes), $this->getParseWheres($contexts));
+    return sprintf( "%s ( Select 1 From %s Where %s)", 
+      $this->getEventFromMethod( $method ), 
+      $this->getTableFromScope( $scopes ), 
+      $this->getParseWheres( $contexts )
+    );
   }
 
   private function getMethodModify(
     array $contexts
   ): string {
-    if( count($contexts) < 5 ){
-      [ $_, $table, $field ] = $contexts;
-      return "{$table}.{$field}";
-    }
-
     [ $_, $table, $field, $_, $methods ] = $contexts;
-    [ $methodsModifys ] = $methods;
+    [ $modifys ] = $methods;
 
+    $driver = DB::driver();
     $target = "{$table}.{$field}";
-    foreach( $methodsModifys as $method ){
-      [ $methodName ] = $method;
 
-      if( strtolower($methodName) === "date" ){
-        $target = match( DB::driver()){
-          'mysql' => "{$methodName}({$target})", 
-          'pgsql', 'sqlsrv' => "Cast({$target} As {$methodName})" 
-        };
+    foreach( $modifys as $method ){
+      if( $method[0] === "date" ){
+        $target = $driver !== "mysql"
+          ? "Cast({$target} As Date)" 
+          : "Date({$target})";
+      } else
+      if( $method[0] === "upper" ){
+        $target = "Upper({$target})";
+      } else
+      if( $method[0] === "lower" ){
+        $target = "Lower({$target})";
+      } else
+      if( $method[0] === "trim" ){
+        $target = "Trim({$target})";
       }
     }
 
@@ -1326,14 +1329,21 @@ class ExpressionWhere
     [ $contextsA, $equal, $contextsB ] = $contexts;
 
     if( is_array( $contextsA ) && is_array( $contextsB )){
-      return sprintf( "%s %s %s", $this->getMethodModify($contextsA), $equal[1], $this->getMethodModify($contextsB) );
+      [ $contextsA, $equal, $contextsB ] = [
+        $this->getMethodModify( $contextsA ), $equal[1], 
+        $this->getMethodModify( $contextsB )
+      ];
     } else if( is_array( $contextsA ) && is_string( $contextsB )){
-      return sprintf( "%s %s %s", $this->getMethodModify($contextsA), $equal[1], $contextsB );
+      [ $contextsA, $equal, $contextsB ] = [
+        $this->getMethodModify( $contextsA ), $equal[1], $contextsB
+      ];
     } else if( is_string( $contextsA ) && is_array( $contextsB )){
-      return sprintf( "%s %s %s", $contextsA, $equal[1], $this->getMethodModify($contextsB));
+      [ $contextsA, $equal, $contextsB ] = [
+        $contextsA, $equal[1], $this->getMethodModify( $contextsB )
+      ];
     }
 
-    return "T_EXP_COMPARE";
+    return "{$contextsA} {$equal} {$contextsB}";
   }
 
   private function getParseWheresLogical(
@@ -1358,8 +1368,15 @@ class ExpressionWhere
       };
     }
 
-    return join( ' ', $contexts );
+    return implode( " ", $contexts );
   }
+
+  private function getScriptTable(
+  ): string {
+    return $this->getTableFromScope(
+      $this->scopes
+    );
+  }  
 
   private function startups(
   ): void {
@@ -1371,18 +1388,9 @@ class ExpressionWhere
     $this->getBuilds();
   }
 
-  private function getScriptTable(
-  ): string {
-    return $this->getTableFromScope(
-      $this->scopes
-    );
-  }
-
   public function get(
   ): array {
     $this->startups();
-    print_r($this->tokens);
-    print_r($this->params);
     return [
       $this->getScriptTable(),
       $this->getParseWheres(

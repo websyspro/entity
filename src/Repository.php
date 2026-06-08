@@ -82,7 +82,7 @@ class Repository
 
   private function getSqlAll(
   ): string {
-    return sprintf( 'Select * from %1$s Where %2$s %3$s %4$s',
+    return sprintf( 'Select * From %1$s Where %2$s %3$s %4$s',
       $this->getTable(), $this->getWhere(), $this->getOrderBy(), $this->getPaged()  
     );
   }
@@ -94,7 +94,7 @@ class Repository
 
   public function all(
   ): array {
-    print_r($this->getSqlAll());
+    print_r($this->getSqlAll() . PHP_EOL);
 
     return DB::query(
       $this->getSqlAll(), 

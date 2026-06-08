@@ -14,19 +14,23 @@ class UserRepository
 
   public function getAll(
     string $dateStart,
-    string $dateEnd
+    string $dateEnd,
+    string $startsWith
   ): mixed {
     $rep = new Repository( PropostaEntity::class );
-    $rep->where( fn( PropostaEntity $p ) => (
+    $rep->where( fn( PropostaEntity $p ) => 
       $p->Created >= $dateStart 
       && $p->Created <= $dateEnd
-      && $p->ComentarioArquivamento->contains( 'DECLINOU' )     
-    ));
-    $rep->paged( 1, 6 );
+      && $p->IsActive 
+      && !$p->IsDeleted
+      && $p->CreatedById = '84850ECB-2443-442A-A9B0-4555C9421227'
+      && !$p->NomeProposta->trim()->upper()->contains( $startsWith )     
+    );
+    $rep->paged( 1, 2 );
     return $rep->all();
   }
 }
 
 $UserRepository = new UserRepository();
-$getAll = $UserRepository->getAll("30/10/2023", "30/10/2023");
+$getAll = $UserRepository->getAll( "01/01/2024", "31/12/2024", "TEST" );
 print_r($getAll);
