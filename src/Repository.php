@@ -47,9 +47,9 @@ class Repository
   ): Repository {
     $start = microtime(true);
 
-    if( isset( $this->expressionWhere ) === false ){
+    if( isset( $this->expressionColumns ) === false ){
       $this->expressionColumns = new ExpressionColumns( $closure );
-      [ $this->table, $this->where, $this->whereParams ] = $this->expressionColumns->get();
+      $this->expressionColumns->get();
     }
 
     $end = microtime(true);

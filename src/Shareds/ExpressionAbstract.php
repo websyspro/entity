@@ -2,7 +2,7 @@
 
 namespace Websyspro\Entity\Shareds;
 
-use function in_array, count;
+use function in_array, count, array_slice;
 use ReflectionFunction;
 use Closure;
 
@@ -42,7 +42,14 @@ define( 'T_EXP_VALUE', 'ExpValue' );
 
 class ExpressionAbstract
 {
+  public ExpressionType $expressionType;  
   public ReflectionFunction $reflectionFunction;
+  public string $cacheClassKey;
+  public string $cacheMethodKey;
+  public array $scopes = [];
+  public array $statics = [];
+  public array $params = [];  
+  public array $contexts = [];
   public array $tokens = [];
   public array $uses = [];
 
@@ -172,5 +179,218 @@ class ExpressionAbstract
     );
 
     return $uses[0] ?? null;
+  }
+ 
+  public function getCacheKey(
+    int $i = 0
+  ): void {
+    for($i=count($this->tokens) - 1; $i>=0; $i--){
+      if(strpos($this->tokens[$i], 'function') !== false){
+        if(isset($this->cacheMethodKey) === false){
+          $this->cacheMethodKey = preg_replace([
+            "#^.*function\s*#", "#\s*\(.*$#"
+          ], "", trim($this->tokens[$i]));
+        }
+      }
+
+      if(strpos($this->tokens[$i], 'class') !== false){
+        if(isset($this->cacheClassKey) === false){
+          $this->cacheClassKey = preg_replace([
+            "#^.*class\s*#", "#\s*\{.*$#"
+          ], "", trim($this->tokens[$i]));
+        }
+      }
+    }
+  }
+
+  public function getContextsNotEnds(
+    array $tokens,
+    int $parenteses = 0
+  ): array {
+    for($i=0; $i<count($tokens); $i++){
+      if($tokens[$i][0] === T_START_PARENTESES){
+        $parenteses++;
+      }
+
+      if($tokens[$i][0] === T_END_PARENTESES){
+        $parenteses--;
+
+        if($parenteses < 0){
+          $tokens = array_slice(
+            $tokens, 0, $i
+          ); break;
+        }          
+      }
+
+      if($parenteses < 1){
+        if($tokens[$i][0] === T_SEMICOLON){
+          $tokens = array_slice(
+            $tokens, 0, $i
+          ); break;
+        }
+      }
+    };
+
+    return $tokens;
+  }
+  
+  private function namberToken(
+    int $namberToken
+  ): string {
+    return match( $namberToken ){
+       34 => 'T_ASP',
+       40 => 'T_START_PARENTESES',
+       41 => 'T_END_PARENTESES',
+       91 => 'T_START_BRACKET',
+       93 => 'T_END_BRACKET',
+       46 => 'T_DOT',
+       44 => 'T_COMMA',
+       59 => 'T_SEMICOLON',
+       58 => 'T_COLON',
+       63 => 'T_QUESTION',
+       43 => 'T_PLUS',
+       45 => 'T_MINUS',
+       42 => 'T_MULTIPLY',
+       47 => 'T_DIVIDE',
+       61 => 'T_EQUAL',
+       62 => 'T_GREATER_THAN',
+       60 => 'T_LESS_THAN',
+       33 => 'T_NOT',
+      123 => 'T_START_BRACE',
+      125 => 'T_END_BRACE',
+        default => token_name( $namberToken )
+    };
+  }  
+
+  private function createToken(
+    string|array $tokenArgs
+  ): array {
+    [ $number, $value ] = is_string( $tokenArgs ) 
+      ? [ ord( $tokenArgs ), $tokenArgs ] : $tokenArgs;
+
+    if( in_array( $number, [ T_CONSTANT_ENCAPSED_STRING ])){
+      $value = trim( $value, '"\'' );
+    }  
+
+    return [ $number, $value, $this->namberToken($number)];
+  }  
+  
+  public function getContext(
+    array $contexts = []
+  ): array {
+    return $this->getContextsNotEnds(
+      array_slice( $contexts, $this->inc(
+        $this->indexOf( $contexts, T_FN )
+      ))
+    );
+  }
+
+  public function getContexts(
+  ): void {
+    $this->contexts = array_slice(
+      $this->tokens, 
+      $this->reflectionFunction->getStartLine() - 1,
+      $this->reflectionFunction->getEndLine() - 
+      $this->reflectionFunction->getStartLine() + 1
+    );
+
+    $this->contexts = array_slice(
+      token_get_all(
+        sprintf( '<?php %s', implode(
+          '', $this->contexts
+        ))
+      ), 1
+    );
+
+    $this->contexts = array_map(
+      fn(string|array $token) => (
+        $this->createToken($token)
+      ), $this->contexts
+    );
+
+    $this->contexts = array_values(
+      array_filter(
+        $this->contexts, fn(array $token) => !in_array( 
+          $token[0], [ T_WHITESPACE, T_CURLY_OPEN, T_END_BRACE, T_DOT ]
+        )
+      )
+    );
+
+    $this->contexts = $this->getContext($this->contexts);
+  }
+  
+  public function getStatics(
+  ): void {
+    $this->statics = $this->reflectionFunction
+      ->getStaticVariables();
+  }
+
+  public function getGroupByLogicals(
+    array $tokens
+  ): array {
+    return $this->groupByTypes(
+      $tokens, [ T_LOGICAL_AND, T_LOGICAL_OR, T_BOOLEAN_AND, T_BOOLEAN_OR ], true
+    );
+  }  
+
+  public function getScopesByContext(
+    array $contexts,
+    array $scopes = [],
+    array $scopesPaarent = []
+  ): array {
+    $scopes = $this->groupByTypes(
+      array_slice( $contexts, 1, $this->dec(
+          $this->indexOf( $contexts, T_END_PARENTESES )
+      )), [ T_COMMA ]
+    );
+
+    $scopes = array_map(
+      function(array $scope){
+        [ $instance, $variable ] = $scope;
+        $instance = $this->getUse(
+          $instance[1]
+        );
+
+        $metadata = new EntityStructure($instance);
+        $metadata = $metadata->get();
+
+        return [ 
+          $instance,
+          $metadata->contexts[T_Entity][0],
+          $variable[1]
+        ];
+      }, $scopes
+    );
+
+    return [ ...$scopesPaarent, ...$scopes ];
+  }
+
+  public function getTokensByContext(
+    array $contexts,
+    array $tokens = []
+  ): array {
+    $tokens = array_slice(
+      $contexts, $this->inc(
+        $this->indexOf( $contexts, T_DOUBLE_ARROW )
+      )
+    );
+
+    $tokens = $this->getGroupByLogicals($tokens);
+    return $tokens;
+  }  
+
+  public function getBuildClear(
+  ): void {
+    unset($this->reflectionFunction);
+    unset($this->expressionType);
+    unset($this->contexts);
+    unset($this->statics);
+    unset($this->closure);
+  }  
+  
+  public function isPossibleToCache(
+  ): bool {
+    return isset($this->cacheClassKey)
+        && isset($this->cacheMethodKey);
   }  
 }
