@@ -1,7 +1,7 @@
 <?php
 
 return array (
-  'hash' => '36af0408801758e2604669ba63902160',
+  'hash' => 'fdd30d1a1a842a1fc4e40864934d5916',
   'context' => 
   array (
     'scopes' => 
@@ -280,9 +280,18 @@ return array (
                             array (
                               0 => 
                               array (
-                                0 => 317,
-                                1 => '$startsWith',
-                                2 => 'T_VARIABLE',
+                                0 => 320,
+                                1 => 'TESTE',
+                                2 => 'T_CONSTANT_ENCAPSED_STRING',
+                              ),
+                            ),
+                            1 => 
+                            array (
+                              0 => 
+                              array (
+                                0 => 320,
+                                1 => 'TEST',
+                                2 => 'T_CONSTANT_ENCAPSED_STRING',
                               ),
                             ),
                           ),
@@ -308,9 +317,107 @@ return array (
                       ),
                       1 => 
                       array (
-                        0 => 317,
-                        1 => '$startsWith',
-                        2 => 'T_VARIABLE',
+                        0 => 320,
+                        1 => 'TESTE',
+                        2 => 'T_CONSTANT_ENCAPSED_STRING',
+                      ),
+                      2 => 
+                      array (
+                        0 => 313,
+                        1 => '%',
+                        2 => 'T_STRING',
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              1 => 
+              array (
+                0 => 'ExpLogical',
+                1 => 'Or',
+              ),
+              2 => 
+              array (
+                0 => 'ExpCompare',
+                1 => 'ExpGroup',
+                2 => 
+                array (
+                  0 => 
+                  array (
+                    0 => 'ExpField',
+                    1 => 'Proposta',
+                    2 => 'NomeProposta',
+                    3 => 'Text',
+                    4 => 
+                    array (
+                      0 => 
+                      array (
+                        0 => 
+                        array (
+                          0 => 'trim',
+                          1 => 
+                          array (
+                          ),
+                        ),
+                        1 => 
+                        array (
+                          0 => 'upper',
+                          1 => 
+                          array (
+                          ),
+                        ),
+                      ),
+                      1 => 
+                      array (
+                        0 => 
+                        array (
+                          0 => 'contains',
+                          1 => 
+                          array (
+                            0 => 
+                            array (
+                              0 => 
+                              array (
+                                0 => 320,
+                                1 => 'TESTE',
+                                2 => 'T_CONSTANT_ENCAPSED_STRING',
+                              ),
+                            ),
+                            1 => 
+                            array (
+                              0 => 
+                              array (
+                                0 => 320,
+                                1 => 'TEST',
+                                2 => 'T_CONSTANT_ENCAPSED_STRING',
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  1 => 
+                  array (
+                    0 => 'ExpEqual',
+                    1 => '!=',
+                  ),
+                  2 => 
+                  array (
+                    0 => 'ExpValue',
+                    1 => 
+                    array (
+                      0 => 
+                      array (
+                        0 => 313,
+                        1 => '%',
+                        2 => 'T_STRING',
+                      ),
+                      1 => 
+                      array (
+                        0 => 320,
+                        1 => 'TEST',
+                        2 => 'T_CONSTANT_ENCAPSED_STRING',
                       ),
                       2 => 
                       array (

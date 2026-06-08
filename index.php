@@ -5,6 +5,8 @@ define( "BASEDIR_APP", BASEDIR . "/src" );
 
 if(!defined( "CACHE_DISABLED" )) 
   define( "CACHE_DISABLED", false );
+if(!defined( "DRIVER" )) 
+  define( "DRIVER", "sqlserver" );
 if(!defined( "HOSTNAME" )) 
   define( "HOSTNAME", "localhost" );
 if(!defined( "DATABASE" )) 

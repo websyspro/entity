@@ -4,6 +4,7 @@ namespace Websyspro\Entity;
 
 use Closure;
 use Websyspro\Entity\Core\DB;
+use Websyspro\Entity\Shareds\ExpressionColumns;
 use Websyspro\Entity\Shareds\ExpressionWhere;
 
 use function sprintf;
@@ -11,7 +12,7 @@ use function sprintf;
 class Repository
 {
   public ExpressionWhere $expressionWhere;
-
+  public ExpressionColumns $expressionColumns;
   public Closure $closureIncludes;
   public Closure $closureWhere;
   public string $table;
@@ -27,10 +28,32 @@ class Repository
   public function where(
     Closure $closure
   ): Repository {
+    $start = microtime(true);
+
+
     if( isset( $this->expressionWhere ) === false ){
       $this->expressionWhere = new ExpressionWhere( $closure );
       [ $this->table, $this->where, $this->whereParams ] = $this->expressionWhere->get();
     }
+
+    $end = microtime(true);
+    printf( 'Timer Where Parse: %f (ms)' . PHP_EOL, ($end - $start) * 1000 );
+
+    return $this;
+  }
+
+  public function select(
+    Closure $closure
+  ): Repository {
+    $start = microtime(true);
+
+    if( isset( $this->expressionWhere ) === false ){
+      $this->expressionColumns = new ExpressionColumns( $closure );
+      [ $this->table, $this->where, $this->whereParams ] = $this->expressionColumns->get();
+    }
+
+    $end = microtime(true);
+    printf( 'Timer Select Parse: %f (ms)' . PHP_EOL, ($end - $start) * 1000 );    
 
     return $this;
   }

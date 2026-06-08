@@ -24,9 +24,13 @@ class UserRepository
       && $p->IsActive 
       && !$p->IsDeleted
       && $p->CreatedById = '84850ECB-2443-442A-A9B0-4555C9421227'
-      && !$p->NomeProposta->trim()->upper()->contains( $startsWith )     
+      && !$p->NomeProposta->trim()->upper()->contains( "TESTE", "TEST" )     
     );
+    $rep->select( fn( PropostaEntity $p ) => [
+      $p->Id
+    ]);
     $rep->paged( 1, 2 );
+    
     return $rep->all();
   }
 }

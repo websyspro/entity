@@ -12,6 +12,7 @@ use Websyspro\Entity\Decorations\EntityList;
 use Websyspro\Entity\Decorations\EntityName;
 use Websyspro\Entity\Decorations\Requireds\NotNull;
 use Websyspro\Entity\Shareds\AbstractEntity;
+use Websyspro\Entity\Types\Varchar;
 
 #[EntityName("Proposta")]
 class PropostaEntity
@@ -76,7 +77,7 @@ extends AbstractEntity
   public string $NomeContato;
 
   #[Text(100)]
-  public string $NomeProposta;
+  public Varchar $NomeProposta;
 
   #[Decimal(18,2)]
   public string $DescontoFinalCliente;
