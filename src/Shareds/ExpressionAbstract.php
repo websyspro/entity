@@ -375,9 +375,59 @@ class ExpressionAbstract
       )
     );
 
-    $tokens = $this->getGroupByLogicals($tokens);
+    if( $this instanceof ExpressionWhere ){
+      $tokens = $this->getGroupByLogicals($tokens);
+    }
+
     return $tokens;
-  }  
+  } 
+  
+  public function getFieldMethods(
+    array $contexts = []
+  ): array {
+    $methods = $this->groupByTypes(
+      array_slice( $contexts, 4 ), [
+        T_OBJECT_OPERATOR
+      ]
+    );
+
+    $methods = array_map(
+      function(array $contexts){
+        [ $name ] = $contexts;
+        $args = $this->groupByTypes(
+          array_slice(
+            $contexts, $this->inc(
+              $this->indexOf(
+                $contexts, T_START_PARENTESES
+              )
+            ), -1
+          ), [ T_COMMA ]
+        );
+
+        return [ $name[1], $args ];
+      }, $methods
+    );
+
+    $compareListMethods = [
+      'contains',
+      'startsWith',
+      'endsWith'
+    ];
+
+    $modifyMethods = array_filter(
+      $methods, fn(array $method) => in_array(
+        $method[0], $compareListMethods
+      ) === false
+    );
+
+    $compareMethods = array_filter(
+      $methods, fn(array $method) => in_array(
+        $method[0], $compareListMethods
+      ) === true
+    );
+
+    return [ array_values( $modifyMethods ), array_values( $compareMethods )];
+  }   
 
   public function getBuildClear(
   ): void {
@@ -392,5 +442,72 @@ class ExpressionAbstract
   ): bool {
     return isset($this->cacheClassKey)
         && isset($this->cacheMethodKey);
+  }
+
+  public function getCache(
+  ): string {
+    $cacheClassKey = md5($this->cacheClassKey);
+    $cacheMethodKey = md5($this->cacheMethodKey);
+    return "orm-$cacheClassKey-$cacheMethodKey";
+  }  
+
+  public function getParserInitial(
+    array $scopes = [],
+    array $tokens = []
+  ): array {
+    return $tokens;    
+  }
+
+  public function getParserValues(
+    array $contexts = []
+  ): array {
+    return $contexts;
+  } 
+  
+  public function getBuildsDirect(
+  ): void {
+    $this->scopes = $this->getScopesByContext( $this->contexts );
+    $this->tokens = $this->getTokensByContext( $this->contexts );
+    $this->tokens = $this->getParserInitial(
+      $this->scopes, $this->tokens
+    );
+
+    Cache::save(
+      $this->getCache(), [
+        'hash' => md5( serialize( $this->contexts)),
+        'context' => [
+          'scopes' => $this->scopes,
+          'tokens' => $this->tokens
+        ]
+      ]     
+    );
+
+    $this->tokens = $this->getParserValues($this->tokens);
+    $this->getBuildClear();
+  }
+
+  public function getBuilds(
+  ): void {
+    if($this->isPossibleToCache()){
+      if(Cache::exist($this->getCache())){
+        [ 'hash' => $hash, 'context' => $context 
+        ] = Cache::load( $this->getCache());
+        if( $hash === md5( serialize( $this->contexts ))){
+          $this->scopes = $context['scopes'];
+          $this->tokens = $this->getParserValues( $context['tokens']);
+          $this->getBuildClear();
+        } else $this->getBuildsDirect();
+      } else $this->getBuildsDirect();
+    } else $this->getBuildsDirect();
+  }
+  
+  public function startups(
+  ): void {
+    $this->getFileRows();
+    $this->getStatics();
+    $this->getCacheKey();
+    $this->getUsesRows();
+    $this->getContexts();
+    $this->getBuilds();
   }  
 }

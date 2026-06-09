@@ -24,17 +24,17 @@ class UserRepository
       && $p->IsActive 
       && !$p->IsDeleted
       && $p->CreatedById = '84850ECB-2443-442A-A9B0-4555C9421227'
-      && !$p->NomeProposta->trim()->upper()->contains( "TESTE", "TEST" )     
+      && $p->NomeProposta->trim()->upper()->contains( $startsWith )     
     );
     $rep->select(fn( PropostaEntity $p ) => [
-      $p->Id, $p->NomeProposta
+      $p->Id, $p->NomeProposta->sum()
     ]);
-    $rep->paged( 1, 2 );
+    $rep->paged( 1, 1 );
 
     return $rep->all();
   }
 }
 
 $UserRepository = new UserRepository();
-$getAll = $UserRepository->getAll( "01/01/2024", "31/12/2024", "TEST" );
+$getAll = $UserRepository->getAll( "01/01/2024", "31/12/2024", "TERESOPOLIS" );
 print_r($getAll);
