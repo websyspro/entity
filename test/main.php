@@ -21,13 +21,15 @@ class UserRepository
     $rep->where( fn( PropostaEntity $p ) => 
       $p->Created >= $dateStart 
       && $p->Created <= $dateEnd
-      && $p->IsActive 
-      && !$p->IsDeleted
+      && $p->IsActive == true
+      && $p->IsDeleted == false
       && $p->CreatedById = '84850ECB-2443-442A-A9B0-4555C9421227'
       && $p->NomeProposta->trim()->upper()->contains( $startsWith )     
     );
     $rep->select(fn( PropostaEntity $p ) => [
-      $p->Id, $p->NomeProposta->sum()
+      $p->Id, $p->NomeContato, $p->NomeProposta->sum(
+        fn(PropostaEntity $p) => $p->DescontoFinalCliente * $p->DescontoFinalCliente
+      )
     ]);
     $rep->paged( 1, 1 );
 

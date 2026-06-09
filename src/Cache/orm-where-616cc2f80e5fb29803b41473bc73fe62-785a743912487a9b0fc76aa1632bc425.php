@@ -1,7 +1,7 @@
 <?php
 
 return array (
-  'hash' => 'feeea448122cce7441c9d6567f066c75',
+  'hash' => 'b45bbd40aeeb2071ec662bcfc8e7ebfd',
   'context' => 
   array (
     'scopes' => 
@@ -112,7 +112,7 @@ return array (
               0 => 
               array (
                 0 => 313,
-                1 => 1,
+                1 => 'true',
                 2 => 'T_STRING',
               ),
             ),
@@ -126,49 +126,41 @@ return array (
       ),
       4 => 
       array (
-        0 => 'ExpDenying',
+        0 => 'ExpCompare',
         1 => 'ExpIntial',
         2 => 
         array (
           0 => 
           array (
-            0 => 'ExpCompare',
-            1 => 'ExpDenying',
-            2 => 
+            0 => 'ExpField',
+            1 => 'Proposta',
+            2 => 'IsDeleted',
+            3 => 'Flag',
+            4 => 
             array (
               0 => 
               array (
-                0 => 'ExpField',
-                1 => 'Proposta',
-                2 => 'IsDeleted',
-                3 => 'Flag',
-                4 => 
-                array (
-                  0 => 
-                  array (
-                  ),
-                  1 => 
-                  array (
-                  ),
-                ),
               ),
               1 => 
               array (
-                0 => 'ExpEqual',
-                1 => '==',
               ),
-              2 => 
+            ),
+          ),
+          1 => 
+          array (
+            0 => 'ExpEqual',
+            1 => '==',
+          ),
+          2 => 
+          array (
+            0 => 'ExpValue',
+            1 => 
+            array (
+              0 => 
               array (
-                0 => 'ExpValue',
-                1 => 
-                array (
-                  0 => 
-                  array (
-                    0 => 313,
-                    1 => 0,
-                    2 => 'T_STRING',
-                  ),
-                ),
+                0 => 313,
+                1 => 'false',
+                2 => 'T_STRING',
               ),
             ),
           ),

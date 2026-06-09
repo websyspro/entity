@@ -8,7 +8,9 @@ class ColumnAbstract
     return $this;
   }
 
-  public function sum(): self {
+  public function sum(
+    mixed $mixed = null
+  ): self {
     return $this;
   }  
 

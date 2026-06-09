@@ -1,7 +1,7 @@
 <?php
 
 return array (
-  'hash' => 'ef2bef3506a3167feb86924e01f6642c',
+  'hash' => 'dc2d2b6e84bfbeae69af6c3e0e06a9d8',
   'context' => 
   array (
     'scopes' => 
@@ -60,34 +60,136 @@ return array (
       7 => 
       array (
         0 => 313,
-        1 => 'NomeProposta',
+        1 => 'NomeContato',
         2 => 'T_STRING',
       ),
       8 => 
+      array (
+        0 => 44,
+        1 => ',',
+        2 => 'T_COMMA',
+      ),
+      9 => 
+      array (
+        0 => 317,
+        1 => '$p',
+        2 => 'T_VARIABLE',
+      ),
+      10 => 
       array (
         0 => 390,
         1 => '->',
         2 => 'T_OBJECT_OPERATOR',
       ),
-      9 => 
+      11 => 
+      array (
+        0 => 313,
+        1 => 'NomeProposta',
+        2 => 'T_STRING',
+      ),
+      12 => 
+      array (
+        0 => 390,
+        1 => '->',
+        2 => 'T_OBJECT_OPERATOR',
+      ),
+      13 => 
       array (
         0 => 313,
         1 => 'sum',
         2 => 'T_STRING',
       ),
-      10 => 
+      14 => 
       array (
         0 => 40,
         1 => '(',
         2 => 'T_START_PARENTESES',
       ),
-      11 => 
+      15 => 
+      array (
+        0 => 348,
+        1 => 'fn',
+        2 => 'T_FN',
+      ),
+      16 => 
+      array (
+        0 => 40,
+        1 => '(',
+        2 => 'T_START_PARENTESES',
+      ),
+      17 => 
+      array (
+        0 => 313,
+        1 => 'PropostaEntity',
+        2 => 'T_STRING',
+      ),
+      18 => 
+      array (
+        0 => 317,
+        1 => '$p',
+        2 => 'T_VARIABLE',
+      ),
+      19 => 
       array (
         0 => 41,
         1 => ')',
         2 => 'T_END_PARENTESES',
       ),
-      12 => 
+      20 => 
+      array (
+        0 => 269,
+        1 => '=>',
+        2 => 'T_DOUBLE_ARROW',
+      ),
+      21 => 
+      array (
+        0 => 317,
+        1 => '$p',
+        2 => 'T_VARIABLE',
+      ),
+      22 => 
+      array (
+        0 => 390,
+        1 => '->',
+        2 => 'T_OBJECT_OPERATOR',
+      ),
+      23 => 
+      array (
+        0 => 313,
+        1 => 'DescontoFinalCliente',
+        2 => 'T_STRING',
+      ),
+      24 => 
+      array (
+        0 => 42,
+        1 => '*',
+        2 => 'T_MULTIPLY',
+      ),
+      25 => 
+      array (
+        0 => 317,
+        1 => '$p',
+        2 => 'T_VARIABLE',
+      ),
+      26 => 
+      array (
+        0 => 390,
+        1 => '->',
+        2 => 'T_OBJECT_OPERATOR',
+      ),
+      27 => 
+      array (
+        0 => 313,
+        1 => 'DescontoFinalCliente',
+        2 => 'T_STRING',
+      ),
+      28 => 
+      array (
+        0 => 41,
+        1 => ')',
+        2 => 'T_END_PARENTESES',
+      ),
+      29 => 
       array (
         0 => 93,
         1 => ']',
