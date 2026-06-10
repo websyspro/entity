@@ -204,34 +204,34 @@ class ExpressionAbstract
   }
 
   public function getContextsNotEnds(
-    array $tokens,
+    array $contexts,
     int $parenteses = 0
   ): array {
-    for($i=0; $i<count($tokens); $i++){
-      if($tokens[$i][0] === T_START_PARENTESES){
+    for($i=0; $i<count($contexts); $i++){
+      if($contexts[$i][0] === T_START_PARENTESES){
         $parenteses++;
       }
 
-      if($tokens[$i][0] === T_END_PARENTESES){
+      if($contexts[$i][0] === T_END_PARENTESES){
         $parenteses--;
 
         if($parenteses < 0){
-          $tokens = array_slice(
-            $tokens, 0, $i
+          $contexts = array_slice(
+            $contexts, 0, $i
           ); break;
         }          
       }
 
       if($parenteses < 1){
-        if($tokens[$i][0] === T_SEMICOLON){
-          $tokens = array_slice(
-            $tokens, 0, $i
+        if($contexts[$i][0] === T_SEMICOLON){
+          $contexts = array_slice(
+            $contexts, 0, $i
           ); break;
         }
       }
     };
 
-    return $tokens;
+    return $contexts;
   }
   
   private function namberToken(
@@ -272,7 +272,9 @@ class ExpressionAbstract
       $value = trim( $value, '"\'' );
     }  
 
-    return [ $number, $value, $this->namberToken($number)];
+    return [ $number, $value
+      // , $this->namberToken($number)
+    ];
   }  
   
   public function getContext(

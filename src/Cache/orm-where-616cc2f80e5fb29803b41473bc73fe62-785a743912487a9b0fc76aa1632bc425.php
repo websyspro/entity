@@ -1,7 +1,7 @@
 <?php
 
 return array (
-  'hash' => 'b45bbd40aeeb2071ec662bcfc8e7ebfd',
+  'hash' => '78eed7f680c0a27b781be0bc32a129af',
   'context' => 
   array (
     'scopes' => 
@@ -53,7 +53,6 @@ return array (
               array (
                 0 => 317,
                 1 => '$dateStart',
-                2 => 'T_VARIABLE',
               ),
             ),
           ),
@@ -66,7 +65,6 @@ return array (
               array (
                 0 => 317,
                 1 => '$dateEnd',
-                2 => 'T_VARIABLE',
               ),
             ),
           ),
@@ -113,7 +111,6 @@ return array (
               array (
                 0 => 313,
                 1 => 'true',
-                2 => 'T_STRING',
               ),
             ),
           ),
@@ -160,7 +157,6 @@ return array (
               array (
                 0 => 313,
                 1 => 'false',
-                2 => 'T_STRING',
               ),
             ),
           ),
@@ -207,7 +203,6 @@ return array (
               array (
                 0 => 320,
                 1 => '84850ECB-2443-442A-A9B0-4555C9421227',
-                2 => 'T_CONSTANT_ENCAPSED_STRING',
               ),
             ),
           ),
@@ -268,7 +263,6 @@ return array (
                           array (
                             0 => 317,
                             1 => '$startsWith',
-                            2 => 'T_VARIABLE',
                           ),
                         ),
                       ),
@@ -296,7 +290,6 @@ return array (
                   array (
                     0 => 317,
                     1 => '$startsWith',
-                    2 => 'T_VARIABLE',
                   ),
                   2 => 
                   array (
