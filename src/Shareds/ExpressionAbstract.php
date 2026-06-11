@@ -181,7 +181,6 @@ class ExpressionAbstract
       return $this->entitys[ $entity ];
     }
     
-    var_dump($entity);
     $this->entitys[ $entity ] = new EntityStructure( $entity );
     $this->entitys[ $entity ] = $this->entitys[ $entity ]->get();
     return $this->entitys[ $entity ];

@@ -41,5 +41,4 @@ $getAll = $UserRepository->getAll( "01/01/2024", "31/12/2024", "TERESOPOLIS" );
 
 $microTimerEnd = microtime(true);
 printf( "%f(ms)\n", bcmul( bcsub( $microTimerEnd, $microTimerStart, 4 ), 1000, 4 ));
-
 print_r($getAll);
