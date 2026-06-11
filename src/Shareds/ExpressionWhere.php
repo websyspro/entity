@@ -103,7 +103,11 @@ extends ExpressionAbstract
 
     return [ 
       T_EXP_COMPARE,
-      $parent, $scopes, [ $childsLeft, $childsEqual, $childsRight ]
+      $parent, $scopes, [ 
+        $childsLeft, 
+        $childsEqual,
+        $childsRight
+      ]
     ];
   }
   
