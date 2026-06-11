@@ -2,7 +2,7 @@
 
 namespace Websyspro\Entity\Shareds;
 
-use function in_array, count, array_slice;
+use function ord, in_array, count, array_slice, sprintf, is_string;
 use ReflectionFunction;
 use Closure;
 
@@ -44,18 +44,21 @@ class ExpressionAbstract
 {
   public ExpressionType $expressionType;  
   public ReflectionFunction $reflectionFunction;
-  public string $cacheClassKey;
-  public string $cacheMethodKey;
+  public string $cacheClass;
+  public string $cacheMethod;
   public array $scopes = [];
   public array $statics = [];
   public array $params = [];  
   public array $contexts = [];
   public array $tokens = [];
   public array $uses = [];
+  public array $entitys = [];
 
   public function __construct(
     public Closure $closure
-  ){}
+  ){
+    $this->analysisLexical();
+  }
 
   public function inc(
     int $number
@@ -69,6 +72,28 @@ class ExpressionAbstract
   ): int {
     return (--$number) - $decNumner;
   }
+
+  public function slice(
+    array $items,
+    int $offset,
+    int|null $length = null
+  ): array {
+    return array_slice( $items, $offset, $length );
+  }  
+
+  public function mapper(
+    array $items,
+    Closure $closure
+  ): array {
+    return array_map( $closure, $items );
+  }
+
+  public function where(
+    array $items,
+    Closure $closure
+  ): array {
+    return array_values( array_filter( $items, $closure ));
+  }  
 
   public function indexOf(
     array $tokens,
@@ -84,8 +109,8 @@ class ExpressionAbstract
   }
 
   public function groupByTypes(
-    array $tokens,
     array $type,
+    array $tokens,
      bool $showKey = false,
     array $curr = [],
     array $accu = [],
@@ -118,92 +143,7 @@ class ExpressionAbstract
     return $accu;
   }
 
-  public function getFileRows(
-  ): void {
-    $this->reflectionFunction = new ReflectionFunction($this->closure);
-    if( $this->reflectionFunction instanceof ReflectionFunction ){
-      $this->tokens = file( $this->reflectionFunction->getFileName());
-
-      if( count( $this->tokens ) !== 0 ){
-        $this->tokens = array_map(
-          function(string $token){
-            $strPos = strpos($token, '//');
-            return $strPos 
-              ? substr($token, 0, $strPos)
-              : $token;
-          }, $this->tokens 
-        );
-      }
-    }
-  }
-
-  public function getUsesRows(
-  ): void {
-    $this->uses = array_values(
-      array_filter(
-        $this->tokens, fn(string $token) => (
-          str_starts_with( trim( $token), 'use')
-        )
-      )
-    );
-
-    $this->uses = array_map( 
-      fn(string $token) => (
-        str_replace([ 'use',';' ], '', $token)
-      ), $this->uses
-    );
-
-    $this->uses = array_map(
-      function(string $token){
-        if( strpos($token, 'as') !== false ){
-          [ $use, $key ] = explode( 'as', $token );
-          return [ trim($use), trim($key)];
-        } else {
-          $useImplits = explode('\\', $token);
-          return [
-            trim( implode( '\\', array_slice($useImplits, 0))), 
-            trim( implode( '\\', array_slice($useImplits, -1)))
-          ];
-        }
-      }, $this->uses
-    );
-  }
-
-  public function getUse(
-    string $variable
-  ): string|null {
-    [ $uses ] = array_values(
-      array_filter(
-        $this->uses, fn(array $use) => $use[1] === $variable
-      )
-    );
-
-    return $uses[0] ?? null;
-  }
- 
-  public function getCacheKey(
-    int $i = 0
-  ): void {
-    for($i=count($this->tokens) - 1; $i>=0; $i--){
-      if(strpos($this->tokens[$i], 'function') !== false){
-        if(isset($this->cacheMethodKey) === false){
-          $this->cacheMethodKey = preg_replace([
-            "#^.*function\s*#", "#\s*\(.*$#"
-          ], "", trim($this->tokens[$i]));
-        }
-      }
-
-      if(strpos($this->tokens[$i], 'class') !== false){
-        if(isset($this->cacheClassKey) === false){
-          $this->cacheClassKey = preg_replace([
-            "#^.*class\s*#", "#\s*\{.*$#"
-          ], "", trim($this->tokens[$i]));
-        }
-      }
-    }
-  }
-
-  public function getContextsNotEnds(
+  public function contextsNotEnds(
     array $contexts,
     int $parenteses = 0
   ): array {
@@ -234,7 +174,112 @@ class ExpressionAbstract
     return $contexts;
   }
   
-  private function namberToken(
+  public function entity(
+    string $entity
+  ): array {
+    // if( isset( $this->entitys[ $entity ])){
+    //   return $this->entitys[ $entity ];
+    // }
+
+    
+
+    // $this->entitys[ $entity ] = new EntityStructure( $entity );
+    // return $this->entitys[ $entity ]->get();
+    return [];
+  }
+
+  public function scopeByField(
+    array $scopes = [],
+    array $childs = [] 
+  ): string|null {
+    if( empty( $scopes )){
+      return null;
+    }
+
+    $scopes = $this->where(
+      $scopes, fn( array $scope ) => $scope[0] === $childs[0][1]
+    );
+
+    if( empty( $scopes )){
+      return null;
+    }
+
+    return $scopes[0][1];
+  }
+
+  public function analysisLexicalTokens(
+  ): void {
+    $this->reflectionFunction = new ReflectionFunction( $this->closure );
+    if( $this->reflectionFunction instanceof ReflectionFunction ){
+      $this->tokens = file( $this->reflectionFunction->getFileName());
+
+      if( count( $this->tokens ) !== 0 ){
+        $this->tokens = $this->mapper(
+          $this->tokens, function(string $token){
+            $strPos = strpos($token, '//');
+            return $strPos ? substr($token, 0, $strPos) : $token;
+          }
+        );
+      }
+    }
+  }
+
+  public function analysisLexicalUses(
+  ): void {
+    $this->uses = $this->where(
+      $this->tokens, fn(string $row) => str_starts_with( 
+        trim( $row), 'use'
+      )
+    );
+
+    $this->uses = $this->mapper(
+      $this->uses, function(string $row){
+        $use = str_replace(
+          [ 'use',';' ], '', $row
+        );
+
+        if( strpos($use, 'as') !== false ){
+          [ $use, $key ] = explode( 'as', $use );
+          return [ trim($use), trim($key)];
+        } else {
+          $useImplits = explode('\\', $use);
+          return [
+            trim( implode( '\\', array_slice( $useImplits, -1 ))),
+            trim( implode( '\\', array_slice( $useImplits, 0 )))
+          ];
+        }        
+      }
+    );
+  }
+
+  public function analysisLexicalOrigins(
+  ): void {
+    for( $i=count( $this->tokens ) - 1; $i>=0; $i-- ){
+      if( strpos( $this->tokens[$i], 'function' ) !== false ){
+        if( isset( $this->cacheMethod ) === false ){
+          $this->cacheMethod = preg_replace([
+            "#^.*function\s*#", "#\s*\(.*$#"
+          ], "", trim( $this->tokens[ $i ]));
+        }
+      }
+      
+      if( strpos( $this->tokens[$i], 'class' ) !== false ){
+        if(isset( $this->cacheClass ) === false ){
+          $this->cacheClass = preg_replace([
+            "#^.*class\s*#", "#\s*\{.*$#"
+          ], "", trim( $this->tokens[ $i ]));
+        }
+      }      
+    }
+  }
+
+  public function analysisLexicalStatics(
+  ): void {
+    $this->statics = $this->reflectionFunction
+      ->getStaticVariables();    
+  }
+
+  public function namberToken(
     int $namberToken
   ): string {
     return match( $namberToken ){
@@ -262,7 +307,7 @@ class ExpressionAbstract
     };
   }  
 
-  private function createToken(
+  public function createToken(
     string|array $tokenArgs
   ): array {
     [ $number, $value ] = is_string( $tokenArgs ) 
@@ -272,244 +317,179 @@ class ExpressionAbstract
       $value = trim( $value, '"\'' );
     }  
 
-    return [ $number, $value
-      // , $this->namberToken($number)
-    ];
+    return [ $number, $value, $this->namberToken($number)];
   }  
-  
-  public function getContext(
-    array $contexts = []
-  ): array {
-    return $this->getContextsNotEnds(
-      array_slice( $contexts, $this->inc(
-        $this->indexOf( $contexts, T_FN )
-      ))
-    );
-  }
 
-  public function getContexts(
+  public function analysisLexicalContexts(
   ): void {
-    $this->contexts = array_slice(
-      $this->tokens, 
-      $this->reflectionFunction->getStartLine() - 1,
-      $this->reflectionFunction->getEndLine() - 
-      $this->reflectionFunction->getStartLine() + 1
-    );
-
     $this->contexts = array_slice(
       token_get_all(
         sprintf( '<?php %s', implode(
-          '', $this->contexts
+          '', array_slice(
+            $this->tokens, 
+            $this->reflectionFunction->getStartLine() - 1,
+            $this->reflectionFunction->getEndLine() - 
+            $this->reflectionFunction->getStartLine() + 1
+          )
         ))
+      ), 1
+    ); 
+    
+    $this->contexts = $this->mapper(
+      $this->contexts, fn(array|string $token) => (
+        $this->createToken($token)
+      ) 
+    );
+
+    $this->contexts = $this->where(
+      $this->contexts, fn(array $token) => (
+        $token[0] !== T_WHITESPACE
+      ) 
+    );
+  }
+
+  public function analysisLexicalScopesExtracts(
+    array $contexts = []
+  ): array {
+    $this->scopes = $this->groupByTypes(
+      [ T_COMMA ], $this->slice(
+        $this->slice( $contexts, 
+          $this->inc( $this->indexOf( $contexts, T_FN )),
+          $this->dec( $this->indexOf( $contexts, T_DOUBLE_ARROW ))
+        ), 1, -1 
+      )
+    );
+
+    return $this->mapper(
+      $this->scopes, fn( array $scope ) => [
+        $scope[1][1], $this->where(
+          $this->uses, fn( array $use ) => $use[0] === $scope[0][1]
+        )[0][1]
+      ]
+    );      
+  }
+
+  public function analysisLexicalScopes(
+  ): void {
+    $this->scopes = $this->analysisLexicalScopesExtracts( $this->contexts );
+    $this->contexts = $this->contextsNotEnds(
+      $this->slice( $this->contexts, $this->inc( $this->indexOf(
+        $this->contexts, T_DOUBLE_ARROW
+      )))
+    );
+  }
+
+  public function isDenying(
+    array $tokens = []
+  ): bool {
+    return $tokens[0][0] === T_NOT;
+  }
+  
+  public function isGroup(
+    array $tokens = []
+  ): bool {
+    return $tokens[0][0] === T_START_PARENTESES;
+  }
+  
+  public function getSubQueryMethod(
+    array $tokens = []    
+  ): array|null {
+    $subQueryMethod = array_slice(
+      $tokens, $this->dec(
+        $this->indexOf(
+          $tokens, T_FN), 1
       ), 1
     );
 
-    $this->contexts = array_map(
-      fn(string|array $token) => (
-        $this->createToken($token)
-      ), $this->contexts
-    );
-
-    $this->contexts = array_values(
-      array_filter(
-        $this->contexts, fn(array $token) => !in_array( 
-          $token[0], [ T_WHITESPACE, T_CURLY_OPEN, T_END_BRACE, T_DOT ]
-        )
-      )
-    );
-
-    $this->contexts = $this->getContext($this->contexts);
-  }
-  
-  public function getStatics(
-  ): void {
-    $this->statics = $this->reflectionFunction
-      ->getStaticVariables();
-  }
-
-  public function getGroupByLogicals(
-    array $tokens
-  ): array {
-    return $this->groupByTypes(
-      $tokens, [ T_LOGICAL_AND, T_LOGICAL_OR, T_BOOLEAN_AND, T_BOOLEAN_OR ], true
-    );
+    return $subQueryMethod ?? null;
   }  
 
-  public function getScopesByContext(
-    array $contexts,
-    array $scopes = [],
-    array $scopesPaarent = []
-  ): array {
-    $scopes = $this->groupByTypes(
-      array_slice( $contexts, 1, $this->dec(
-          $this->indexOf( $contexts, T_END_PARENTESES )
-      )), [ T_COMMA ]
-    );
-
-    $scopes = array_map(
-      function(array $scope){
-        [ $instance, $variable ] = $scope;
-        $instance = $this->getUse(
-          $instance[1]
-        );
-
-        $metadata = new EntityStructure($instance);
-        $metadata = $metadata->get();
-
-        return [ 
-          $instance,
-          $metadata->contexts[T_Entity][0],
-          $variable[1]
-        ];
-      }, $scopes
-    );
-
-    return [ ...$scopesPaarent, ...$scopes ];
+  public function isSubQuery(
+    array $contexts = []    
+  ): bool {
+    [ $subQueryMethod ] = $this->getSubQueryMethod($contexts);
+    return in_array( $subQueryMethod[1], [ 'any' ]);
+  }
+  
+  public function isLogical(
+    array $tokens = []
+  ): bool {
+    [ $tokens ] = $tokens;
+    [ $log ] = $tokens;
+    return in_array( $log, [
+      T_LOGICAL_AND, T_LOGICAL_OR, T_BOOLEAN_AND, T_BOOLEAN_OR 
+    ]);
+  }
+  
+  public function isCompare(
+    array $tokens = []
+  ): bool {
+    return empty(
+      array_filter( $tokens, fn(array $token) => in_array( $token[0], [
+        T_IS_NOT_IDENTICAL, T_IS_GREATER_OR_EQUAL, T_IS_SMALLER_OR_EQUAL,
+        T_EQUAL, T_IS_EQUAL, T_IS_IDENTICAL, T_IS_NOT_EQUAL,
+        T_GREATER_THAN, T_LESS_THAN
+      ]))
+    ) ? false : true;
   }
 
-  public function getTokensByContext(
-    array $contexts,
+  public function isUnary(
     array $tokens = []
-  ): array {
-    $tokens = array_slice(
-      $contexts, $this->inc(
-        $this->indexOf( $contexts, T_DOUBLE_ARROW )
-      )
-    );
+  ): bool {
+    return $this->isCompare($tokens) === false;
+  }  
 
-    if( $this instanceof ExpressionWhere ){
-      $tokens = $this->getGroupByLogicals($tokens);
+  public function getExpType(
+    array $contexts = []
+  ): string|null {
+    if( $this->isDenying( $contexts )){
+      return T_EXP_DENYING;
+    } else if( $this->isGroup( $contexts )){
+      return T_EXP_GROUP;
+    } else if( $this->isSubQuery( $contexts )){
+      return T_EXP_SUBQUERY;
+    } else if( $this->isLogical( $contexts )){
+      return T_EXP_LOGICAL;
+    } else if( $this->isCompare( $contexts )){
+      return T_EXP_COMPARE;
+    } else if( $this->isUnary( $contexts )){
+      return T_EXP_UNARY;
+    }
+      
+    return null;
+  }
+
+  public function isField(
+    array $contexts = []
+  ): bool {
+    if( count( $contexts ) < 3 ){
+      return false;
     }
 
-    return $tokens;
-  } 
-  
-  public function getFieldMethods(
-    array $contexts = []
-  ): array {
-    $methods = $this->groupByTypes(
-      array_slice( $contexts, 4 ), [
-        T_OBJECT_OPERATOR
-      ]
-    );
-
-    $methods = array_map(
-      function(array $contexts){
-        [ $name ] = $contexts;
-        $args = $this->groupByTypes(
-          array_slice(
-            $contexts, $this->inc(
-              $this->indexOf(
-                $contexts, T_START_PARENTESES
-              )
-            ), -1
-          ), [ T_COMMA ]
-        );
-
-        return [ $name[1], $args ];
-      }, $methods
-    );
-
-    $compareListMethods = [
-      'contains',
-      'startsWith',
-      'endsWith'
-    ];
-
-    $modifyMethods = array_filter(
-      $methods, fn(array $method) => in_array(
-        $method[0], $compareListMethods
-      ) === false
-    );
-
-    $compareMethods = array_filter(
-      $methods, fn(array $method) => in_array(
-        $method[0], $compareListMethods
-      ) === true
-    );
-
-    return [ array_values( $modifyMethods ), array_values( $compareMethods )];
-  }   
-
-  public function getBuildClear(
-  ): void {
-    unset($this->reflectionFunction);
-    unset($this->expressionType);
-    unset($this->contexts);
-    unset($this->statics);
-    unset($this->closure);
-  }  
-  
-  public function isPossibleToCache(
-  ): bool {
-    return isset($this->cacheClassKey)
-        && isset($this->cacheMethodKey);
-  }
-
-  public function getCache(
-  ): string {
-    $cacheClassKey = md5($this->cacheClassKey);
-    $cacheMethodKey = md5($this->cacheMethodKey);
-    return "orm-$cacheClassKey-$cacheMethodKey";
-  }  
-
-  public function getParserInitial(
-    array $scopes = [],
-    array $tokens = []
-  ): array {
-    return $tokens;    
-  }
-
-  public function getParserValues(
-    array $contexts = []
-  ): array {
-    return $contexts;
-  } 
-  
-  public function getBuildsDirect(
-  ): void {
-    $this->scopes = $this->getScopesByContext( $this->contexts );
-    $this->tokens = $this->getTokensByContext( $this->contexts );
-    $this->tokens = $this->getParserInitial(
-      $this->scopes, $this->tokens
-    );
-
-    Cache::save(
-      $this->getCache(), [
-        'hash' => md5( serialize( $this->contexts)),
-        'context' => [
-          'scopes' => $this->scopes,
-          'tokens' => $this->tokens
-        ]
-      ]     
-    );
-
-    $this->tokens = $this->getParserValues($this->tokens);
-    $this->getBuildClear();
-  }
-
-  public function getBuilds(
-  ): void {
-    if($this->isPossibleToCache()){
-      if(Cache::exist($this->getCache())){
-        [ 'hash' => $hash, 'context' => $context 
-        ] = Cache::load( $this->getCache());
-        if( $hash === md5( serialize( $this->contexts ))){
-          $this->scopes = $context['scopes'];
-          $this->tokens = $this->getParserValues( $context['tokens']);
-          $this->getBuildClear();
-        } else $this->getBuildsDirect();
-      } else $this->getBuildsDirect();
-    } else $this->getBuildsDirect();
+    return $contexts[0][0] === T_VARIABLE
+        && $contexts[1][0] === T_OBJECT_OPERATOR
+        && $contexts[2][0] === T_STRING;
   }
   
-  public function startups(
+  public function analysisLexicalInit(
+  ): void {}
+
+  public function analysisLexicalClear(
   ): void {
-    $this->getFileRows();
-    $this->getStatics();
-    $this->getCacheKey();
-    $this->getUsesRows();
-    $this->getContexts();
-    $this->getBuilds();
-  }  
+    unset( $this->tokens );
+    unset( $this->closure );
+    unset( $this->reflectionFunction );
+  }
+  
+  public function analysisLexical(
+  ): void {
+    $this->analysisLexicalTokens();
+    $this->analysisLexicalUses();
+    $this->analysisLexicalOrigins();
+    $this->analysisLexicalStatics();
+    $this->analysisLexicalContexts();
+    $this->analysisLexicalScopes();
+    $this->analysisLexicalInit();
+    $this->analysisLexicalClear();
+  }
 }

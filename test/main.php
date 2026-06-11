@@ -1,7 +1,10 @@
 <?php
 
-use Websyspro\Entity\Repository;
+use Websyspro\Entity\Shareds\ExpressionWhere;
+use Websyspro\Test\Crm\Entitys\ItemPropostaEntity;
 use Websyspro\Test\Crm\Entitys\PropostaEntity;
+
+$microTimerStart = microtime(true);
 
 class UserRepository
 {
@@ -17,26 +20,26 @@ class UserRepository
     string $dateEnd,
     string $startsWith
   ): mixed {
-    $rep = new Repository( PropostaEntity::class );
-    $rep->where( fn( PropostaEntity $p ) => 
-      $p->Created >= $dateStart 
-      && $p->Created <= $dateEnd
-      && $p->IsActive == true
-      && $p->IsDeleted == false
-      && $p->CreatedById = '84850ECB-2443-442A-A9B0-4555C9421227'
-      && $p->NomeProposta->trim()->upper()->contains( $startsWith )     
-    );
-    $rep->select(fn( PropostaEntity $p ) => [
-      $p->Id, $p->NomeContato, $p->NomeProposta->sum(
-        fn(PropostaEntity $p) => $p->DescontoFinalCliente * $p->DescontoFinalCliente
-      )
-    ]);
-    $rep->paged( 1, 1 );
+    $expressionWhere = new ExpressionWhere(
+      fn( PropostaEntity $p ) => (
+        $p->Created >= $dateStart 
+        && $p->Created <= $dateEnd
+        && $p->IsActive == true
+        && $p->IsDeleted == false
+        && $p->CreatedById = '84850ECB-2443-442A-A9B0-4555C9421227'
+        && $p->NomeProposta->trim()->upper()->contains( $startsWith )
+        && !$p->itemsProposta->any( fn(ItemPropostaEntity $i) => $i->PropostaId == $p->Id && $i->IsActive )
+      ) 
+    );    
 
-    return $rep->all();
+    return $expressionWhere;
   }
 }
 
 $UserRepository = new UserRepository();
 $getAll = $UserRepository->getAll( "01/01/2024", "31/12/2024", "TERESOPOLIS" );
+
+$microTimerEnd = microtime(true);
+printf( "%f (ms)\n", bcmul( bcsub( $microTimerEnd, $microTimerStart, 4 ), 1000, 4 ));
+
 print_r($getAll);

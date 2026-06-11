@@ -24,7 +24,7 @@ use Websyspro\Entity\Decorations\EntityName;
 use Websyspro\Entity\Decorations\Generations\AutoIncrement;
 use Websyspro\Entity\Decorations\Requireds\NotNull;
 use Websyspro\Entity\Decorations\Statistics\Index;
-use function in_array, count, is_array, is_object, sprintf;
+use function in_array, count, sprintf;
 
 /* defined consts to objects */
 define( 'T_Entity', 'entity' );
@@ -50,38 +50,18 @@ class EntityStructure
     public string $class
   ){}
 
-  public static function where(
-    array|object $array,
-    Closure $closure,
-    array $arrayFromArry = []
+  public function mapper(
+    array $items,
+    Closure $closure
   ): array {
-    foreach($array as $key => $val){
-      if(is_numeric($key)){
-        $closure($val, $key) ? $arrayFromArry[] = $val : [];
-      } else {
-        $closure($val, $key) ? $arrayFromArry[$key] = $val : [];
-      }
-    }
-
-    return $arrayFromArry;
+    return array_map( $closure, $items );
   }
 
-  public static function map(
-    array|object $array,
+  public function where(
+    array $items,
     Closure $closure
-  ): array|object {
-    if(is_array($array)){
-      foreach($array as $key => $val){
-        $array[$key] = $closure($val, $key);
-      }
-    } else
-    if(is_object($array)){
-      foreach($array as $key => $val){
-        $array->{$key} = $closure($val, $key);
-      }      
-    }
-
-    return $array;
+  ): array {
+    return array_values( array_filter( $items, $closure ));
   }
 
   private function getGroupByNumber(
@@ -93,7 +73,7 @@ class EntityStructure
       $contextsArr[$group][] = $key;
     }
     
-    return $this->map(
+    return $this->mapper(
       $contextsArr, fn(array $items) => sprintf(
         '%s_%s', $contextsLabel, join( '_', $items )
       )
@@ -162,7 +142,7 @@ class EntityStructure
   private function getColumns(
     ReflectionClass $reflectionClass
   ): array {
-    return $this->map(
+    return $this->mapper(
       $reflectionClass->getProperties(
         ReflectionProperty::IS_PUBLIC
       ), fn( ReflectionProperty $p ) => $p->name
@@ -229,7 +209,7 @@ class EntityStructure
   
   private function getReflectionAlias(
   ): void {
-    $this->contexts[T_Alias] = $this->map(
+    $this->contexts[T_Alias] = $this->mapper(
       $this->getReflectionByAttribute(
         ColumnName::class, true
       ), fn(ColumnName  $columnName ) => $columnName->columnName
@@ -238,7 +218,7 @@ class EntityStructure
 
   private function getReflectionIndex(
   ): void {
-    $this->contexts[T_Indexes] = $this->map(
+    $this->contexts[T_Indexes] = $this->mapper(
       $this->getReflectionByAttribute(
         Index::class, true
       ), fn(Index $index) => $index->indexGroup 
@@ -251,7 +231,7 @@ class EntityStructure
 
   private function getReflectionUniques(
   ): void {
-    $this->contexts[T_Uniques] = $this->map(
+    $this->contexts[T_Uniques] = $this->mapper(
       $this->getReflectionByAttribute(
         Unique::class, true
       ), fn(Unique $unique) => $unique->uniqueGroup 
@@ -268,7 +248,7 @@ class EntityStructure
       ForeignKey::class, true
     );
 
-    $this->contexts[T_Foreign_Keys] = $this->map(
+    $this->contexts[T_Foreign_Keys] = $this->mapper(
       $this->contexts[T_Foreign_Keys], function(ForeignKey $foreignKey, string $key){
         $entityReference = new EntityStructure(
           $foreignKey->entityReference
@@ -285,7 +265,7 @@ class EntityStructure
 
   private function getReflectionPrimaryKeys(
   ): void {
-    $this->contexts[T_Primary_Keys] = $this->map(
+    $this->contexts[T_Primary_Keys] = $this->mapper(
       $this->getReflectionByAttribute(
         PrimaryKey::class, false
       ), fn(mixed $_, string $key) => $key
