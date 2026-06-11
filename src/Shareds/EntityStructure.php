@@ -40,6 +40,7 @@ define( 'T_Auto_Increments', 'auto_increments' );
 
 
 class EntityStructure
+extends ExpressionUtils
 {
   public ReflectionClass $reflectionClassBase;
   public ReflectionClass $reflectionClassChild;
@@ -49,20 +50,6 @@ class EntityStructure
   public function __construct(
     public string $class
   ){}
-
-  public function mapper(
-    array $items,
-    Closure $closure
-  ): array {
-    return array_map( $closure, $items );
-  }
-
-  public function where(
-    array $items,
-    Closure $closure
-  ): array {
-    return array_values( array_filter( $items, $closure ));
-  }
 
   private function getGroupByNumber(
     string $contextsLabel,
@@ -296,7 +283,11 @@ class EntityStructure
   
   private function getCache(
   ): string {
-    return sprintf( "%s.php", md5( strtolower( $this->class)));
+    return sprintf(
+      "orm-entity-%s.php", md5(
+        strtolower( $this->class)
+      )
+    );
   }
 
   private function startups(

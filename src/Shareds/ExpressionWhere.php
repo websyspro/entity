@@ -66,8 +66,16 @@ extends ExpressionAbstract
     array $scopes,
     array $childs = []
   ): array {
-    // $entity = $this->entity( $this->scopeByField( $scopes, $childs ));
-    return $childs;
+    [ $scopeVariable, $fieldVariable ] = $this->fieldProps( $childs );
+    [ $entity, $types ] = $this->fieldPropByEntity( 
+      $this->scopeByField( $scopes, $scopeVariable )
+    );
+
+    return [
+      $entity[ 0 ],
+      $types[ $fieldVariable ], 
+      $fieldVariable
+    ];
   }
   
   public function analysisSemanticsCompare(
@@ -86,11 +94,10 @@ extends ExpressionAbstract
 
     [ $childsLeft, $childsEqual, $childsRight ] = [
       $this->isField( $childsLeft ) 
-        ? [ T_EXP_FIELD, $childsLeft ]
-        : [ T_EXP_VALUE, $childsLeft ],
-        [ T_EXP_EQUAL, $childsEqual ],
+        ? [ T_EXP_FIELD, $this->analysisSemanticsCompareField( $scopes, $childsLeft )]
+        : [ T_EXP_VALUE, $childsLeft ], [ T_EXP_EQUAL, $childsEqual ],
       $this->isField( $childsRight ) 
-        ? [ T_EXP_FIELD, $childsRight ] 
+        ? [ T_EXP_FIELD, $this->analysisSemanticsCompareField( $scopes, $childsRight )] 
         : [ T_EXP_VALUE, $childsRight ]  
     ];
 
@@ -107,7 +114,7 @@ extends ExpressionAbstract
   ): array {
     return [ 
       T_EXP_UNARY,
-      $parent, $scopes, [ T_EXP_FIELD, $childs ]
+      $parent, $scopes, [ T_EXP_FIELD, $this->analysisSemanticsCompareField( $scopes, $childs ) ]
     ];
   }  
 
