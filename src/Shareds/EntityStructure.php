@@ -244,59 +244,59 @@ class EntityStructure
   
   private function getReflectionForeignKeys(
   ): void {
-    $this->contexts[T_Foreign_Keys] = $this->getReflectionByAttribute(
-      ForeignKey::class, true
-    );
+    // $this->contexts[T_Foreign_Keys] = $this->getReflectionByAttribute(
+    //   ForeignKey::class, true
+    // );
 
-    $this->contexts[T_Foreign_Keys] = $this->mapper(
-      $this->contexts[T_Foreign_Keys], function(ForeignKey $foreignKey, string $key){
-        $entityReference = new EntityStructure(
-          $foreignKey->entityReference
-        );
+    // $this->contexts[T_Foreign_Keys] = $this->mapper(
+    //   $this->contexts[T_Foreign_Keys], function(ForeignKey $foreignKey, string $key){
+    //     $entityReference = new EntityStructure(
+    //       $foreignKey->entityReference
+    //     );
 
-        return [ 
-          $this->contexts[T_Entity][0], $key,
-          $entityReference->get()->contexts[T_Entity][0],
-          $entityReference->get()->contexts[T_Primary_Keys][0]
-        ];
-      }
-    );
+    //     return [ 
+    //       $this->contexts[T_Entity][0], $key,
+    //       $entityReference->get()->contexts[T_Entity][0],
+    //       $entityReference->get()->contexts[T_Primary_Keys][0]
+    //     ];
+    //   }
+    // );
   }
 
   private function getReflectionPrimaryKeys(
   ): void {
-    $this->contexts[T_Primary_Keys] = $this->mapper(
-      $this->getReflectionByAttribute(
-        PrimaryKey::class, false
-      ), fn(mixed $_, string $key) => $key
-    );
+    // $this->contexts[T_Primary_Keys] = $this->mapper(
+    //   $this->getReflectionByAttribute(
+    //     PrimaryKey::class, false
+    //   ), fn(mixed $_, string $key) => $key
+    // );
 
-    $this->contexts[T_Primary_Keys] = array_values(
-      $this->contexts[T_Primary_Keys]
-    );
+    // $this->contexts[T_Primary_Keys] = array_values(
+    //   $this->contexts[T_Primary_Keys]
+    // );
   }
 
   private function getReflectionNotNulls(
   ): void {
-    $this->contexts[T_Not_Nulls] = $this->mapper(
-      $this->getReflectionByAttribute(
-        NotNull::class, false
-      ), fn(mixed $_, string $key) => $key
-    );
+    // $this->contexts[T_Not_Nulls] = $this->mapper(
+    //   $this->getReflectionByAttribute(
+    //     NotNull::class, false
+    //   ), fn(mixed $_, string $key) => $key
+    // );
   }
   
   private function getReflectionAutoIncrements(
   ): void {
-    $this->contexts[T_Auto_Increments] = $this->mapper(
-      $this->getReflectionByAttribute(
-        AutoIncrement::class, false
-      ), fn(mixed $_, string $key) => $key
-    );
+    // $this->contexts[T_Auto_Increments] = $this->mapper(
+    //   $this->getReflectionByAttribute(
+    //     AutoIncrement::class, false
+    //   ), fn(mixed $_, string $key) => $key
+    // );
   } 
   
   private function getCache(
   ): string {
-    return md5( strtolower( $this->class));
+    return sprintf( "%s.php", md5( strtolower( $this->class)));
   }
 
   private function startups(
@@ -313,25 +313,26 @@ class EntityStructure
     $this->getReflectionPrimaryKeys();
     $this->getReflectionNotNulls();
     $this->getReflectionAutoIncrements();
-
-    /* clear variable(s) */
-    unset($this->reflectionClassChild);
-    unset($this->reflectionClassBase);
-    unset($this->attributes);
   }  
 
   public function get(
   ): mixed {
-    print_r( $this->getCache() );
+    $cacheFileDir = implode( 
+      DIRECTORY_SEPARATOR, [
+        BASEDIR_APP, "Cache", $this->getCache()
+      ]
+    );
 
-    $hashFile = $this->getCache();
-    if( Cache::exist( $hashFile )){
-      $this->contexts = Cache::load( $hashFile );
+    if( file_exists( $cacheFileDir )){
+      $this->contexts = require_once $cacheFileDir;
     } else {
       $this->startups();
-      Cache::save( $hashFile, $this->contexts );
+      file_put_contents( $cacheFileDir, sprintf(
+          "<?php\n\nreturn %s;", var_export( $this->contexts, true )
+        ), LOCK_EX 
+      );
     }
-    
-    return $this;
+
+    return $this->contexts;
   }  
 }

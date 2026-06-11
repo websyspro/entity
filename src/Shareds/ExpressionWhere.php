@@ -66,8 +66,7 @@ extends ExpressionAbstract
     array $scopes,
     array $childs = []
   ): array {
-    $entity = $this->entity( $this->scopeByField( $scopes, $childs ));
-    print_r($entity);
+    // $entity = $this->entity( $this->scopeByField( $scopes, $childs ));
     return $childs;
   }
   
@@ -87,11 +86,11 @@ extends ExpressionAbstract
 
     [ $childsLeft, $childsEqual, $childsRight ] = [
       $this->isField( $childsLeft ) 
-        ? [ T_EXP_FIELD, $this->analysisSemanticsCompareField( $scopes, $childsLeft )]
+        ? [ T_EXP_FIELD, $childsLeft ]
         : [ T_EXP_VALUE, $childsLeft ],
         [ T_EXP_EQUAL, $childsEqual ],
       $this->isField( $childsRight ) 
-        ? [ T_EXP_FIELD, $this->analysisSemanticsCompareField( $scopes, $childsRight )] 
+        ? [ T_EXP_FIELD, $childsRight ] 
         : [ T_EXP_VALUE, $childsRight ]  
     ];
 

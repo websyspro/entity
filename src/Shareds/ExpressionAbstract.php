@@ -180,11 +180,11 @@ class ExpressionAbstract
     if( isset( $this->entitys[ $entity ])){
       return $this->entitys[ $entity ];
     }
-
-
-
+    
+    var_dump($entity);
     $this->entitys[ $entity ] = new EntityStructure( $entity );
-    return $this->entitys[ $entity ]->get();
+    $this->entitys[ $entity ] = $this->entitys[ $entity ]->get();
+    return $this->entitys[ $entity ];
   }
 
   public function scopeByField(
