@@ -278,7 +278,7 @@ class EntityStructure
 
   private function getReflectionNotNulls(
   ): void {
-    $this->contexts[T_Not_Nulls] = $this->map(
+    $this->contexts[T_Not_Nulls] = $this->mapper(
       $this->getReflectionByAttribute(
         NotNull::class, false
       ), fn(mixed $_, string $key) => $key
@@ -287,7 +287,7 @@ class EntityStructure
   
   private function getReflectionAutoIncrements(
   ): void {
-    $this->contexts[T_Auto_Increments] = $this->map(
+    $this->contexts[T_Auto_Increments] = $this->mapper(
       $this->getReflectionByAttribute(
         AutoIncrement::class, false
       ), fn(mixed $_, string $key) => $key
