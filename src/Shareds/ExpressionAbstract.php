@@ -177,15 +177,14 @@ class ExpressionAbstract
   public function entity(
     string $entity
   ): array {
-    // if( isset( $this->entitys[ $entity ])){
-    //   return $this->entitys[ $entity ];
-    // }
+    if( isset( $this->entitys[ $entity ])){
+      return $this->entitys[ $entity ];
+    }
 
-    
 
-    // $this->entitys[ $entity ] = new EntityStructure( $entity );
-    // return $this->entitys[ $entity ]->get();
-    return [];
+
+    $this->entitys[ $entity ] = new EntityStructure( $entity );
+    return $this->entitys[ $entity ]->get();
   }
 
   public function scopeByField(

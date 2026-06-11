@@ -66,8 +66,8 @@ extends ExpressionAbstract
     array $scopes,
     array $childs = []
   ): array {
-    // var_dump( $this->entity( $this->scopeByField( $scopes, $childs ) ) );
-
+    $entity = $this->entity( $this->scopeByField( $scopes, $childs ));
+    print_r($entity);
     return $childs;
   }
   

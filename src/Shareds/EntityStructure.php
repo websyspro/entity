@@ -322,6 +322,8 @@ class EntityStructure
 
   public function get(
   ): mixed {
+    print_r( $this->getCache() );
+
     $hashFile = $this->getCache();
     if( Cache::exist( $hashFile )){
       $this->contexts = Cache::load( $hashFile );
