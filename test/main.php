@@ -1,10 +1,18 @@
 <?php
 
-use Websyspro\Entity\Shareds\ExpressionWhere;
 use Websyspro\Test\Crm\Entitys\ItemPropostaEntity;
 use Websyspro\Test\Crm\Entitys\PropostaEntity;
+use Websyspro\Entity\Shareds\ExpressionWhere;
 
-$microTimerStart = microtime(true);
+if(!defined( "MICROTIMER_START" )) 
+  define( "MICROTIMER_START", microtime( true ));
+
+function calcTimer( string $description ): void {
+  printf( "%s: %f(ms)\n",
+    str_pad( $description, 64, ".", STR_PAD_RIGHT ), 
+    bcmul( bcsub( microtime(true), MICROTIMER_START, 6 ), 1000, 6 )
+  );
+}
 
 class UserRepository
 {
@@ -20,25 +28,29 @@ class UserRepository
     string $dateEnd,
     string $startsWith
   ): mixed {
-    $expressionWhere = new ExpressionWhere(
+    calcTimer( "Antes de instanciar Class ExpressionWhere" );
+    return new ExpressionWhere(
       fn( PropostaEntity $p ) => (
         $p->Created >= $dateStart 
-        && $p->Created <= $dateEnd
+        && $p->Created >= $dateEnd
         && $p->IsActive == true
         && $p->IsDeleted == false
-        && $p->CreatedById = '84850ECB-2443-442A-A9B0-4555C9421227'
-        && $p->NomeProposta->trim()->upper()->contains( $startsWith )
-        && !$p->itemsProposta->any( fn(ItemPropostaEntity $i) => $i->PropostaId == $p->Id && $i->IsActive )
+        && '84850ECB-2443-442A-A9B0-4555C9421227' == $p->CreatedById
+        && !$p->NomeProposta->trim()->upper()->contains( $startsWith )
+        && !$p->itemsProposta->any( fn(ItemPropostaEntity $i) => $i->PropostaId == $p->Id && $i->IsActive && $p->Created >= $dateStart && $p->Created <= $dateEnd )
       ) 
-    );    
-
-    return $expressionWhere;
+    );
   }
 }
 
-$UserRepository = new UserRepository();
-$getAll = $UserRepository->getAll( "01/01/2024", "31/12/2024", "TERESOPOLIS" );
+calcTimer( "Iniciar Processso" );
 
-$microTimerEnd = microtime(true);
-printf( "%f(ms)\n", bcmul( bcsub( $microTimerEnd, $microTimerStart, 4 ), 1000, 4 ));
-print_r($getAll);
+$UserRepository = new UserRepository();
+calcTimer( "Instanciar classe UserRepository" );
+
+$getAll = $UserRepository->getAll( "01/01/2024", "31/12/2024", "TERESOPOLIS" );
+calcTimer( "Chamar Metodo GetAll from UserRepository" );
+
+calcTimer( "Tempo total" );
+echo PHP_EOL;
+print_r($getAll->contexts);

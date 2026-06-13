@@ -79,4 +79,47 @@ return array (
   'uniques' => 
   array (
   ),
+  'foreign_keys' => 
+  array (
+    0 => 
+    array (
+      0 => 'Proposta',
+      1 => 'InstituicaoId',
+      2 => 'Instituicao',
+      3 => 'Id',
+    ),
+    1 => 
+    array (
+      0 => 'Proposta',
+      1 => 'DistribuidorId',
+      2 => 'Distribuidor',
+      3 => 'Id',
+    ),
+    2 => 
+    array (
+      0 => 'Proposta',
+      1 => 'ConsultorVendasEspeciaisId',
+      2 => 'ConsultorVendasEspeciais',
+      3 => 'Id',
+    ),
+  ),
+  'primary_keys' => 
+  array (
+    0 => 'Id',
+  ),
+  'not_nulls' => 
+  array (
+    0 => 'IsActive',
+    1 => 'IsDeleted',
+    2 => 'Created',
+    3 => 'CreatedById',
+    4 => 'Status',
+    5 => 'InstituicaoId',
+    6 => 'Arquivada',
+    7 => 'Versao',
+    8 => 'Frete',
+  ),
+  'auto_increments' => 
+  array (
+  ),
 );

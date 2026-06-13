@@ -2,10 +2,10 @@
 
 namespace Websyspro\Entity\Shareds;
 
-use Closure;
 use ReflectionAttribute;
 use ReflectionClass;
 use ReflectionProperty;
+use Websyspro\Entity\Commons\Utils;
 use Websyspro\Entity\Decorations\BaseEntity;
 use Websyspro\Entity\Decorations\ColumnName;
 use Websyspro\Entity\Decorations\Columns\Date;
@@ -25,22 +25,9 @@ use Websyspro\Entity\Decorations\Generations\AutoIncrement;
 use Websyspro\Entity\Decorations\Requireds\NotNull;
 use Websyspro\Entity\Decorations\Statistics\Index;
 use function in_array, count, sprintf;
-
-/* defined consts to objects */
-define( 'T_Entity', 'entity' );
-define( 'T_Columns', 'columns' );
-define( 'T_Types', 'types' );
-define( 'T_Alias', 'alias' );
-define( 'T_Indexes', 'indexes' );
-define( 'T_Uniques', 'uniques' );
-define( 'T_Foreign_Keys', 'foreign_keys' );
-define( 'T_Primary_Keys', 'primary_keys' );
-define( 'T_Not_Nulls', 'not_nulls' );
-define( 'T_Auto_Increments', 'auto_increments' );  
-
-
+  
 class EntityStructure
-extends ExpressionUtils
+extends Utils
 {
   public ReflectionClass $reflectionClassBase;
   public ReflectionClass $reflectionClassChild;
@@ -49,7 +36,9 @@ extends ExpressionUtils
 
   public function __construct(
     public string $class
-  ){}
+  ){
+    $this->startups();
+  }
 
   private function getGroupByNumber(
     string $contextsLabel,
@@ -231,62 +220,53 @@ extends ExpressionUtils
   
   private function getReflectionForeignKeys(
   ): void {
-    // $this->contexts[T_Foreign_Keys] = $this->getReflectionByAttribute(
-    //   ForeignKey::class, true
-    // );
+    $this->contexts[T_Foreign_Keys] = $this->getReflectionByAttribute(
+      ForeignKey::class, true
+    );
 
-    // $this->contexts[T_Foreign_Keys] = $this->mapper(
-    //   $this->contexts[T_Foreign_Keys], function(ForeignKey $foreignKey, string $key){
-    //     $entityReference = new EntityStructure(
-    //       $foreignKey->entityReference
-    //     );
+    $this->contexts[T_Foreign_Keys] = $this->mapper(
+      $this->contexts[T_Foreign_Keys], function(ForeignKey $foreignKey, string $key){
+        $cacheEentityReference = Cache::entity(
+          $foreignKey->entityReference
+        );
 
-    //     return [ 
-    //       $this->contexts[T_Entity][0], $key,
-    //       $entityReference->get()->contexts[T_Entity][0],
-    //       $entityReference->get()->contexts[T_Primary_Keys][0]
-    //     ];
-    //   }
-    // );
+        return [ 
+          $this->contexts[T_Entity][0], $key,
+          $cacheEentityReference[T_Entity][0],
+          $cacheEentityReference[T_Primary_Keys][0]
+        ];
+      }
+    );
   }
 
   private function getReflectionPrimaryKeys(
   ): void {
-    // $this->contexts[T_Primary_Keys] = $this->mapper(
-    //   $this->getReflectionByAttribute(
-    //     PrimaryKey::class, false
-    //   ), fn(mixed $_, string $key) => $key
-    // );
+    $this->contexts[T_Primary_Keys] = $this->mapper(
+      $this->getReflectionByAttribute(
+        PrimaryKey::class, false
+      ), fn(mixed $_, string $key) => $key
+    );
 
-    // $this->contexts[T_Primary_Keys] = array_values(
-    //   $this->contexts[T_Primary_Keys]
-    // );
+    $this->contexts[T_Primary_Keys] = array_values(
+      $this->contexts[T_Primary_Keys]
+    );
   }
 
   private function getReflectionNotNulls(
   ): void {
-    // $this->contexts[T_Not_Nulls] = $this->mapper(
-    //   $this->getReflectionByAttribute(
-    //     NotNull::class, false
-    //   ), fn(mixed $_, string $key) => $key
-    // );
+    $this->contexts[T_Not_Nulls] = $this->mapper(
+      $this->getReflectionByAttribute(
+        NotNull::class, false
+      ), fn(mixed $_, string $key) => $key
+    );
   }
   
   private function getReflectionAutoIncrements(
   ): void {
-    // $this->contexts[T_Auto_Increments] = $this->mapper(
-    //   $this->getReflectionByAttribute(
-    //     AutoIncrement::class, false
-    //   ), fn(mixed $_, string $key) => $key
-    // );
-  } 
-  
-  private function getCache(
-  ): string {
-    return sprintf(
-      "orm-entity-%s.php", md5(
-        strtolower( $this->class)
-      )
+    $this->contexts[T_Auto_Increments] = $this->mapper(
+      $this->getReflectionByAttribute(
+        AutoIncrement::class, false
+      ), fn(mixed $_, string $key) => $key
     );
   }
 
@@ -304,26 +284,5 @@ extends ExpressionUtils
     $this->getReflectionPrimaryKeys();
     $this->getReflectionNotNulls();
     $this->getReflectionAutoIncrements();
-  }  
-
-  public function get(
-  ): mixed {
-    $cacheFileDir = implode( 
-      DIRECTORY_SEPARATOR, [
-        BASEDIR_APP, "Cache", $this->getCache()
-      ]
-    );
-
-    if( file_exists( $cacheFileDir )){
-      $this->contexts = require_once $cacheFileDir;
-    } else {
-      $this->startups();
-      file_put_contents( $cacheFileDir, sprintf(
-          "<?php\n\nreturn %s;", var_export( $this->contexts, true )
-        ), LOCK_EX 
-      );
-    }
-
-    return $this->contexts;
   }  
 }

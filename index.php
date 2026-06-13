@@ -3,6 +3,10 @@
 define( "BASEDIR", __DIR__ );
 define( "BASEDIR_APP", BASEDIR . "/src" );
 
+
+if(!defined( "MICROTIMER_END" )) 
+  define( "MICROTIMER_END", 0 );
+
 if(!defined( "CACHE_DISABLED" )) 
   define( "CACHE_DISABLED", false );
 if(!defined( "DRIVER" )) 

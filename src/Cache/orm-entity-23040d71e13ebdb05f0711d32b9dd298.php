@@ -124,4 +124,70 @@ return array (
   'uniques' => 
   array (
   ),
+  'foreign_keys' => 
+  array (
+    0 => 
+    array (
+      0 => 'ItemProposta',
+      1 => 'ObraId',
+      2 => 'Obra',
+      3 => 'Id',
+    ),
+    1 => 
+    array (
+      0 => 'ItemProposta',
+      1 => 'PropostaId',
+      2 => 'Proposta',
+      3 => 'Id',
+    ),
+  ),
+  'primary_keys' => 
+  array (
+    0 => 'Id',
+  ),
+  'not_nulls' => 
+  array (
+    0 => 'IsActive',
+    1 => 'IsDeleted',
+    2 => 'Created',
+    3 => 'CreatedById',
+    4 => 'Quantidade',
+    5 => 'CustoGrafica',
+    6 => 'CustoPapel',
+    7 => 'PrecoCapa',
+    8 => 'Desconto',
+    9 => 'ObraId',
+    10 => 'PropostaId',
+    11 => 'Amortizacao',
+    12 => 'AvalPlatSistema',
+    13 => 'Comissao',
+    14 => 'ComissaoMercado',
+    15 => 'CreditoPisConfins',
+    16 => 'CustoMixagem',
+    17 => 'CustosRateadosTI',
+    18 => 'Folha',
+    19 => 'Frete',
+    20 => 'FretePrimario',
+    21 => 'JuridicoCompliance',
+    22 => 'LivroProfessor',
+    23 => 'MaterialEmbalagem',
+    24 => 'Mkt',
+    25 => 'Pcld',
+    26 => 'Pdd',
+    27 => 'PlataformaLivro',
+    28 => 'PlataformaSistema',
+    29 => 'ServicosAssessoria',
+    30 => 'Terceiros',
+    31 => 'Viagens',
+    32 => 'ValorUnitario',
+    33 => 'Da',
+    34 => 'PrecoCapaDistribuidor',
+    35 => 'CustoEditorial',
+    36 => 'CustoAvaliacao',
+    37 => 'CustoPlataforma',
+    38 => 'CustoProdutoAcabado',
+  ),
+  'auto_increments' => 
+  array (
+  ),
 );
