@@ -32,12 +32,15 @@ class UserRepository
     return new ExpressionWhere(
       fn( PropostaEntity $p ) => (
         $p->Created >= $dateStart 
-        && $p->Created >= $dateEnd
-        && $p->IsActive == true
-        && $p->IsDeleted == false
+        && $dateEnd >= $p->Created
+        && "EMERSON" != $p->NomeContato
+        && !$p->NomeProposta->trim()->upper()->contains( $startsWith, "TEST" )
+        // && $p->IsActive == true
+        // && !$p->IsActive
         && '84850ECB-2443-442A-A9B0-4555C9421227' == $p->CreatedById
-        && !$p->NomeProposta->trim()->upper()->contains( $startsWith )
-        && !$p->itemsProposta->any( fn(ItemPropostaEntity $i) => $i->PropostaId == $p->Id && $i->IsActive && $p->Created >= $dateStart && $p->Created <= $dateEnd )
+        // && $p->IsDeleted == false
+        && $p->NomeProposta->trim()->upper() == "98\%"
+        && !$p->itemsProposta->any( fn(ItemPropostaEntity $i) => $i->PropostaId == $p->Id && !$i->IsActive && $p->Created >= $dateStart && $p->Created <= $dateEnd )
       ) 
     );
   }
