@@ -29,20 +29,25 @@ class UserRepository
     string $startsWith
   ): mixed {
     calcTimer( "Antes de instanciar Class ExpressionWhere" );
-    return new ExpressionWhere(
+    $expressionWhere = new ExpressionWhere(
       fn( PropostaEntity $p ) => (
-        $p->Created >= $dateStart 
+        "98%" == $p->NomeProposta
+        && !$p->NomeProposta->isNotNull()
+        && $p->Created >= $dateStart 
         && $dateEnd >= $p->Created
         && "EMERSON" != $p->NomeContato
-        && !$p->NomeProposta->trim()->upper()->contains( $startsWith, "TEST" )
-        // && $p->IsActive == true
-        // && !$p->IsActive
+        && !$p->NomeProposta->trim()->upper()->endsWith( $startsWith, "TEST" )
+        && $p->NomeProposta->in( "TESTA", "TESTB" )
+        && $p->IsActive == true
+        && !$p->IsActive
         && '84850ECB-2443-442A-A9B0-4555C9421227' == $p->CreatedById
-        // && $p->IsDeleted == false
-        && $p->NomeProposta->trim()->upper() == "98\%"
+        && $p->IsDeleted == false
+        && $p->NomeProposta->trim()->upper() == "98%"
         && !$p->itemsProposta->any( fn(ItemPropostaEntity $i) => $i->PropostaId == $p->Id && !$i->IsActive && $p->Created >= $dateStart && $p->Created <= $dateEnd )
       ) 
     );
+
+    return $expressionWhere;
   }
 }
 
@@ -56,4 +61,4 @@ calcTimer( "Chamar Metodo GetAll from UserRepository" );
 
 calcTimer( "Tempo total" );
 echo PHP_EOL;
-print_r($getAll->contexts);
+//print_r($getAll->contexts);

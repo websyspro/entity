@@ -41,6 +41,16 @@ class ColumnAbstract
     return $this;
   }
 
+  public function isNull(
+  ): self {
+    return $this;
+  }
+  
+  public function isNotNull(
+  ): self {
+    return $this;
+  }  
+
   public function contains(
     mixed ...$args
   ): self {
@@ -57,4 +67,10 @@ class ColumnAbstract
   ): self {
     return $this;
   }
+
+  public function in(
+    mixed ...$args
+  ): self {
+    return $this;
+  }  
 }
