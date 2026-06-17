@@ -3,8 +3,11 @@
 namespace Websyspro\Entity\Shareds;
 
 use Closure;
-use ReflectionFunction;
 use function ord, count, in_array, is_string, array_slice, array_merge, sprintf;
+use ReflectionFunction;
+
+define( 'T_HASH', 'hash' ); 
+define( 'T_CONTEXTS', 'contexts' );
 
 define( 'T_START_PARENTESES', 40 );
 define( 'T_END_PARENTESES', 41 );
@@ -78,24 +81,22 @@ define( "T_TOKEN_VALUE", "tokenValue" );
 
 class ExpressionAbstract
 {
-  public ExpressionType $expressionType;  
   public ReflectionFunction $reflectionFunction;
+  public bool $cacheHashEquals = false;  
   public string $cacheClass;
   public string $cacheMethod;
-  public bool $cacheHashEquals = false;
-  public array $scopes = [];
-  public array $statics = [];
-  public array $params = [];  
+  public string $contextsBaseHash;
+  public string $hash;
   public array $contexts = [];
-  public array $contextsBase = [];
+  public array $contextsBase = [];  
+  public array $scopes = [];
   public array $tokens = [];
   public array $uses = [];
 
   public function __construct(
     public Closure $closure
   ){
-    calcTimer( "Construtor da class ExpressionAbstract" );
-    $this->analysisLexical();
+    calcTimer( "[PRE-CACHE] Construtor da class ExpressionAbstract" );
   }
 
   public function inc(
@@ -144,15 +145,267 @@ class ExpressionAbstract
     }
 
     return -1;
+  }  
+
+  public function analysisLexicalTokens(
+  ): void {
+    $this->reflectionFunction = new ReflectionFunction( $this->closure );
+    calcTimer( "[PRE-CACHE] Create ReflectionFunction ExpressionWhere::Tokens" );
+    if( $this->reflectionFunction instanceof ReflectionFunction ){
+      $this->tokens = file( $this->reflectionFunction->getFileName());
+      calcTimer( "[PRE-CACHE] Ler aquivo ExpressionWhere::Tokens" );
+
+      if( count( $this->tokens ) !== 0 ){
+        $this->tokens = $this->mapper(
+          $this->tokens, function(string $token){
+            $strPos = strpos( $token, '//' );
+            return $strPos ? substr($token, 0, $strPos) : $token;
+          }
+        );
+      }
+    }
+  }
+  
+  public function analysisLexicalOrigins(
+  ): void {
+    for( $i=count( $this->tokens ) - 1; $i>=0; $i-- ){
+      if( strpos( $this->tokens[$i], 'function' ) !== false ){
+        if( isset( $this->cacheMethod ) === false ){
+          $this->cacheMethod = preg_replace([
+            "#^.*function\s*#", "#\s*\(.*$#"
+          ], "", trim( $this->tokens[ $i ]));
+          calcTimer( "[PRE-CACHE] Search Function Name ExpressionWhere::Origins" );
+        }
+      }
+      
+      if( strpos( $this->tokens[$i], 'class' ) !== false ){
+        if(isset( $this->cacheClass ) === false ){
+          $this->cacheClass = preg_replace([
+            "#^.*class\s*#", "#\s*\{.*$#"
+          ], "", trim( $this->tokens[ $i ]));
+          calcTimer( "[PRE-CACHE] Search Classe Name ExpressionWhere::Origins" );
+        }
+      }      
+    }
+  }
+
+  public function namberToken(
+    int $namberToken
+  ): string {
+    return match( $namberToken ){
+       34 => 'T_ASP',
+       40 => 'T_START_PARENTESES',
+       41 => 'T_END_PARENTESES',
+       91 => 'T_START_BRACKET',
+       93 => 'T_END_BRACKET',
+       46 => 'T_DOT',
+       44 => 'T_COMMA',
+       59 => 'T_SEMICOLON',
+       58 => 'T_COLON',
+       63 => 'T_QUESTION',
+       43 => 'T_PLUS',
+       45 => 'T_MINUS',
+       42 => 'T_MULTIPLY',
+       47 => 'T_DIVIDE',
+       61 => 'T_EQUAL',
+       62 => 'T_GREATER_THAN',
+       60 => 'T_LESS_THAN',
+       33 => 'T_NOT',
+      123 => 'T_START_BRACE',
+      125 => 'T_END_BRACE',
+        default => token_name( $namberToken )
+    };
+  }  
+
+  public function createToken(
+    string|array $tokenArgs
+  ): array {
+    [ $tokenKey, $tokenValue ] = is_string( $tokenArgs ) 
+      ? [ ord( $tokenArgs ), $tokenArgs ] : $tokenArgs;
+
+    if( in_array( $tokenKey, [ T_CONSTANT_ENCAPSED_STRING ])){
+      $tokenValue = trim( $tokenValue, '"\'' );
+    }  
+
+    return [
+      T_TOKEN_KEY => $tokenKey,
+      T_TOKEN_VALUE => $tokenValue, 
+      T_TOKEN_NAME => $this->namberToken(
+        $tokenKey
+      )
+    ];
+  }
+
+  public function groupByTypes(
+    array $type,
+    array $tokens,
+     bool $showKey = false,
+    array $curr = [],
+    array $accu = [],
+      int $depth = 0
+  ): array {
+    foreach( $tokens as $token ){
+      if( in_array( $token[T_TOKEN_KEY], $type ) && $depth === 0){
+        if( $curr ){
+          $accu[] = $curr;
+          $curr = [];
+        } 
+        
+        if( $showKey ){
+          $accu[] = [ $token ];
+        }
+
+        continue;
+      }
+
+      $curr[] = $token;
+
+      if($token[T_TOKEN_KEY] === T_START_PARENTESES) $depth++;
+      if($token[T_TOKEN_KEY] === T_END_PARENTESES) $depth--;
+    }
+
+    if( $curr ){
+      $accu[] = $curr;
+    }
+
+    return $accu;
+  }
+
+  public function groupByTypesLogical(
+    array $contexts = []
+  ): array {
+    return $this->groupByTypes([ 
+      T_LOGICAL_AND, T_LOGICAL_OR, T_BOOLEAN_AND, T_BOOLEAN_OR 
+    ], $contexts, true );
+  }  
+
+  public function contextsNotEnds(
+    array $contexts,
+    int $parenteses = 0
+  ): array {
+    for($i=0; $i<count($contexts); $i++){
+      if($contexts[$i][T_TOKEN_KEY] === T_START_PARENTESES){
+        $parenteses++;
+      }
+
+      if($contexts[$i][T_TOKEN_KEY] === T_END_PARENTESES){
+        $parenteses--;
+
+        if($parenteses < 0){
+          $contexts = array_slice(
+            $contexts, 0, $i
+          ); break;
+        }          
+      }
+
+      if($parenteses < 1){
+        if($contexts[$i][T_TOKEN_KEY] === T_SEMICOLON){
+          $contexts = array_slice(
+            $contexts, 0, $i
+          ); break;
+        }
+      }
+    };
+
+    return $contexts;
   }
 
   public function cacheFile(
   ): string {
-    return sprintf( "orm-where-%s-%s", 
-      md5($this->cacheClass), md5($this->cacheMethod) 
+    return implode( DIRECTORY_SEPARATOR, [
+      BASEDIR_APP, "Cache", sprintf( "orm-where-%s-%s.php", 
+        md5( $this->cacheClass ), md5( $this->cacheMethod ) 
+      )
+    ]);
+  }
+
+  public function analysisLexicalContexts(
+  ): void {
+    $this->contexts = $this->slice(
+      token_get_all(
+        sprintf( '<?php %s', implode(
+          '', $this->slice(
+            $this->tokens, 
+            $this->reflectionFunction->getStartLine() - 1,
+            $this->reflectionFunction->getEndLine() - 
+            $this->reflectionFunction->getStartLine() + 1
+          )
+        ))
+      ), 1
+    ); 
+    
+    $this->contexts = $this->mapper(
+      $this->contexts, fn(array|string $token) => (
+        $this->createToken($token)
+      ) 
+    );
+
+    $this->contexts = $this->contextsNotEnds(
+      $this->where( $this->contexts, fn(array $token) => (
+        $token[T_TOKEN_KEY] !== T_WHITESPACE
+      ))
     );
   }
-  
+
+  public function analysisLexicalUses(
+  ): void {
+    $this->uses = $this->where(
+      $this->tokens, fn(string $row) => str_starts_with( 
+        trim( $row), 'use'
+      )
+    );
+
+    $this->uses = $this->mapper(
+      $this->uses, function(string $row){
+        $use = str_replace(
+          [ 'use',';' ], '', $row
+        );
+
+        if( strpos($use, 'as') !== false ){
+          [ $use, $key ] = explode( 'as', $use );
+          return [ trim($use), trim($key)];
+        } else {
+          $useImplits = explode('\\', $use);
+          return [
+            trim( implode( '\\', array_slice( $useImplits, -1 ))),
+            trim( implode( '\\', array_slice( $useImplits, 0 )))
+          ];
+        }        
+      }
+    );
+  } 
+
+  public function analysisLexicalScopesExtracts(
+    array $contexts = []
+  ): array {
+    $this->scopes = $this->groupByTypes(
+      [ T_COMMA ], $this->slice(
+        $this->slice( $contexts, 
+          $this->inc( $this->indexOf( $contexts, T_FN )),
+          $this->dec( $this->indexOf( $contexts, T_DOUBLE_ARROW ))
+        ), 1, -1 
+      )
+    );
+
+    return $this->mapper(
+      $this->scopes, fn( array $scope ) => [
+        $scope[1][T_TOKEN_VALUE], $this->where(
+          $this->uses, fn( array $use ) => $use[0] === $scope[0][T_TOKEN_VALUE]
+        )[0][1]
+      ]
+    );      
+  }  
+
+  public function analysisLexicalScopes(
+  ): void {
+    $this->scopes = $this->analysisLexicalScopesExtracts( $this->contexts );
+    $this->contexts = $this->slice(
+      $this->contexts, $this->inc( $this->indexOf(
+        $this->contexts, T_DOUBLE_ARROW
+      ))
+    );
+  }
+
   public function isDenying(
     array $tokens = []
   ): bool {
@@ -228,274 +481,8 @@ class ExpressionAbstract
     }
       
     return null;
-  } 
-  
-  public function isField(
-    array $contexts = []
-  ): bool {
-    if( count( $contexts ) < 3 ){
-      return false;
-    }
-
-    return $contexts[0][T_TOKEN_KEY] === T_VARIABLE
-        && $contexts[1][T_TOKEN_KEY] === T_OBJECT_OPERATOR
-        && $contexts[2][T_TOKEN_KEY] === T_STRING;
-  }  
-
-  public function analysisLexicalTokens(
-  ): void {
-    $this->reflectionFunction = new ReflectionFunction( $this->closure );
-    if( $this->reflectionFunction instanceof ReflectionFunction ){
-      $this->tokens = file( $this->reflectionFunction->getFileName());
-
-      if( count( $this->tokens ) !== 0 ){
-        $this->tokens = $this->mapper(
-          $this->tokens, function(string $token){
-            $strPos = strpos( $token, '//' );
-            return $strPos ? substr($token, 0, $strPos) : $token;
-          }
-        );
-      }
-    }
-  } 
-  
-  public function analysisLexicalUses(
-  ): void {
-    $this->uses = $this->where(
-      $this->tokens, fn(string $row) => str_starts_with( 
-        trim( $row), 'use'
-      )
-    );
-
-    $this->uses = $this->mapper(
-      $this->uses, function(string $row){
-        $use = str_replace(
-          [ 'use',';' ], '', $row
-        );
-
-        if( strpos($use, 'as') !== false ){
-          [ $use, $key ] = explode( 'as', $use );
-          return [ trim($use), trim($key)];
-        } else {
-          $useImplits = explode('\\', $use);
-          return [
-            trim( implode( '\\', array_slice( $useImplits, -1 ))),
-            trim( implode( '\\', array_slice( $useImplits, 0 )))
-          ];
-        }        
-      }
-    );
   }
   
-  public function analysisLexicalOrigins(
-  ): void {
-    for( $i=count( $this->tokens ) - 1; $i>=0; $i-- ){
-      if( strpos( $this->tokens[$i], 'function' ) !== false ){
-        if( isset( $this->cacheMethod ) === false ){
-          $this->cacheMethod = preg_replace([
-            "#^.*function\s*#", "#\s*\(.*$#"
-          ], "", trim( $this->tokens[ $i ]));
-        }
-      }
-      
-      if( strpos( $this->tokens[$i], 'class' ) !== false ){
-        if(isset( $this->cacheClass ) === false ){
-          $this->cacheClass = preg_replace([
-            "#^.*class\s*#", "#\s*\{.*$#"
-          ], "", trim( $this->tokens[ $i ]));
-        }
-      }      
-    }
-  }
-  
-  public function namberToken(
-    int $namberToken
-  ): string {
-    return match( $namberToken ){
-       34 => 'T_ASP',
-       40 => 'T_START_PARENTESES',
-       41 => 'T_END_PARENTESES',
-       91 => 'T_START_BRACKET',
-       93 => 'T_END_BRACKET',
-       46 => 'T_DOT',
-       44 => 'T_COMMA',
-       59 => 'T_SEMICOLON',
-       58 => 'T_COLON',
-       63 => 'T_QUESTION',
-       43 => 'T_PLUS',
-       45 => 'T_MINUS',
-       42 => 'T_MULTIPLY',
-       47 => 'T_DIVIDE',
-       61 => 'T_EQUAL',
-       62 => 'T_GREATER_THAN',
-       60 => 'T_LESS_THAN',
-       33 => 'T_NOT',
-      123 => 'T_START_BRACE',
-      125 => 'T_END_BRACE',
-        default => token_name( $namberToken )
-    };
-  }  
-
-  public function createToken(
-    string|array $tokenArgs
-  ): array {
-    [ $tokenKey, $tokenValue ] = is_string( $tokenArgs ) 
-      ? [ ord( $tokenArgs ), $tokenArgs ] : $tokenArgs;
-
-    if( in_array( $tokenKey, [ T_CONSTANT_ENCAPSED_STRING ])){
-      $tokenValue = trim( $tokenValue, '"\'' );
-    }  
-
-    return [
-      T_TOKEN_KEY => $tokenKey,
-      T_TOKEN_VALUE => $tokenValue, 
-      T_TOKEN_NAME => $this->namberToken(
-        $tokenKey
-      )
-    ];
-  }  
-  
-  public function analysisLexicalContexts(
-  ): void {
-    $this->contexts = $this->slice(
-      token_get_all(
-        sprintf( '<?php %s', implode(
-          '', $this->slice(
-            $this->tokens, 
-            $this->reflectionFunction->getStartLine() - 1,
-            $this->reflectionFunction->getEndLine() - 
-            $this->reflectionFunction->getStartLine() + 1
-          )
-        ))
-      ), 1
-    ); 
-    
-    $this->contexts = $this->mapper(
-      $this->contexts, fn(array|string $token) => (
-        $this->createToken($token)
-      ) 
-    );
-
-    $this->contexts = $this->contextsBase = $this->contextsNotEnds(
-      $this->where( $this->contexts, fn(array $token) => (
-        $token[T_TOKEN_KEY] !== T_WHITESPACE
-      ))
-    );
-
-    if( Cache::exist( $this->cacheFile())){
-      $cache = Cache::load( $this->cacheFile());
-      $this->cacheHashEquals = $cache["hash"] === md5( json_encode( $this->contexts));
-      $this->contexts = $cache["contexts"];
-    }
-  }
-
-  public function groupByTypes(
-    array $type,
-    array $tokens,
-     bool $showKey = false,
-    array $curr = [],
-    array $accu = [],
-      int $depth = 0
-  ): array {
-    foreach( $tokens as $token ){
-      if( in_array( $token[T_TOKEN_KEY], $type ) && $depth === 0){
-        if( $curr ){
-          $accu[] = $curr;
-          $curr = [];
-        } 
-        
-        if( $showKey ){
-          $accu[] = [ $token ];
-        }
-
-        continue;
-      }
-
-      $curr[] = $token;
-
-      if($token[T_TOKEN_KEY] === T_START_PARENTESES) $depth++;
-      if($token[T_TOKEN_KEY] === T_END_PARENTESES) $depth--;
-    }
-
-    if( $curr ){
-      $accu[] = $curr;
-    }
-
-    return $accu;
-  }
-
-  public function groupByTypesLogical(
-    array $contexts = []
-  ): array {
-    return $this->groupByTypes([ 
-      T_LOGICAL_AND, T_LOGICAL_OR, T_BOOLEAN_AND, T_BOOLEAN_OR 
-    ], $contexts, true );
-  }  
-
-  public function contextsNotEnds(
-    array $contexts,
-    int $parenteses = 0
-  ): array {
-    for($i=0; $i<count($contexts); $i++){
-      if($contexts[$i][T_TOKEN_KEY] === T_START_PARENTESES){
-        $parenteses++;
-      }
-
-      if($contexts[$i][T_TOKEN_KEY] === T_END_PARENTESES){
-        $parenteses--;
-
-        if($parenteses < 0){
-          $contexts = array_slice(
-            $contexts, 0, $i
-          ); break;
-        }          
-      }
-
-      if($parenteses < 1){
-        if($contexts[$i][T_TOKEN_KEY] === T_SEMICOLON){
-          $contexts = array_slice(
-            $contexts, 0, $i
-          ); break;
-        }
-      }
-    };
-
-    return $contexts;
-  }  
-  
-  public function analysisLexicalScopesExtracts(
-    array $contexts = []
-  ): array {
-    $this->scopes = $this->groupByTypes(
-      [ T_COMMA ], $this->slice(
-        $this->slice( $contexts, 
-          $this->inc( $this->indexOf( $contexts, T_FN )),
-          $this->dec( $this->indexOf( $contexts, T_DOUBLE_ARROW ))
-        ), 1, -1 
-      )
-    );
-
-    return $this->mapper(
-      $this->scopes, fn( array $scope ) => [
-        $scope[1][T_TOKEN_VALUE], $this->where(
-          $this->uses, fn( array $use ) => $use[0] === $scope[0][T_TOKEN_VALUE]
-        )[0][1]
-      ]
-    );      
-  }
-
-  public function analysisLexicalScopes(
-  ): void {
-    if( $this->cacheHashEquals === false ){
-      $this->scopes = $this->analysisLexicalScopesExtracts( $this->contexts );
-      $this->contexts = $this->slice(
-        $this->contexts, $this->inc( $this->indexOf(
-          $this->contexts, T_DOUBLE_ARROW
-        ))
-      );
-    }
-  } 
-
   public function analysisLexicalHierarchySemanticsDenying(
     string $parent,
      array $scopes,
@@ -664,6 +651,18 @@ class ExpressionAbstract
     return [ T_COLUMN_METHODS => $events ];
   }
 
+    public function isField(
+    array $contexts = []
+  ): bool {
+    if( count( $contexts ) < 3 ){
+      return false;
+    }
+
+    return $contexts[0][T_TOKEN_KEY] === T_VARIABLE
+        && $contexts[1][T_TOKEN_KEY] === T_OBJECT_OPERATOR
+        && $contexts[2][T_TOKEN_KEY] === T_STRING;
+  }
+
   public function createField(
     array $scopes,
     array $childs = []
@@ -759,7 +758,7 @@ class ExpressionAbstract
         $this->createField( $scopes, $childs )
       ]
     ];
-  }
+  }  
 
   public function analysisLexicalHierarchySemantics(
     string $parent,
@@ -783,12 +782,10 @@ class ExpressionAbstract
 
   public function analysisLexicalHierarchy(
   ): void {
-    if( $this->cacheHashEquals === false ){
-      $this->contexts = $this->analysisLexicalHierarchySemantics( 
-        T_EXP_INITIAL, $this->scopes, $this->contexts
-      );
-    }
-  }
+    $this->contexts = $this->analysisLexicalHierarchySemantics( 
+      T_EXP_INITIAL, $this->scopes, $this->contexts
+    );
+  } 
 
   public function analysisLexicalHierarchySimpleSemanticsToAjustSide(
     array &$contexts,
@@ -1062,8 +1059,8 @@ class ExpressionAbstract
     }
 
     return $this->analysisLexicalHierarchySimples( $contexts );
-  }
-
+  }  
+  
   public function analysisLexicalHierarchySimples(
     array $contexts = []
   ): array {
@@ -1081,24 +1078,14 @@ class ExpressionAbstract
       }
     );
   }  
-
+  
   public function analysisLexicalSimples(
   ): void {
-    if( $this->cacheHashEquals === false ){
-      $this->contexts = $this->analysisLexicalHierarchySimples( $this->contexts );
-      if( $this->cacheHashEquals === false ){
-        Cache::save( 
-          $this->cacheFile(), [ 
-            "hash" => md5( json_encode( $this->contextsBase )),
-            "contexts" => $this->contexts
-          ] 
-        );
-      }
-    }
+    $this->contexts = $this->analysisLexicalHierarchySimples( $this->contexts );
   }
 
   public function analysisLexicalInit(
-  ): void {}
+  ): void {}  
 
   public function analysisLexicalClear(
   ): void {
@@ -1107,17 +1094,13 @@ class ExpressionAbstract
     unset( $this->cacheHashEquals );
     unset( $this->reflectionFunction );
   }  
-  
-  public function analysisLexical(
+
+  public function analysisLexicalBuild(
   ): void {
-    $this->analysisLexicalTokens();
-    calcTimer( "Criar Listagem de ExpressionWhere::Tokens" );
-    $this->analysisLexicalUses();
-    calcTimer( "Criar Listagem de ExpressionWhere::Uses" );
-    $this->analysisLexicalOrigins();
-    calcTimer( "Criar Listagem de ExpressionWhere::Origens" );
     $this->analysisLexicalContexts();
     calcTimer( "Criar Listagem de ExpressionWhere::Contexts" );
+    $this->analysisLexicalUses();
+    calcTimer( "Criar Listagem de ExpressionWhere::Uses" );
     $this->analysisLexicalScopes();
     calcTimer( "Criar Listagem de ExpressionWhere::Scopes" );
     $this->analysisLexicalHierarchy();
@@ -1128,5 +1111,51 @@ class ExpressionAbstract
     calcTimer( "Criar Listagem de ExpressionWhere::Init" );  
     $this->analysisLexicalClear();
     calcTimer( "Criar Listagem de ExpressionWhere::Clear" );
+
+    file_put_contents( 
+      $this->cacheFile(), sprintf(
+        "<?php%s%sreturn %s;", PHP_EOL, PHP_EOL, var_export([
+          T_HASH => $this->contextsBaseHash, 
+          T_CONTEXTS => $this->contexts
+        ], true)
+      ), LOCK_EX
+    );    
+  }
+  
+  public function analysisLexicalCache(
+  ): void {
+    $this->contextsBase = $this->slice( $this->tokens, 
+      $this->reflectionFunction->getStartLine() - 1,
+      $this->reflectionFunction->getEndLine() - 
+      $this->reflectionFunction->getStartLine() + 1
+    );
+
+    $this->contextsBaseHash = md5(
+      json_encode( $this->contextsBase )
+    );
+
+    if( file_exists( $this->cacheFile())){
+      [ T_HASH => $this->hash, T_CONTEXTS => $this->contexts 
+      ] = require $this->cacheFile();
+      calcTimer( "[PRE-CACHE] Require File ExpressionWhere::Cache" );
+      if( $this->contextsBaseHash === $this->hash ){
+        $this->analysisLexicalInit();
+      } else $this->analysisLexicalBuild();
+    } else $this->analysisLexicalBuild();
+  }
+  
+  public function analysisLexical(
+  ): void {
+    $this->analysisLexicalTokens();
+    calcTimer( "[PRE-CACHE] Criar Listagem de ExpressionWhere::Tokens" );
+    $this->analysisLexicalOrigins();
+    calcTimer( "[PRE-CACHE] Criar Listagem de ExpressionWhere::Origens" );
+    $this->analysisLexicalCache();
+    calcTimer( "[PRE-CACHE] Criar Listagem de ExpressionWhere::Cache" );
   }  
-}
+
+  public function get(
+  ): void {
+    $this->analysisLexical();
+  }
+};
