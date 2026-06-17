@@ -2,7 +2,7 @@
 
 use Websyspro\Test\Crm\Entitys\ItemPropostaEntity;
 use Websyspro\Test\Crm\Entitys\PropostaEntity;
-use Websyspro\Entity\Shareds\ExpressionWhere;
+use Websyspro\Entity\Shareds\ExpressionAbstract_;
 
 if(!defined( "MICROTIMER_START" )) 
   define( "MICROTIMER_START", microtime( true ));
@@ -29,7 +29,7 @@ class UserRepository
     string $startsWith
   ): mixed {
     calcTimer( "Antes de instanciar Class ExpressionWhere" );
-    $expressionWhere = new ExpressionWhere(
+    $expressionWhere = new ExpressionAbstract_(
       fn( PropostaEntity $p ) => (
         "98%" == $p->NomeProposta
         && !$p->NomeProposta->isNotNull()
@@ -47,6 +47,7 @@ class UserRepository
       ) 
     );
 
+    $expressionWhere->get();
     return $expressionWhere;
   }
 }
@@ -61,4 +62,4 @@ calcTimer( "Chamar Metodo GetAll from UserRepository" );
 
 calcTimer( "Tempo total" );
 echo PHP_EOL;
-//print_r($getAll->contexts);
+print_r($getAll->contexts);

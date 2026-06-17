@@ -60,7 +60,6 @@ define( 'T_ACTION_TO_BETWEEN', 4 );
 define( 'T_ACTION_TO_LIKE', 5 );
 define( 'T_ACTION_TO_IN', 6 );
 
-/* define KEY_NAMES */
 define( "T_OBJECT", "object" );
 define( "T_PARENT", "parent" );
 define( "T_CHILDS", "childs" );
