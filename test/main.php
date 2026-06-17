@@ -33,7 +33,7 @@ class UserRepository
     $expressionWhere = new ExpressionWhere(
       fn( PropostaEntity $p ) => (
         "98%" == $p->NomeProposta
-        && !$p->NomeProposta->isNotNull()
+        && !$p->NomeProposta->isNull()
         && $p->Created >= $dateStart 
         && $dateEnd >= $p->Created
         && "EMERSON" != $p->NomeContato

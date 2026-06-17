@@ -168,6 +168,7 @@ class ExpressionAbstract
   
   public function analysisLexicalOrigins(
   ): void {
+    var_dump( $this->reflectionFunction->getShortName() );
     for( $i=count( $this->tokens ) - 1; $i>=0; $i-- ){
       if( strpos( $this->tokens[$i], 'function' ) !== false ){
         if( isset( $this->cacheMethod ) === false ){
@@ -313,8 +314,9 @@ class ExpressionAbstract
   public function cacheFile(
   ): string {
     return implode( DIRECTORY_SEPARATOR, [
-      BASEDIR_APP, "Cache", sprintf( "orm-where-%s-%s.php", 
+      BASEDIR_APP, "Cache", sprintf( "orm-where-%s.php", 
         md5( $this->cacheClass ), md5( $this->cacheMethod ) 
+        //md5( $this->reflectionFunction->getShortName() )
       )
     ]);
   }
@@ -1109,8 +1111,6 @@ class ExpressionAbstract
     calcTimer( "Criar Listagem de ExpressionWhere::Simples" );  
     $this->analysisLexicalInit();  
     calcTimer( "Criar Listagem de ExpressionWhere::Init" );  
-    $this->analysisLexicalClear();
-    calcTimer( "Criar Listagem de ExpressionWhere::Clear" );
 
     file_put_contents( 
       $this->cacheFile(), sprintf(
@@ -1119,7 +1119,10 @@ class ExpressionAbstract
           T_CONTEXTS => $this->contexts
         ], true)
       ), LOCK_EX
-    );    
+    );
+    
+    $this->analysisLexicalClear();
+    calcTimer( "Criar Listagem de ExpressionWhere::Clear" );
   }
   
   public function analysisLexicalCache(
