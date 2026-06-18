@@ -31,9 +31,12 @@ extends Utils
 
     return $this->mapper(
       $this->scopes, fn( array $scope ) => [
-        $scope[1][T_TOKEN_VALUE], $this->filter(
-          $this->statements, fn( array $use ) => $use[0] === $scope[0][T_TOKEN_VALUE]
-        )[0][1]
+        K_STATEMENTS => $this->filter(
+          $this->statements, fn( array $statement ) => (
+            $statement[K_VARIABLE] === $scope[0][T_TOKEN_VALUE]
+          )
+        )[0][K_STATEMENTS],
+        K_VARIABLE => $scope[1][T_TOKEN_VALUE]
       ]
     );      
   }  
@@ -78,7 +81,7 @@ extends Utils
       )
     ];
   }
-  
+
   public function analysisLexicalHierarchyApplySubQuery(
     string $parent,
      array $scopes,
@@ -87,6 +90,7 @@ extends Utils
     return [
       T_OBJECT => T_EXP_SUBQUERY,
       T_PARENT => $parent,
+      T_METHOD => $this->getSubQueryMethod( $childs ), 
       T_CHILDS => $this->analysisLexicalHierarchyApply(
         T_EXP_SUBQUERY, array_merge( 
           $scopes, $this->analysisLexicalScopesExtracts(
@@ -115,130 +119,6 @@ extends Utils
     ];
   }
 
-  public function fieldProps(
-    array $contexts = []
-  ): array {
-    [ $scopeVariable, $_, $fieldVariable ] = $contexts;
-    return [ $scopeVariable[T_TOKEN_VALUE], $fieldVariable[T_TOKEN_VALUE] ];
-  }
-
-  public function fieldPropByEntity(
-    string $entity,
-    string $column
-  ): array {
-    $cacheEntitys = Cache::entity(
-      $entity
-    );
-
-    [ $columnScheme ] = $cacheEntitys[
-      T_Entity
-    ];
-
-    [ $columnName ] = [ 
-      $cacheEntitys[ T_Alias ][ $column ]
-        ?? $column
-    ];
-
-    [ $columnType ] = array_slice(
-      explode( '\\', $cacheEntitys[ T_Types ][ $column ] ), -1, 1
-    );
-
-    return [ 
-      T_SCHEME => $columnScheme, 
-      T_COLUMN => $columnName,
-      T_COLUMN_TYPE => $columnType
-    ];
-  }  
-  
-  public function scopeByField(
-    array $scopes,
-    string $scopeVariable 
-  ): string|null {
-    if( empty( $scopes )){
-      return null;
-    }
-
-    $scopes = $this->filter(
-      $scopes, fn( array $scope ) => (
-        $scope[K_VARIABLE] === $scopeVariable
-      ) 
-    );
-    
-    if( empty( $scopes )){
-      return null;
-    }
-    
-    return $scopes[0][K_STATEMENTS];
-  }
-  
-  public function fieldMethods(
-    array $childs = [],
-    array $events = []
-  ): array {
-    $events = $this->groupByTypes(
-      [ T_OBJECT_OPERATOR ], $this->slice( $childs, 4 )
-    );
-
-    $events = $this->mapper(
-      $events, fn( array $tokens ) => [
-        T_COLUMN_METHOD_NAME => $tokens[0][T_TOKEN_VALUE], 
-        T_COLUMN_METHOD_TYPE => in_array(
-          $tokens[0][T_TOKEN_VALUE], [ 
-            'contains',
-            'startsWith',
-            'endsWith',
-            'in',
-            'isNull',
-            'isNotNull'
-          ]) ? 'compare' : 'modify', 
-        T_COLUMN_METHOD_ARGS => $this->mapper(
-            $this->groupByTypes(
-            [ T_COMMA ], array_slice(
-              $tokens, $this->inc(
-                $this->indexOf(
-                  $tokens, T_START_PARENTESES
-                )
-              ), -1
-            ), 
-          ), fn( array $args ) => $args[0]
-        )
-      ]
-    );
-
-    return [ T_COLUMN_METHODS => $events ];
-  }
-
-    public function isField(
-    array $contexts = []
-  ): bool {
-    if( count( $contexts ) < 3 ){
-      return false;
-    }
-
-    return $contexts[0][T_TOKEN_KEY] === T_VARIABLE
-        && $contexts[1][T_TOKEN_KEY] === T_OBJECT_OPERATOR
-        && $contexts[2][T_TOKEN_KEY] === T_STRING;
-  }
-
-  public function createField(
-    array $scopes,
-    array $childs = []
-  ): array {
-    [ $variable, $column 
-    ] = $this->fieldProps($childs);
-   
-    return [ 
-      T_OBJECT => T_EXP_FIELD, 
-      ...array_merge(
-        $this->fieldPropByEntity( 
-          $this->scopeByField( 
-            $scopes, $variable 
-          ), $column
-        ), $this->fieldMethods($childs)
-      )
-    ];
-  }
-  
   public function createEqual(
     array $childs = []
   ): array {
@@ -331,7 +211,7 @@ extends Utils
           T_EXP_LOGICAL => $this->analysisLexicalHierarchyApplyLogical( $childs ),
           T_EXP_COMPARE => $this->analysisLexicalHierarchyApplyCompare( $parent, $scopes, $childs ),
           T_EXP_UNARY => $this->analysisLexicalHierarchyApplyUnary( $parent, $scopes, $childs ),
-            default => $childs
+            default => $this->analysisLexicalHierarchyApply( $parent, $scopes, $childs )
         }
       )
     );
@@ -618,26 +498,51 @@ extends Utils
     return $this->analysisLexicalSemanticsApply( $contexts );
   }  
 
+  public function analysisLexicalSemanticsApplyInLote(
+    array $childs = []
+  ): array {
+    $childs = $this->analysisLexicalSemanticsApplyAction( T_ACTION_TO_ADJUST_SIDE, $childs);
+    $childs = $this->analysisLexicalSemanticsApplyAction( T_ACTION_TO_ADJUST_EQUALS, $childs);
+    $childs = $this->analysisLexicalSemanticsApplyAction( T_ACTION_TO_METHODS, $childs);
+    $childs = $this->analysisLexicalSemanticsApplyAction( T_ACTION_TO_BETWEEN, $childs);
+    $childs = $this->analysisLexicalSemanticsApplyAction( T_ACTION_TO_LIKE, $childs);    
+    return $childs;
+  }
+
+  public function isSemanticsLoop(
+    array $contexts = []
+  ): bool {
+    return in_array(
+      $contexts[ T_OBJECT ], [
+        T_EXP_GROUP, T_EXP_DENYING, T_EXP_SUBQUERY 
+      ]
+    );
+  }
+
   public function analysisLexicalSemanticsApply(
     array $contexts = []
   ): array {
-    return $this->mapper( 
-      $contexts, function(array $context){
-        if( in_array($context[T_OBJECT], [T_EXP_GROUP, T_EXP_DENYING, T_EXP_SUBQUERY])){
-          $context[T_CHILDS] = $this->analysisLexicalSemanticsApplyAction( T_ACTION_TO_ADJUST_SIDE, $context[T_CHILDS]);
-          $context[T_CHILDS] = $this->analysisLexicalSemanticsApplyAction( T_ACTION_TO_ADJUST_EQUALS, $context[T_CHILDS]);
-          $context[T_CHILDS] = $this->analysisLexicalSemanticsApplyAction( T_ACTION_TO_METHODS, $context[T_CHILDS]);
-          $context[T_CHILDS] = $this->analysisLexicalSemanticsApplyAction( T_ACTION_TO_BETWEEN, $context[T_CHILDS]);
-          $context[T_CHILDS] = $this->analysisLexicalSemanticsApplyAction( T_ACTION_TO_LIKE, $context[T_CHILDS]);
+    $contexts = $this->mapper( 
+      $contexts, function( array $context ){
+        if( $this->isSemanticsLoop( $context )){
+          $context[T_CHILDS] = $this->analysisLexicalSemanticsApplyInLote(
+            $context[ T_CHILDS ]
+          );
         }
 
         return $context;
       }
     );
+
+    return $contexts;
   }
   
   public function analysisLexicalSemantics(
   ): void {
+    if( $this->isSemanticsLoop( $this->contexts[0]) === false ){
+      $this->contexts = $this->analysisLexicalSemanticsApplyInLote( $this->contexts );
+    }
+    
     $this->contexts = $this->analysisLexicalSemanticsApply( $this->contexts );
   }
 
@@ -654,17 +559,34 @@ extends Utils
     $this->analysisLexicalHierarchy();
     $this->analysisLexicalSemantics();
     $this->analysisLexicalSave();
-}
+  }
+
+  public function analysisValuesApply(
+    array $contexts = []
+  ): array {
+    return $this->mapper( 
+      $contexts, function(array $context){
+        if( in_array( $context[ T_OBJECT ], [T_EXP_GROUP, T_EXP_DENYING, T_EXP_SUBQUERY ])){
+        }
+
+        return $context;
+      }
+    );
+  }  
+
+  public function analysisValues(
+  ): array {
+    $this->contexts = $this->analysisValuesApply();
+    return [];
+  } 
 
   public function analysisLexicalInitial(
-  ): void {
-    calcTimer( "Start Load Cache Cache::getWhereOrNull" );
-    $cache = Cache::getWhereOrNull( $this->signary );
-    calcTimer( "Load Cache Cache::getWhereOrNull" );
-    if( $cache === false || $cache[T_HASH] !== $this->hash ){
+  ): array {
+    $cacheExists = Cache::getWhereOrNull( $this->signary );
+    if( $cacheExists === false || $cacheExists[T_HASH] !== $this->hash ){
       $this->analysisLexical();
-    } else {
-      $this->contexts = $cache[T_CONTEXTS];
-    }    
+    } else [ T_CONTEXTS => $this->contexts ] = $cacheExists;
+
+    return $this->analysisValues();
   }  
 }

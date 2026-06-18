@@ -65,6 +65,7 @@ define( 'T_ACTION_TO_IN', 6 );
 define( "T_OBJECT", "object" );
 define( "T_PARENT", "parent" );
 define( "T_CHILDS", "childs" );
+define( "T_METHOD", "method" );
 define( "T_VALUES", "values" );
 define( "T_SCHEME", "scheme" );
 define( "T_COLUMN", "column" );
@@ -77,6 +78,8 @@ define( "T_COLUMN_METHOD_ARGS", "args" );
 define( "T_TOKEN_KEY", "tokenKey" );
 define( "T_TOKEN_NAME", "tokenName" );
 define( "T_TOKEN_VALUE", "tokenValue" );
+
+define( "T_SUB_QUERY_LIST", [ "any" ] );
 
 class Utils
 {
@@ -105,14 +108,28 @@ class Utils
     array $items,
     Closure $closure
   ): array {
-    return array_map( $closure, $items, array_keys( $items ));
+    $result = [];
+
+    foreach( $items as $key => $item ){
+      $result[$key] = $closure($item, $key);
+    }
+
+    return $result;
   }
 
   public function filter(
     array $items,
     Closure $closure
   ): array {
-    return array_values( array_filter( $items, $closure ));
+    $result = [];
+
+    foreach( $items as $item ){
+      if( $closure( $item )){
+        $result[] = $item;
+      }
+    }
+
+    return $result;
   }
 
   public function indexOf(
@@ -287,21 +304,25 @@ class Utils
   
   public function getSubQueryMethod(
     array $tokens = []    
-  ): array|null {
-    $subQueryMethod = array_slice(
+  ): string|null {
+    $subQueryMethods = array_slice(
       $tokens, $this->dec(
         $this->indexOf( $tokens, T_FN ), 1
       ), 1
     );
 
-    return $subQueryMethod ?? null;
+    if( empty( $subQueryMethods )){
+      return null;
+    }
+
+    [ $subQueryMethod ] = $subQueryMethods;
+    return $subQueryMethod[T_TOKEN_VALUE] ?? null;
   }  
 
   public function isSubQuery(
     array $contexts = []    
   ): bool {
-    [ $subQueryMethod ] = $this->getSubQueryMethod($contexts);
-    return in_array( $subQueryMethod[T_TOKEN_VALUE], [ 'any' ]);
+    return in_array( $this->getSubQueryMethod( $contexts ), T_SUB_QUERY_LIST );
   }
   
   public function isLogical(
@@ -348,5 +369,232 @@ class Utils
     }
       
     return null;
+  }
+
+  public function fieldProps(
+    array $contexts = []
+  ): array {
+    [ $scopeVariable, $_, $fieldVariable ] = $contexts;
+    return [ $scopeVariable[T_TOKEN_VALUE], $fieldVariable[T_TOKEN_VALUE] ];
+  }
+  
+  public function fieldPropByEntity(
+    string $entity,
+    string $column
+  ): array {
+    $cacheEntitys = Cache::entity(
+      $entity
+    );
+
+    [ $columnScheme ] = $cacheEntitys[
+      T_Entity
+    ];
+
+    [ $columnName ] = [ 
+      $cacheEntitys[ T_Alias ][ $column ]
+        ?? $column
+    ];
+
+    [ $columnType ] = array_slice(
+      explode( '\\', $cacheEntitys[ T_Types ][ $column ] ), -1, 1
+    );
+
+    return [ 
+      T_SCHEME => $columnScheme, 
+      T_COLUMN => $columnName,
+      T_COLUMN_TYPE => $columnType
+    ];
+  }
+  
+  public function scopeByField(
+    array $scopes,
+    string $scopeVariable 
+  ): string|null {
+    if( empty( $scopes )){
+      return null;
+    }
+
+    $scopes = $this->filter(
+      $scopes, fn( array $scope ) => (
+        $scope[K_VARIABLE] === $scopeVariable
+      ) 
+    );
+    
+    if( empty( $scopes )){
+      return null;
+    }
+    
+    return $scopes[0][K_STATEMENTS];
+  }
+  
+  public function fieldMethods(
+    array $childs = [],
+    array $events = []
+  ): array {
+    $events = $this->groupByTypes(
+      [ T_OBJECT_OPERATOR ], $this->slice( $childs, 4 )
+    );
+
+    $events = $this->mapper(
+      $events, fn( array $tokens ) => [
+        T_COLUMN_METHOD_NAME => $tokens[0][T_TOKEN_VALUE], 
+        T_COLUMN_METHOD_TYPE => in_array(
+          $tokens[0][T_TOKEN_VALUE], [ 
+            'contains',
+            'startsWith',
+            'endsWith',
+            'in',
+            'isNull',
+            'isNotNull'
+          ]) ? 'compare' : 'modify', 
+        T_COLUMN_METHOD_ARGS => $this->mapper(
+            $this->groupByTypes(
+            [ T_COMMA ], array_slice(
+              $tokens, $this->inc(
+                $this->indexOf(
+                  $tokens, T_START_PARENTESES
+                )
+              ), -1
+            ), 
+          ), fn( array $args ) => $args[0]
+        )
+      ]
+    );
+
+    return [ T_COLUMN_METHODS => $events ];
+  }
+
+  public function isField(
+    array $contexts = []
+  ): bool {
+    if( count( $contexts ) < 3 ){
+      return false;
+    }
+
+    return $contexts[0][T_TOKEN_KEY] === T_VARIABLE
+        && $contexts[1][T_TOKEN_KEY] === T_OBJECT_OPERATOR
+        && $contexts[2][T_TOKEN_KEY] === T_STRING;
+  }  
+  
+  public function createField(
+    array $scopes,
+    array $childs = []
+  ): array {
+    [ $variable, $column 
+    ] = $this->fieldProps($childs);
+   
+    return [ 
+      T_OBJECT => T_EXP_FIELD, 
+      ...array_merge(
+        $this->fieldPropByEntity( 
+          $this->scopeByField( 
+            $scopes, $variable 
+          ), $column
+        ), $this->fieldMethods($childs)
+      )
+    ];
+  }
+
+  private function startupVariable(
+    array $contexts,
+    array $statics
+  ): array {
+    [ $_, $contexts ] = $contexts;
+
+    for($i=0; $i < count($contexts); $i++){
+      [ $_, $value ] = $contexts[$i];
+      
+      if( is_array( $statics )){
+        $staticValue = $statics[
+          trim($value, '$')
+        ] ?? null;
+      } else
+      if( is_object( $statics )){
+        $staticValue = $statics->{
+          trim($value, '$')
+        } ?? null;
+      }
+      
+      if( $staticValue !== null ){
+        if( is_string( $staticValue )){
+          $contexts[$i] = [
+            T_STRING, 
+            $staticValue,
+            token_name(T_STRING)
+          ];
+        } else
+        if( is_object( $staticValue )){
+          $statics = $staticValue;
+          array_splice( $contexts, $i, 2 ); $i--;
+        } else
+        if( is_array( $staticValue )){
+          $statics = $staticValue;
+          $tokensOuts = array_splice($contexts, $i, 4);
+          array_splice( $contexts, $i, 0, [ $tokensOuts[ 2 ]]); $i--;
+        }
+      }
+    }
+
+    return $contexts;
+  }  
+  
+  public function isEnumValueNotProperty(
+    array $contexts
+  ): bool {
+    if(count($contexts) < 3){
+      return false;
+    }
+
+    if( count($contexts) === 3 ){
+      [ $enum, $double, $case ] = $contexts;
+        return $enum[0] === T_STRING 
+            && $double[0] === T_DOUBLE_COLON 
+            && $case[0] === T_STRING;
+    }
+
+    return false;
+  }
+  
+  private function updateEnumValue(
+    array $contexts,
+    array $statements,
+     bool $isWithProps
+  ): array {
+    if( $isWithProps ){
+      [ $enum, $_, $case, $_, $property ] = $contexts;
+    } else {
+      [ $enum, $_, $case ] = $contexts;
+    }
+
+    $useEnum = $this->filter(
+      $statements, fn(array $use) => $use[1] === $enum[1]
+    );
+
+    if( $useEnum ){
+      [ $use ] = $useEnum;
+
+      $constantEnum = sprintf( "%s::%s", $use[0], $case[1]);
+      if( defined( $constantEnum )){
+        $enumCase = constant( $constantEnum );
+        if( isset( $property )){
+          return [
+            T_STRING,
+            $property[0] === T_STRING && $property[1] === 'name'
+              ? $enumCase->name : $enumCase->value, token_name(T_STRING)
+          ];
+        } else {
+          return [
+            T_STRING, 
+            $enumCase->value,
+            token_name(T_STRING)
+          ];
+        }
+      }
+    }
+
+    return [ T_STRING, implode(
+      '', array_map( fn(array $context) => $context[1], $contexts )
+      ), token_name( T_STRING )
+    ];
   }  
 }

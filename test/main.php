@@ -18,12 +18,9 @@ class UserRepository
     string $dateEnd,
     string $startsWith
   ): mixed {
-    calcTimer( "Criar Instancia de Repository" );
     $repository = new Repository( PropostaEntity::class );
-    calcTimer( "Fim Instancia de Repository" );
-    calcTimer( "Chamar metodo Where de Repository" );
     $repository->where( 
-      fn( PropostaEntity $p ) => (
+      fn( PropostaEntity $p ) => 
         $p->Created >= $dateStart 
         && $p->Created <= $dateEnd 
         && "98%" == $p->NomeProposta
@@ -31,12 +28,11 @@ class UserRepository
         && "EMERSON" != $p->NomeContato
         && !$p->NomeProposta->trim()->upper()->endsWith( $startsWith, "TEST" )
         && $p->NomeProposta->in( "TESTA", "TESTB" )
-        // && !$p->itemsProposta->any( fn(ItemPropostaEntity $i) => $i->PropostaId == $p->Id && !$i->IsActive && $p->Created >= $dateStart && $p->Created <= $dateEnd )
+        && !$p->itemsProposta->any( fn(ItemPropostaEntity $i) => $i->PropostaId == $p->Id && !$i->IsActive && $p->Created >= $dateStart && $p->Created <= $dateEnd )
         && $p->IsActive == true
-      )         
-    );   
-    
-    calcTimer( "Fim metodo Where de Repository" );
+      
+    );
+    $repository->select(fn( PropostaEntity $p ) => $p->NomeProposta->sum() );   
     return $repository;
   }
 }
@@ -62,12 +58,9 @@ function calcTimer(
 }
 
 calcTimer( "Iniciar Processso" );
-calcTimer( "Instanciar UserRepository" );
 $UserRepository = new UserRepository();
-calcTimer( "Fim Instanciar UserRepository" );
-calcTimer( "Chamar metodo getAll de UserRepository" );
 $getAll = $UserRepository->getAll( "01/01/2024", "31/12/2024", "TERESOPOLIS" );
-calcTimer( "Fim metodo getAll de UserRepository" );
+calcTimer( "Fim Processso" );
 
 echo PHP_EOL;
 print_r($getAll);
