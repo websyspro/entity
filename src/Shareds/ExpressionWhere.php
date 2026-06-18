@@ -526,7 +526,7 @@ extends Utils
       $contexts, function( array $context ){
         if( $this->isSemanticsLoop( $context )){
           $context[T_CHILDS] = $this->analysisLexicalSemanticsApplyInLote(
-            $context[ T_CHILDS ]
+            $context[T_CHILDS]
           );
         }
 
@@ -539,11 +539,11 @@ extends Utils
   
   public function analysisLexicalSemantics(
   ): void {
-    if( $this->isSemanticsLoop( $this->contexts[0]) === false ){
-      $this->contexts = $this->analysisLexicalSemanticsApplyInLote( $this->contexts );
-    }
-    
-    $this->contexts = $this->analysisLexicalSemanticsApply( $this->contexts );
+    $this->contexts = $this->analysisLexicalSemanticsApply( 
+      $this->isSemanticsLoop( $this->contexts[ 0 ]) === false 
+        ? $this->analysisLexicalSemanticsApplyInLote( $this->contexts ) 
+        : $this->contexts 
+    );
   }
 
   public function analysisLexicalSave(
