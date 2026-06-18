@@ -46,17 +46,17 @@ class Cache
   }
   
   public static function save(
-    string $file,
+    string $signary,
     array $contexts
   ): array {
     file_put_contents( 
-      self::path( "{$file}.php"), sprintf(
+      self::path( "{$signary}.php"), sprintf(
         "<?php%s%sreturn %s;", PHP_EOL, PHP_EOL, var_export($contexts, true)
       ), LOCK_EX
     );
 
-    self::$cacheContexts[ $file ] = $contexts;
-    return self::$cacheContexts[$file];
+    self::$cacheContexts[ $signary ] = $contexts;
+    return self::$cacheContexts[ $signary ];
   }
 
   public static function delete(
@@ -86,11 +86,19 @@ class Cache
       "orm-entity-%s", md5( $entity )
     );
 
-    if( self::exist( $hash ) ){
-      return self::load( $hash );
+    $cacheFile = @include self::file($hash); 
+    if( $cacheFile !== false ){
+      return $cacheFile;
     }
 
     $entityStructure = new EntityStructure( $entity );
     return self::save( $hash, $entityStructure->contexts );
+  }
+
+  public static function getWhereOrNull(
+    string $signary
+  ): array|false {
+    $hash = "orm-where-{$signary}";
+    return @include self::file( $hash );
   }
 }

@@ -13,7 +13,7 @@ class Repository
 extends Utils
 {
   public string $signary;
-  public array $useStatements;
+  public array $statements;
   public ReflectionFunction $reflectionFunction;
  
   public function __construct(
@@ -28,33 +28,33 @@ extends Utils
 
     while( $handle->eof() === false ){
       $handleFgets = $handle->fgets();
-      $this->useStatements[] = trim( $handleFgets, "\r\n;" );
+      $this->statements[] = trim( $handleFgets, "\r\n;" );
       if( str_contains( $handleFgets, "class" )){
         break;
       }
     }
     
-    $this->useStatements = $this->filter( 
-      $this->useStatements, fn( string $useStatements ) => (
+    $this->statements = $this->filter( 
+      $this->statements, fn( string $useStatements ) => (
         str_starts_with($useStatements, "use ")
       )
     );
 
-    $this->useStatements = $this->mapper(
-      $this->useStatements, function( string $useStatements ){
-        $useStatements = str_replace( "use ", "", $useStatements );
-        if( str_contains( $useStatements, "as" )){
-          [ $statements, $alias ] = explode( "as", $useStatements );
-          return [ K_STATEMENTS => $statements, K_VARIABLE => $alias ];
+    $this->statements = $this->mapper(
+      $this->statements, function( string $statement ){
+        $statement = str_replace( "use ", "", $statement );
+        if( str_contains( $statement, "as" )){
+          [ $statement, $alias ] = explode( "as", $statement );
+          return [ K_STATEMENTS => $statement, K_VARIABLE => $alias ];
         } else {
-          $statementsPaths = explode( "\\", $useStatements );
-          [ $statements, $alias ] = [ $useStatements, ...$this->slice( $statementsPaths, -1, 1 )];
-          return [ K_STATEMENTS => $statements, K_VARIABLE => $alias ];
+          $statementsPaths = explode( "\\", $statement );
+          [ $statement, $alias ] = [ $statement, ...$this->slice( $statementsPaths, -1, 1 )];
+          return [ K_STATEMENTS => $statement, K_VARIABLE => $alias ];
         }
       }
     );
 
-    return $this->useStatements;
+    return $this->statements;
   }
 
   public function setSignaryAndUsesStatements(
@@ -65,25 +65,25 @@ extends Utils
       );
     }
 
-    if( isset( $this->useStatements ) === false ){
-      $this->useStatements = $this->extractUseStatements();
+    if( isset( $this->statements ) === false ){
+      $this->statements = $this->extractUseStatements();
     }
   }
 
   private function getStatementByVariable(
-    array $statements
+    array $scope
   ): string|null {
-    $statement = $this->filter( 
-      $this->useStatements, fn( array $useStatement ) => (
-        $useStatement[ K_VARIABLE ] === $statements[T_TOKEN_VALUE]
+    $statements = $this->filter( 
+      $this->statements, fn( array $statement ) => (
+        $statement[ K_VARIABLE ] === $scope[T_TOKEN_VALUE]
       )
     );
 
-    if(empty($statement)){
+    if(empty( $statements )){
       return null;
     }
 
-    [ $statement ] = $statement;
+    [ $statement ] = $statements;
     return $statement[ K_STATEMENTS ];
   }
 
@@ -118,6 +118,12 @@ extends Utils
     );
   }
 
+  private function extractHash(
+    array $tokens
+  ): string {
+    return md5( json_encode( $tokens ));
+  }  
+
   private function extractScopeAndTokens(
     ReflectionFunction &$reflectionFunction
   ): array {
@@ -127,14 +133,23 @@ extends Utils
 
     $handle->seek( $reflectionFunction->getStartLine() - 1);
     while( $handle->eof() === false ){
-      $tokens[] = trim( $handle->fgets(), "\r\n" );
+      $handleFGets = trim( $handle->fgets());
+      if( strpos( $handleFGets, "//" ) !== false ){
+        $handleFGets = substr( 
+          $handleFGets, 0, strpos(
+            $handleFGets, "//"
+          )
+        );
+      }
+
+      $tokens[] = $handleFGets;
       if( $handle->key() >= $reflectionFunction->getEndLine() - 1){
         break;
       }
     }
 
     $tokens = $this->tokenized( $tokens );
-    return [ $this->extractScope( $tokens ), $this->extractTokens( $tokens ) ];
+    return [ $this->extractScope( $tokens ), $this->extractTokens( $tokens ), $this->extractHash( $tokens )];
   }
 
   public function where(
@@ -143,13 +158,15 @@ extends Utils
     $this->reflectionFunction = new ReflectionFunction( $closure );
     if( $this->reflectionFunction instanceof ReflectionFunction ){
       $this->setSignaryAndUsesStatements();
-      [ $scope, $tokens ] = $this->extractScopeAndTokens(
+      [ $scope, $tokens, $hash ] = $this->extractScopeAndTokens(
         $this->reflectionFunction
       );
 
+      calcTimer( "Create new ExpressionWhere" );
       $expresionWhere = new ExpressionWhere(
-        $this->signary, $scope, $tokens
+        $this->signary, $hash, $this->statements, $scope, $tokens
       );
+      $expresionWhere->analysisLexicalInitial();
     }
 
     return $this;
@@ -165,11 +182,7 @@ extends Utils
         $this->reflectionFunction
       );
 
-      $expresionSelect = new ExpressionSelect (
-        $this->signary, $scope, $tokens
-      );
-
-      print_r( $tokens );
+      $expresionSelect = new ExpressionSelect( $this->signary, $scope, $tokens );
     }
 
     return $this;

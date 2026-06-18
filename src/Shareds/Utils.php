@@ -3,7 +3,10 @@
 namespace Websyspro\Entity\Shareds;
 
 use Closure;
-use function array_slice, is_string, is_array, array_map, array_filter, array_values;
+use function array_slice, is_string, is_array, array_map, array_filter, array_values, in_array;
+
+define( 'T_HASH', 'hash' ); 
+define( 'T_CONTEXTS', 'contexts' );
 
 define( 'T_START_PARENTESES', 40 );
 define( 'T_END_PARENTESES', 41 );
@@ -24,6 +27,52 @@ define( 'T_EQUAL', 61 );
 define( 'T_GREATER_THAN', 62 );
 define( 'T_LESS_THAN', 60 );
 define( 'T_NOT', 33 );
+
+define( 'T_EXP_INITIAL', 'ExpIntial' );
+define( 'T_EXP_DENYING', 'ExpDenying' );
+define( 'T_EXP_GROUP', 'ExpGroup' );
+define( 'T_EXP_LOGICAL', 'ExpLogical' );
+define( 'T_EXP_COMPARE', 'ExpCompare' );
+define( 'T_EXP_BETWEEN', 'ExpBetween' );
+define( 'T_EXP_ISNULL', 'ExpNull' );
+define( 'T_EXP_ISNOTNULL', 'ExpNotNull' );
+define( 'T_EXP_LIKE', 'ExpLike' );
+define( 'T_EXP_IN', 'ExpIn' );
+define( 'T_EXP_UNARY', 'ExpUnary' );
+define( 'T_EXP_SUBQUERY', 'ExpSubQuery' );
+define( 'T_EXP_FIELD', 'ExpField' );
+define( 'T_EXP_EQUAL', 'ExpEqual' );
+define( 'T_EXP_VALUE', 'ExpValue' );
+
+define( 'T_Entity', 'entity' );
+define( 'T_Columns', 'columns' );
+define( 'T_Types', 'types' );
+define( 'T_Alias', 'alias' );
+define( 'T_Indexes', 'indexes' );
+define( 'T_Uniques', 'uniques' );
+define( 'T_Foreign_Keys', 'foreign_keys' );
+define( 'T_Primary_Keys', 'primary_keys' );
+define( 'T_Not_Nulls', 'not_nulls' );
+define( 'T_Auto_Increments', 'auto_increments' );
+
+define( 'T_ACTION_TO_ADJUST_SIDE', 1 );
+define( 'T_ACTION_TO_ADJUST_EQUALS', 2 );
+define( 'T_ACTION_TO_METHODS', 3 );
+define( 'T_ACTION_TO_BETWEEN', 4 );
+define( 'T_ACTION_TO_LIKE', 5 );
+define( 'T_ACTION_TO_IN', 6 );
+
+define( "T_OBJECT", "object" );
+define( "T_PARENT", "parent" );
+define( "T_CHILDS", "childs" );
+define( "T_VALUES", "values" );
+define( "T_SCHEME", "scheme" );
+define( "T_COLUMN", "column" );
+define( "T_COLUMN_TYPE", "columnType" );
+define( "T_COLUMN_METHODS", "columnMethods" );
+define( "T_COLUMN_METHOD_NAME", "name" );
+define( "T_COLUMN_METHOD_TYPE", "type" );
+define( "T_COLUMN_METHOD_ARGS", "args" );
 
 define( "T_TOKEN_KEY", "tokenKey" );
 define( "T_TOKEN_NAME", "tokenName" );
@@ -221,12 +270,83 @@ class Utils
       )
     );
 
-    $tokens = $this->slice( 
-      $tokens, $this->inc( 
-        $this->indexOf( $tokens, T_START_PARENTESES )
-      ),
-    );
-
     return $this->contextsNotEnds( $tokens );
   }
+
+  public function isDenying(
+    array $tokens = []
+  ): bool {
+    return $tokens[0][T_TOKEN_KEY] === T_NOT;
+  }
+  
+  public function isGroup(
+    array $tokens = []
+  ): bool {
+    return $tokens[0][T_TOKEN_KEY] === T_START_PARENTESES;
+  }
+  
+  public function getSubQueryMethod(
+    array $tokens = []    
+  ): array|null {
+    $subQueryMethod = array_slice(
+      $tokens, $this->dec(
+        $this->indexOf( $tokens, T_FN ), 1
+      ), 1
+    );
+
+    return $subQueryMethod ?? null;
+  }  
+
+  public function isSubQuery(
+    array $contexts = []    
+  ): bool {
+    [ $subQueryMethod ] = $this->getSubQueryMethod($contexts);
+    return in_array( $subQueryMethod[T_TOKEN_VALUE], [ 'any' ]);
+  }
+  
+  public function isLogical(
+    array $contexts = []
+  ): bool {
+    return in_array( $contexts[0][T_TOKEN_KEY], [
+      T_LOGICAL_AND, T_LOGICAL_OR, T_BOOLEAN_AND, T_BOOLEAN_OR 
+    ]);
+  }
+  
+  public function isCompare(
+    array $contexts = []
+  ): bool {
+    return empty(
+      $this->filter( $contexts, fn(array $token) => in_array( $token[T_TOKEN_KEY], [
+        T_IS_NOT_IDENTICAL, T_IS_GREATER_OR_EQUAL, T_IS_SMALLER_OR_EQUAL,
+        T_EQUAL, T_IS_EQUAL, T_IS_IDENTICAL, T_IS_NOT_EQUAL,
+        T_GREATER_THAN, T_LESS_THAN
+      ]))
+    ) ? false : true;
+  }
+
+  public function isUnary(
+    array $tokens = []
+  ): bool {
+    return $this->isCompare($tokens) === false;
+  }  
+
+  public function getExpType(
+    array $contexts = []
+  ): string|null {
+    if( $this->isDenying( $contexts )){
+      return T_EXP_DENYING;
+    } else if( $this->isGroup( $contexts )){
+      return T_EXP_GROUP;
+    } else if( $this->isSubQuery( $contexts )){
+      return T_EXP_SUBQUERY;
+    } else if( $this->isLogical( $contexts )){
+      return T_EXP_LOGICAL;
+    } else if( $this->isCompare( $contexts )){
+      return T_EXP_COMPARE;
+    } else if( $this->isUnary( $contexts )){
+      return T_EXP_UNARY;
+    }
+      
+    return null;
+  }  
 }

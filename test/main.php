@@ -17,14 +17,28 @@ class UserRepository
     string $dateEnd,
     string $startsWith
   ): mixed {
+    calcTimer( "Criar nova Instancia de Repository" );
     $repository = new Repository( PropostaEntity::class );
-    calcTimer( "instanciar Class Repository" );
-    $repository->where( fn( PropostaEntity $p ) => $p->NomeProposta == "98%" );
+    calcTimer( "Chamar metodo where de Repository" );
+    $repository->where( 
+      fn( PropostaEntity $p ) => (
+        $p->Created >= $dateStart 
+        && $p->Created <= $dateEnd 
+        && "98%" == $p->NomeProposta
+        // && !$p->NomeProposta->isNotNull()
+        // && "EMERSON" != $p->NomeContato
+        // && !$p->NomeProposta->trim()->upper()->endsWith( $startsWith, "TEST" )
+        // && $p->NomeProposta->in( "TESTA", "TESTB" )
+        // && $p->IsActive == true
+      )         
+    );
+
+    // $repository->select( fn( PropostaEntity $p ) => $p->NomeProposta );
+    // calcTimer( "Execute Repository::select" );
+    // $repository->orderBy( fn( PropostaEntity $p ) => $p->NomeProposta );
+    // calcTimer( "Execute Repository::orderBy" );    
+    
     calcTimer( "Execute Repository::where" );
-    $repository->select( fn( PropostaEntity $p ) => $p->NomeProposta );
-    calcTimer( "Execute Repository::select" );
-    $repository->orderBy( fn( PropostaEntity $p ) => $p->NomeProposta );
-    calcTimer( "Execute Repository::orderBy" );    
     return $repository;
     // $expressionWhere = new ExpressionAbstract_(
     //   fn( PropostaEntity $p ) => (
@@ -52,21 +66,32 @@ class UserRepository
 if(!defined( "MICROTIMER_START" )) 
   define( "MICROTIMER_START", microtime( true ));
 
+global $microtimerPrev;
+$microtimerPrev = 0;
+
 function calcTimer( string $description ): void {
-  printf( "%s: %f(ms)\n",
-    str_pad( $description, 64, ".", STR_PAD_RIGHT ), 
-    bcmul( bcsub( microtime(true), MICROTIMER_START, 6 ), 1000, 6 )
+  global $microtimerPrev;
+
+  $description = str_pad( 
+    $description, 64, ".", STR_PAD_RIGHT
   );
+
+  $microtimeEnd = microtime( true );
+  $microtimeEndFloat = bcmul( bcsub( $microtimeEnd, MICROTIMER_START, 6 ), 1000, 6);
+  if( $microtimerPrev !== 0 ){
+    $microtimePrevFloat = bcmul( bcsub( $microtimeEnd, $microtimerPrev, 6 ), 1000, 6);
+  } else $microtimePrevFloat = bcmul( bcsub( 0, 0, 6 ), 1000, 6);
+  $microtimerPrev = $microtimeEnd;
+
+  echo "{$description}: {$microtimeEndFloat}(ms) +({$microtimePrevFloat})\n";
 }
 
 calcTimer( "Iniciar Processso" );
-
+calcTimer( "Criar nova Instancia de UserRepository" );
 $UserRepository = new UserRepository();
-calcTimer( "Instanciar classe UserRepository" );
 
+calcTimer( "Chamar metodo getAll de UserRepository" );
 $getAll = $UserRepository->getAll( "01/01/2024", "31/12/2024", "TERESOPOLIS" );
-calcTimer( "Chamar Metodo GetAll from UserRepository" );
 
-calcTimer( "Tempo total" );
 echo PHP_EOL;
 print_r($getAll);
