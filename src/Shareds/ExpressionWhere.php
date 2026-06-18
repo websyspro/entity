@@ -509,7 +509,7 @@ extends Utils
     return $childs;
   }
 
-  public function isSemanticsLoop(
+  public function isSemanticsChilds(
     array $contexts = []
   ): bool {
     return in_array(
@@ -524,7 +524,7 @@ extends Utils
   ): array {
     $contexts = $this->mapper( 
       $contexts, function( array $context ){
-        if( $this->isSemanticsLoop( $context )){
+        if( $this->isSemanticsChilds( $context )){
           $context[T_CHILDS] = $this->analysisLexicalSemanticsApplyInLote(
             $context[T_CHILDS]
           );
@@ -540,7 +540,7 @@ extends Utils
   public function analysisLexicalSemantics(
   ): void {
     $this->contexts = $this->analysisLexicalSemanticsApply( 
-      $this->isSemanticsLoop( $this->contexts[ 0 ]) === false 
+      $this->isSemanticsChilds( $this->contexts[ 0 ]) === false 
         ? $this->analysisLexicalSemanticsApplyInLote( $this->contexts ) 
         : $this->contexts 
     );
