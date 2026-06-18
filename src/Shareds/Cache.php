@@ -98,7 +98,13 @@ class Cache
   public static function getWhereOrNull(
     string $signary
   ): array|false {
+    calcTimer( "Criar string ORM_WHERE dentro de getWhereOrNull" );
     $hash = "orm-where-{$signary}";
-    return @include self::file( $hash );
+    calcTimer( "FIM string ORM_WHERE dentro de getWhereOrNull" );
+    
+    calcTimer( "Executar @include self::file( \$hash )" );
+    $file = @include self::file( $hash );
+    calcTimer( "Fim Executar @include self::file( \$hash )" );
+    return $file;
   }
 }

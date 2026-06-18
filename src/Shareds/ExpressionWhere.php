@@ -657,18 +657,7 @@ extends Utils
 }
 
   public function analysisLexicalInitial(
-    // string $signary,
-    // string $hash,
-    // array $statements = [],
-    // array $scopes = [],
-    // array $tokens = [],
   ): void {
-    // $this->statements = $statements;
-    // $this->signary = $signary;
-    // $this->scopes = $scopes;
-    // $this->tokens = $tokens;
-    // $this->hash = $hash;
-
     calcTimer( "Start Load Cache Cache::getWhereOrNull" );
     $cache = Cache::getWhereOrNull( $this->signary );
     calcTimer( "Load Cache Cache::getWhereOrNull" );

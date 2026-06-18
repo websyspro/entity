@@ -1,6 +1,7 @@
 <?php
 
 use Websyspro\Entity\Shareds\Repository;
+use Websyspro\Test\Crm\Entitys\ItemPropostaEntity;
 use Websyspro\Test\Crm\Entitys\PropostaEntity;
 
 class UserRepository
@@ -17,81 +18,56 @@ class UserRepository
     string $dateEnd,
     string $startsWith
   ): mixed {
-    calcTimer( "Criar nova Instancia de Repository" );
+    calcTimer( "Criar Instancia de Repository" );
     $repository = new Repository( PropostaEntity::class );
-    calcTimer( "Chamar metodo where de Repository" );
+    calcTimer( "Fim Instancia de Repository" );
+    calcTimer( "Chamar metodo Where de Repository" );
     $repository->where( 
       fn( PropostaEntity $p ) => (
         $p->Created >= $dateStart 
         && $p->Created <= $dateEnd 
         && "98%" == $p->NomeProposta
-        // && !$p->NomeProposta->isNotNull()
-        // && "EMERSON" != $p->NomeContato
-        // && !$p->NomeProposta->trim()->upper()->endsWith( $startsWith, "TEST" )
-        // && $p->NomeProposta->in( "TESTA", "TESTB" )
-        // && $p->IsActive == true
+        && !$p->NomeProposta->isNotNull()
+        && "EMERSON" != $p->NomeContato
+        && !$p->NomeProposta->trim()->upper()->endsWith( $startsWith, "TEST" )
+        && $p->NomeProposta->in( "TESTA", "TESTB" )
+        // && !$p->itemsProposta->any( fn(ItemPropostaEntity $i) => $i->PropostaId == $p->Id && !$i->IsActive && $p->Created >= $dateStart && $p->Created <= $dateEnd )
+        && $p->IsActive == true
       )         
-    );
-
-    // $repository->select( fn( PropostaEntity $p ) => $p->NomeProposta );
-    // calcTimer( "Execute Repository::select" );
-    // $repository->orderBy( fn( PropostaEntity $p ) => $p->NomeProposta );
-    // calcTimer( "Execute Repository::orderBy" );    
+    );   
     
-    calcTimer( "Execute Repository::where" );
+    calcTimer( "Fim metodo Where de Repository" );
     return $repository;
-    // $expressionWhere = new ExpressionAbstract_(
-    //   fn( PropostaEntity $p ) => (
-    //     "98%" == $p->NomeProposta
-    //     && !$p->NomeProposta->isNotNull()
-    //     && $p->Created >= $dateStart 
-    //     && $dateEnd >= $p->Created
-    //     && "EMERSON" != $p->NomeContato
-    //     && !$p->NomeProposta->trim()->upper()->endsWith( $startsWith, "TEST" )
-    //     && $p->NomeProposta->in( "TESTA", "TESTB" )
-    //     && $p->IsActive == true
-    //     && !$p->IsActive
-    //     && '84850ECB-2443-442A-A9B0-4555C9421227' == $p->CreatedById
-    //     && $p->IsDeleted == false
-    //     && $p->NomeProposta->trim()->upper() == "98%"
-    //     && !$p->itemsProposta->any( fn(ItemPropostaEntity $i) => $i->PropostaId == $p->Id && !$i->IsActive && $p->Created >= $dateStart && $p->Created <= $dateEnd )
-    //   ) 
-    // );
-
-    // $expressionWhere->get();
-    // return $expressionWhere;
   }
 }
 
-if(!defined( "MICROTIMER_START" )) 
-  define( "MICROTIMER_START", microtime( true ));
+if(!defined('MICROTIMER_START')) {
+    define('MICROTIMER_START', hrtime(true));
+}
 
-global $microtimerPrev;
-$microtimerPrev = 0;
+$microtimerPrev = MICROTIMER_START;
 
-function calcTimer( string $description ): void {
+function calcTimer(
+  string $description
+): void {
   global $microtimerPrev;
+  $now = hrtime(true);
 
-  $description = str_pad( 
-    $description, 64, ".", STR_PAD_RIGHT
-  );
+  $total = ($now - MICROTIMER_START) / 1_000_000;
+  $delta = ($now - $microtimerPrev) / 1_000_000;
 
-  $microtimeEnd = microtime( true );
-  $microtimeEndFloat = bcmul( bcsub( $microtimeEnd, MICROTIMER_START, 6 ), 1000, 6);
-  if( $microtimerPrev !== 0 ){
-    $microtimePrevFloat = bcmul( bcsub( $microtimeEnd, $microtimerPrev, 6 ), 1000, 6);
-  } else $microtimePrevFloat = bcmul( bcsub( 0, 0, 6 ), 1000, 6);
-  $microtimerPrev = $microtimeEnd;
+  $microtimerPrev = $now;
 
-  echo "{$description}: {$microtimeEndFloat}(ms) +({$microtimePrevFloat})\n";
+  printf( "%-64s: %.6f(ms) +(%.6f)\n", $description, $total, $delta );
 }
 
 calcTimer( "Iniciar Processso" );
-calcTimer( "Criar nova Instancia de UserRepository" );
+calcTimer( "Instanciar UserRepository" );
 $UserRepository = new UserRepository();
-
+calcTimer( "Fim Instanciar UserRepository" );
 calcTimer( "Chamar metodo getAll de UserRepository" );
 $getAll = $UserRepository->getAll( "01/01/2024", "31/12/2024", "TERESOPOLIS" );
+calcTimer( "Fim metodo getAll de UserRepository" );
 
 echo PHP_EOL;
 print_r($getAll);

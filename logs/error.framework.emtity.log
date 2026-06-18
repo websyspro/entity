@@ -1,0 +1,11 @@
+[Thu Jun 18 16:33:46.374727 2026] [ssl:warn] [pid 30524:tid 348] AH01909: framework-entity:443:0 server certificate does NOT include an ID which matches the server name
+[Thu Jun 18 16:33:48.134654 2026] [ssl:warn] [pid 30524:tid 348] AH01909: framework-entity:443:0 server certificate does NOT include an ID which matches the server name
+[Thu Jun 18 16:33:50.682278 2026] [ssl:warn] [pid 2856:tid 372] AH01909: framework-entity:443:0 server certificate does NOT include an ID which matches the server name
+[Thu Jun 18 16:33:52.438267 2026] [ssl:warn] [pid 2856:tid 372] AH01909: framework-entity:443:0 server certificate does NOT include an ID which matches the server name
+[Thu Jun 18 16:39:35.203364 2026] [ssl:warn] [pid 18720:tid 352] AH01909: framework-entity:443:0 server certificate does NOT include an ID which matches the server name
+[Thu Jun 18 16:39:35.246627 2026] [ssl:warn] [pid 18720:tid 352] AH01909: framework-entity:443:0 server certificate does NOT include an ID which matches the server name
+[Thu Jun 18 16:39:36.147893 2026] [ssl:warn] [pid 18044:tid 384] AH01909: framework-entity:443:0 server certificate does NOT include an ID which matches the server name
+[Thu Jun 18 16:39:36.190624 2026] [ssl:warn] [pid 18044:tid 384] AH01909: framework-entity:443:0 server certificate does NOT include an ID which matches the server name
+[Thu Jun 18 16:39:49.173607 2026] [ssl:warn] [pid 5628:tid 360] AH01909: framework-entity:443:0 server certificate does NOT include an ID which matches the server name
+[Thu Jun 18 16:39:49.219332 2026] [ssl:warn] [pid 5628:tid 360] AH01909: framework-entity:443:0 server certificate does NOT include an ID which matches the server name
+[Thu Jun 18 16:39:50.007420 2026] [ssl:warn] [pid 29940:tid 212] AH01909: framework-entity:443:0 server certificate does NOT include an ID which matches the server name

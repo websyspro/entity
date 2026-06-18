@@ -22,10 +22,13 @@ extends Utils
 
   public function extractUseStatements(
   ): array {
+    calcTimer( "Abrir arquivo com SplFileObject" );
     $handle = new SplFileObject(
       $this->reflectionFunction->getFileName()
     );
+    calcTimer( "Fim arquivo com SplFileObject" );
 
+    calcTimer( "Loop no aruqivo ate a linha que comeca com Class" );
     while( $handle->eof() === false ){
       $handleFgets = $handle->fgets();
       $this->statements[] = trim( $handleFgets, "\r\n;" );
@@ -33,12 +36,15 @@ extends Utils
         break;
       }
     }
+    calcTimer( "Fim no aruqivo ate a linha que comeca com Class" );
     
+    calcTimer( "Filtrar somente linhas que comeca com Use" );
     $this->statements = $this->filter( 
       $this->statements, fn( string $useStatements ) => (
-        str_starts_with($useStatements, "use ")
+        str_starts_with( $useStatements, "use ")
       )
     );
+    calcTimer( "Fim Filtrar somente linhas que comeca com Use" );
 
     $this->statements = $this->mapper(
       $this->statements, function( string $statement ){
@@ -155,18 +161,29 @@ extends Utils
   public function where(
     Closure $closure
   ): self {
+    calcTimer( "create ReflectionFunction" );
     $this->reflectionFunction = new ReflectionFunction( $closure );
+    calcTimer( "Fim Create ReflectionFunction" );
     if( $this->reflectionFunction instanceof ReflectionFunction ){
+      calcTimer( "Chamar methdo setSignaryAndUsesStatements de Repository" );
       $this->setSignaryAndUsesStatements();
+      calcTimer( "Fim Chamar methdo setSignaryAndUsesStatements de Repository" );
+
+      calcTimer( "Chamar methdo extractScopeAndTokens de Repository" );
       [ $scope, $tokens, $hash ] = $this->extractScopeAndTokens(
         $this->reflectionFunction
       );
+      calcTimer( "Fim methdo extractScopeAndTokens de Repository" );
 
-      calcTimer( "Create new ExpressionWhere" );
+      calcTimer( "Criar Instancia de ExpressionWhere" );
       $expresionWhere = new ExpressionWhere(
         $this->signary, $hash, $this->statements, $scope, $tokens
       );
+      calcTimer( "Fim Instancia de ExpressionWhere" );
+
+      calcTimer( "Chamar methdo analysisLexicalInitial de ExpressionWhere" );
       $expresionWhere->analysisLexicalInitial();
+      calcTimer( "Fim methdo analysisLexicalInitial de ExpressionWhere" );
     }
 
     return $this;
