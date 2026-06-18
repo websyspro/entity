@@ -2,7 +2,7 @@
 
 namespace Websyspro\Entity\Shareds;
 
-class ExpressionWhere
+class ExpressionSelect
 extends Utils
 {
   public function __construct(

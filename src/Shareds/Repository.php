@@ -70,12 +70,86 @@ extends Utils
     }
   }
 
+  private function getStatementByVariable(
+    array $statements
+  ): string|null {
+    $statement = $this->filter( 
+      $this->useStatements, fn( array $useStatement ) => (
+        $useStatement[ K_VARIABLE ] === $statements[T_TOKEN_VALUE]
+      )
+    );
+
+    if(empty($statement)){
+      return null;
+    }
+
+    [ $statement ] = $statement;
+    return $statement[ K_STATEMENTS ];
+  }
+
+  private function extractScope(
+    array $tokens
+  ): array {
+    $tokens = $this->slice(
+      $this->slice( $tokens, $this->inc( $this->indexOf( $tokens, T_START_PARENTESES ))), 
+        0, $this->dec( $this->indexOf( $tokens, T_END_PARENTESES ), 1 )
+    );
+
+    $tokens = $this->groupByTypes(
+      [ T_COMMA ], $tokens, true
+    );
+
+    return $this->mapper(
+      $tokens, function( array $scope ){
+        [ $statements, $variables ] = $scope;
+        $statements = $this->getStatementByVariable( $statements );
+        return [ K_STATEMENTS => $statements, K_VARIABLE => $variables[T_TOKEN_VALUE] ];
+      }
+    );
+  }
+
+  private function extractTokens(
+    array $tokens
+  ): array {
+    return $this->slice( 
+      $tokens, $this->inc(
+        $this->indexOf( $tokens, T_DOUBLE_ARROW )
+      )
+    );
+  }
+
+  private function extractScopeAndTokens(
+    ReflectionFunction &$reflectionFunction
+  ): array {
+    $handle = new SplFileObject(
+      $reflectionFunction->getFileName()
+    );
+
+    $handle->seek( $reflectionFunction->getStartLine() - 1);
+    while( $handle->eof() === false ){
+      $tokens[] = trim( $handle->fgets(), "\r\n" );
+      if( $handle->key() >= $reflectionFunction->getEndLine() - 1){
+        break;
+      }
+    }
+
+    $tokens = $this->tokenized( $tokens );
+    return [ $this->extractScope( $tokens ), $this->extractTokens( $tokens ) ];
+  }
+
   public function where(
     Closure $closure
   ): self {
     $this->reflectionFunction = new ReflectionFunction( $closure );
     if( $this->reflectionFunction instanceof ReflectionFunction ){
       $this->setSignaryAndUsesStatements();
+      [ $scope, $tokens ] = $this->extractScopeAndTokens(
+        $this->reflectionFunction
+      );
+
+      $expresionWhere = new ExpressionWhere(
+        $this->signary, $scope, $tokens
+      );
     }
 
     return $this;
@@ -87,7 +161,17 @@ extends Utils
     $this->reflectionFunction = new ReflectionFunction( $closure );
     if( $this->reflectionFunction instanceof ReflectionFunction ){
       $this->setSignaryAndUsesStatements();
+      [ $scope, $tokens ] = $this->extractScopeAndTokens(
+        $this->reflectionFunction
+      );
+
+      $expresionSelect = new ExpressionSelect (
+        $this->signary, $scope, $tokens
+      );
+
+      print_r( $tokens );
     }
+
     return $this;
   }
   
