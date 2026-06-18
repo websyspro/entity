@@ -135,4 +135,8 @@ if ($cachedData !== false && is_array($cachedData)) {
 }
 
 // 🔴 PRIMEIRA VEZ: Se o include retornou false, significa que o cache não existe.
+<<<<<<< HEAD
 // Execute aqui todo o seu processo pesado de ler o arquivo original e gerar o cache...
+=======
+// Execute aqui todo o seu processo pesado de ler o arquivo original e gerar o cache...
+>>>>>>> fdae5a6f86fd44e7bab9f9dbab2e8e8817f93abd
