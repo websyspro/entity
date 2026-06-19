@@ -59,13 +59,23 @@ extends Utils
         );
       }
     }
+    
+    $isGroups = in_array(
+      $this->getExpType( $this->slice( $childs, 1 )), [
+        T_EXP_GROUP, T_EXP_SUBQUERY
+      ]
+    );
 
     return [ 
       T_OBJECT => T_EXP_DENYING, 
       T_PARENT => $parent,
-      T_CHILDS => $this->analysisLexicalHierarchyApply(
-        T_EXP_DENYING, $scopes, $this->slice( $childs, 1 )
-      )
+      T_CHILDS => [
+        $isGroups ? $this->analysisLexicalHierarchyApply(
+          T_EXP_DENYING, $scopes, $this->slice( $childs, 1 )
+        ) : $this->analysisLexicalHierarchyApplyUnary(
+          T_EXP_DENYING, $scopes, $this->slice( $childs, 1 )
+        )
+      ]
     ];
   }
 
@@ -170,18 +180,23 @@ extends Utils
       T_GREATER_THAN, T_LESS_THAN 
     ], $childs, true );
 
-    return [
-      T_OBJECT => T_EXP_COMPARE, 
-      T_PARENT => $parent, 
-      T_CHILDS => [
-        $this->isField( $childA ) 
-          ? $this->createField( $scopes, $childA ) 
-          : $this->createValue( $childA ), $this->createEqual( $equals ),
-        $this->isField( $childB )
-          ? $this->createField( $scopes, $childB ) 
-          : $this->createValue( $childB )
-      ]
+    $childs = [
+      $this->isField( $childA ) 
+        ? $this->createField( $scopes, $childA ) 
+        : $this->createValue( $childA ), $this->createEqual( $equals ),
+      $this->isField( $childB )
+        ? $this->createField( $scopes, $childB ) 
+        : $this->createValue( $childB )
     ];
+
+    if( $childs[0][T_OBJECT] === T_EXP_FIELD && $childs[2][T_OBJECT] === T_EXP_VALUE ){
+      $childs[2][T_VALUES_TYPE] = $childs[0][T_COLUMN_TYPE];
+    } else 
+    if( $childs[2][T_OBJECT] === T_EXP_FIELD && $childs[0][T_OBJECT] === T_EXP_VALUE ){
+      $childs[0][T_VALUES_TYPE] = $childs[2][T_COLUMN_TYPE];
+    }
+
+    return [ T_OBJECT => T_EXP_COMPARE, T_PARENT => $parent, T_CHILDS => $childs ];
   }
   
   public function analysisLexicalHierarchyApplyUnary(
@@ -189,13 +204,22 @@ extends Utils
      array $scopes,
      array $childs = []
   ): array {
-    return [ 
-      T_OBJECT => T_EXP_UNARY,
-      T_PARENT => $parent,
-      T_CHILDS => [
-        $this->createField( $scopes, $childs )
-      ]
-    ];
+    $field = $this->createField( $scopes, $childs );
+    if( $field[ T_COLUMN_TYPE ] !== "Flag" ){
+      return [ 
+        T_OBJECT => T_EXP_UNARY,
+        T_PARENT => $parent,
+        T_CHILDS => [ $field ]
+      ];
+    } else {
+      return $this->analysisLexicalHierarchyApplyCompare(
+        $parent, $scopes,array_merge( 
+          $childs, 
+          [ $this->createToken([ T_IS_IDENTICAL, "===" ]) ],
+          [ $this->createToken([ T_STRING, $parent === T_EXP_DENYING ? "false" : "true" ]) ]
+        )
+      );
+    }
   }  
 
   public function analysisLexicalHierarchyApply(
@@ -297,7 +321,8 @@ extends Utils
                         [ $this->createToken([ T_STRING, '%' ]) ], [
                           $methodCompare[0][T_COLUMN_METHOD_ARGS][$y]
                         ], [ $this->createToken([ T_STRING, '%' ]) ]
-                      )
+                      ),
+                      T_VALUES_TYPE => $contexts[$x][T_CHILDS][0][T_COLUMN_TYPE]
                     ]
                   ]
                 ];
@@ -313,7 +338,8 @@ extends Utils
                         [ $methodCompare[0][T_COLUMN_METHOD_ARGS][$y]], [
                           $this->createToken([ T_STRING, '%' ])
                         ]
-                      )
+                      ),
+                      T_VALUES_TYPE => $contexts[$x][T_CHILDS][0][T_COLUMN_TYPE]
                     ]
                   ]
                 ];
@@ -324,11 +350,13 @@ extends Utils
                   T_PARENT => $contexts[$x][T_PARENT], 
                   T_CHILDS => [
                     $contexts[$x][T_CHILDS][0], [
-                      T_EXP_VALUE, array_merge(
+                      T_OBJECT => T_EXP_VALUE, 
+                      T_VALUES => array_merge(
                         [ $this->createToken([ T_STRING, '%' ]) ], [
                           $methodCompare[0][T_COLUMN_METHOD_ARGS][$y]
                         ]
-                      )
+                      ),
+                      T_VALUES_TYPE => $contexts[$x][T_CHILDS][0][T_COLUMN_TYPE]
                     ]
                   ]
                 ];
@@ -340,7 +368,8 @@ extends Utils
             } else {
               for( $y = 0; $y < count($methodCompare[0][T_COLUMN_METHOD_ARGS]); $y++ ){
                 if( $contextsLinks[$y][T_OBJECT] !== T_EXP_LOGICAL ){
-                  $contextsLinks[$y][T_PARENT] = $contexts[$x][T_PARENT];
+                  $contextsLinks[$y][T_PARENT] = $contexts[$x][T_PARENT] === T_EXP_DENYING 
+                    ? T_EXP_DENYING : T_EXP_GROUP;
                 }
               }
 
@@ -369,7 +398,8 @@ extends Utils
                   T_VALUES => array_merge(
                     [ $this->createToken([ T_START_BRACKET, "[" ]) ], $contextsArgs,
                     [ $this->createToken([ T_END_BRACKET, "]" ]) ]
-                  )
+                  ),
+                  T_VALUES_TYPE => $contexts[$x][T_CHILDS][0][T_COLUMN_TYPE]
                 ]
               ]
             ];
@@ -380,9 +410,7 @@ extends Utils
                 ? T_EXP_ISNULL 
                 : T_EXP_ISNOTNULL,
               T_PARENT => $contexts[$x][T_PARENT],
-              T_CHILDS => [
-                $contexts[$x][T_CHILDS]
-              ]
+              T_CHILDS => $contexts[$x][T_CHILDS]
             ];
           }
         }
@@ -441,9 +469,10 @@ extends Utils
           $contexts[$x] = [ 
             T_OBJECT => T_EXP_LIKE, 
             T_PARENT => $contexts[$x][T_PARENT], 
-            T_VALUES => [
+            T_CHILDS => [
               $contexts[$x][T_CHILDS][0], [
-                T_EXP_VALUE, $contexts[$x][T_CHILDS][2][T_VALUES] 
+                T_OBJECT => T_EXP_VALUE, 
+                T_VALUES => $contexts[$x][T_CHILDS][2][T_VALUES] 
               ]
             ]
           ];
@@ -566,13 +595,15 @@ extends Utils
     array $childs = []
   ): array {
     for($i=1; $i < count($childs[T_CHILDS]); $i++){
-      $childs[T_CHILDS][$i][T_VALUES] = $this->variableToStatic( 
-        $childs[T_CHILDS][$i][T_VALUES], $this->statics
-      );
+      if($childs[T_CHILDS][$i][T_OBJECT] === T_EXP_VALUE){
+        $childs[T_CHILDS][$i][T_VALUES] = $this->variableToStatic( 
+          $childs[T_CHILDS][$i][T_VALUES], $this->statics
+        );
 
-      $childs[T_CHILDS][$i][T_VALUES] = $this->enumToStatic( 
-        $childs[T_CHILDS][$i][T_VALUES], $this->statements
-      );
+        $childs[T_CHILDS][$i][T_VALUES] = $this->enumToStatic( 
+          $childs[T_CHILDS][$i][T_VALUES], $this->statements
+        );
+      }
     }
 
     return $childs;
@@ -581,9 +612,9 @@ extends Utils
   public function analysisValuesApplyInChild(
     array $childs = []
   ): array {
-    $childs[T_CHILDS] = $childs[ T_OBJECT ] !== T_EXP_LOGICAL
-      ? $this->analysisValuesApplyInChildAlls( $childs ) 
-      : $childs[T_CHILDS];
+    if( $childs[ T_OBJECT ] !== T_EXP_LOGICAL ){
+      $childs = $this->analysisValuesApplyInChildAlls( $childs ); 
+    }
 
     return $childs;
   }
@@ -611,8 +642,7 @@ extends Utils
       $this->analysisLexical();
     } else [ T_CONTEXTS => $this->contexts ] = $cacheExists;
 
-    $this->analysisValues();
-
+    // $this->analysisValues();
     print_r( $this->contexts );
     return [];
   }  

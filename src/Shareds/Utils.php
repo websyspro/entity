@@ -5,81 +5,82 @@ namespace Websyspro\Entity\Shareds;
 use Closure;
 use function array_slice, is_string, is_array, array_map, count, in_array;
 
-define( 'T_HASH', 'hash' ); 
-define( 'T_CONTEXTS', 'contexts' );
+defined( 'T_HASH' ) || define( 'T_HASH', 'hash' );
+defined( 'T_CONTEXTS' ) || define( 'T_CONTEXTS', 'contexts' );
 
-define( 'T_START_PARENTESES', 40 );
-define( 'T_END_PARENTESES', 41 );
-define( 'T_START_BRACKET', 91 );
-define( 'T_END_BRACKET', 93 );
-define( 'T_START_BRACE', 123 );
-define( 'T_END_BRACE', 125 );
-define( 'T_DOT', 46 );
-define( 'T_COMMA', 44 );
-define( 'T_SEMICOLON', 59 );
-define( 'T_COLON', 58 );
-define( 'T_QUESTION', 63 );
-define( 'T_PLUS', 43 );
-define( 'T_MINUS', 45 );
-define( 'T_MULTIPLY', 42 );
-define( 'T_DIVIDE', 47 );
-define( 'T_EQUAL', 61 );
-define( 'T_GREATER_THAN', 62 );
-define( 'T_LESS_THAN', 60 );
-define( 'T_NOT', 33 );
+defined( 'T_START_PARENTESES' ) || define( 'T_START_PARENTESES', 40 );
+defined( 'T_END_PARENTESES' ) || define( 'T_END_PARENTESES', 41 );
+defined( 'T_START_BRACKET' ) || define( 'T_START_BRACKET', 91 );
+defined( 'T_END_BRACKET' ) || define( 'T_END_BRACKET', 93 );
+defined( 'T_START_BRACE' ) || define( 'T_START_BRACE', 123 );
+defined( 'T_END_BRACE' ) || define( 'T_END_BRACE', 125 );
+defined( 'T_DOT' ) || define( 'T_DOT', 46 );
+defined( 'T_COMMA' ) || define( 'T_COMMA', 44 );
+defined( 'T_SEMICOLON' ) || define( 'T_SEMICOLON', 59 );
+defined( 'T_COLON' ) || define( 'T_COLON', 58 );
+defined( 'T_QUESTION' ) || define( 'T_QUESTION', 63 );
+defined( 'T_PLUS' ) || define( 'T_PLUS', 43 );
+defined( 'T_MINUS' ) || define( 'T_MINUS', 45 );
+defined( 'T_MULTIPLY' ) || define( 'T_MULTIPLY', 42 );
+defined( 'T_DIVIDE' ) || define( 'T_DIVIDE', 47 );
+defined( 'T_EQUAL' ) || define( 'T_EQUAL', 61 );
+defined( 'T_GREATER_THAN' ) || define( 'T_GREATER_THAN', 62 );
+defined( 'T_LESS_THAN' ) || define( 'T_LESS_THAN', 60 );
+defined( 'T_NOT' ) || define( 'T_NOT', 33 );
 
-define( 'T_EXP_INITIAL', 'ExpIntial' );
-define( 'T_EXP_DENYING', 'ExpDenying' );
-define( 'T_EXP_GROUP', 'ExpGroup' );
-define( 'T_EXP_LOGICAL', 'ExpLogical' );
-define( 'T_EXP_COMPARE', 'ExpCompare' );
-define( 'T_EXP_BETWEEN', 'ExpBetween' );
-define( 'T_EXP_ISNULL', 'ExpNull' );
-define( 'T_EXP_ISNOTNULL', 'ExpNotNull' );
-define( 'T_EXP_LIKE', 'ExpLike' );
-define( 'T_EXP_IN', 'ExpIn' );
-define( 'T_EXP_UNARY', 'ExpUnary' );
-define( 'T_EXP_SUBQUERY', 'ExpSubQuery' );
-define( 'T_EXP_FIELD', 'ExpField' );
-define( 'T_EXP_EQUAL', 'ExpEqual' );
-define( 'T_EXP_VALUE', 'ExpValue' );
+defined( 'T_EXP_INITIAL' ) || define( 'T_EXP_INITIAL', 'ExpIntial' );
+defined( 'T_EXP_DENYING' ) || define( 'T_EXP_DENYING', 'ExpDenying' );
+defined( 'T_EXP_GROUP' ) || define( 'T_EXP_GROUP', 'ExpGroup' );
+defined( 'T_EXP_LOGICAL' ) || define( 'T_EXP_LOGICAL', 'ExpLogical' );
+defined( 'T_EXP_COMPARE' ) || define( 'T_EXP_COMPARE', 'ExpCompare' );
+defined( 'T_EXP_BETWEEN' ) || define( 'T_EXP_BETWEEN', 'ExpBetween' );
+defined( 'T_EXP_ISNULL' ) || define( 'T_EXP_ISNULL', 'ExpNull' );
+defined( 'T_EXP_ISNOTNULL' ) || define( 'T_EXP_ISNOTNULL', 'ExpNotNull' );
+defined( 'T_EXP_LIKE' ) || define( 'T_EXP_LIKE', 'ExpLike' );
+defined( 'T_EXP_IN' ) || define( 'T_EXP_IN', 'ExpIn' );
+defined( 'T_EXP_UNARY' ) || define( 'T_EXP_UNARY', 'ExpUnary' );
+defined( 'T_EXP_SUBQUERY' ) || define( 'T_EXP_SUBQUERY', 'ExpSubQuery' );
+defined( 'T_EXP_FIELD' ) || define( 'T_EXP_FIELD', 'ExpField' );
+defined( 'T_EXP_EQUAL' ) || define( 'T_EXP_EQUAL', 'ExpEqual' );
+defined( 'T_EXP_VALUE' ) || define( 'T_EXP_VALUE', 'ExpValue' );
 
-define( 'T_Entity', 'entity' );
-define( 'T_Columns', 'columns' );
-define( 'T_Types', 'types' );
-define( 'T_Alias', 'alias' );
-define( 'T_Indexes', 'indexes' );
-define( 'T_Uniques', 'uniques' );
-define( 'T_Foreign_Keys', 'foreign_keys' );
-define( 'T_Primary_Keys', 'primary_keys' );
-define( 'T_Not_Nulls', 'not_nulls' );
-define( 'T_Auto_Increments', 'auto_increments' );
+defined( 'T_Entity' ) || define( 'T_Entity', 'entity' );
+defined( 'T_Columns' ) || define( 'T_Columns', 'columns' );
+defined( 'T_Types' ) || define( 'T_Types', 'types' );
+defined( 'T_Alias' ) || define( 'T_Alias', 'alias' );
+defined( 'T_Indexes' ) || define( 'T_Indexes', 'indexes' );
+defined( 'T_Uniques' ) || define( 'T_Uniques', 'uniques' );
+defined( 'T_Foreign_Keys' ) || define( 'T_Foreign_Keys', 'foreign_keys' );
+defined( 'T_Primary_Keys' ) || define( 'T_Primary_Keys', 'primary_keys' );
+defined( 'T_Not_Nulls' ) || define( 'T_Not_Nulls', 'not_nulls' );
+defined( 'T_Auto_Increments' ) || define( 'T_Auto_Increments', 'auto_increments' );
 
-define( 'T_ACTION_TO_ADJUST_SIDE', 1 );
-define( 'T_ACTION_TO_ADJUST_EQUALS', 2 );
-define( 'T_ACTION_TO_METHODS', 3 );
-define( 'T_ACTION_TO_BETWEEN', 4 );
-define( 'T_ACTION_TO_LIKE', 5 );
-define( 'T_ACTION_TO_IN', 6 );
+defined( 'T_ACTION_TO_ADJUST_SIDE' ) || define( 'T_ACTION_TO_ADJUST_SIDE', 1 );
+defined( 'T_ACTION_TO_ADJUST_EQUALS' ) || define( 'T_ACTION_TO_ADJUST_EQUALS', 2 );
+defined( 'T_ACTION_TO_METHODS' ) || define( 'T_ACTION_TO_METHODS', 3 );
+defined( 'T_ACTION_TO_BETWEEN' ) || define( 'T_ACTION_TO_BETWEEN', 4 );
+defined( 'T_ACTION_TO_LIKE' ) || define( 'T_ACTION_TO_LIKE', 5 );
+defined( 'T_ACTION_TO_IN' ) || define( 'T_ACTION_TO_IN', 6 );
 
-define( "T_OBJECT", "object" );
-define( "T_PARENT", "parent" );
-define( "T_CHILDS", "childs" );
-define( "T_METHOD", "method" );
-define( "T_VALUES", "values" );
-define( "T_SCHEME", "scheme" );
-define( "T_COLUMN", "column" );
-define( "T_COLUMN_TYPE", "columnType" );
-define( "T_COLUMN_METHODS", "columnMethods" );
-define( "T_COLUMN_METHOD_NAME", "name" );
-define( "T_COLUMN_METHOD_TYPE", "type" );
-define( "T_COLUMN_METHOD_ARGS", "args" );
+defined( 'T_OBJECT' ) || define( 'T_OBJECT', 'object' );
+defined( 'T_PARENT' ) || define( 'T_PARENT', 'parent' );
+defined( 'T_CHILDS' ) || define( 'T_CHILDS', 'childs' );
+defined( 'T_METHOD' ) || define( 'T_METHOD', 'method' );
+defined( 'T_VALUES' ) || define( 'T_VALUES', 'values' );
+defined( 'T_VALUES_TYPE' ) || define( 'T_VALUES_TYPE', 'valuesType' );
+defined( 'T_SCHEME' ) || define( 'T_SCHEME', 'scheme' );
+defined( 'T_COLUMN' ) || define( 'T_COLUMN', 'column' );
+defined( 'T_COLUMN_TYPE' ) || define( 'T_COLUMN_TYPE', 'columnType' );
+defined( 'T_COLUMN_METHODS' ) || define( 'T_COLUMN_METHODS', 'columnMethods' );
+defined( 'T_COLUMN_METHOD_NAME' ) || define( 'T_COLUMN_METHOD_NAME', 'name' );
+defined( 'T_COLUMN_METHOD_TYPE' ) || define( 'T_COLUMN_METHOD_TYPE', 'type' );
+defined( 'T_COLUMN_METHOD_ARGS' ) || define( 'T_COLUMN_METHOD_ARGS', 'args' );
 
-define( "T_TOKEN_KEY", "tokenKey" );
-define( "T_TOKEN_NAME", "tokenName" );
-define( "T_TOKEN_VALUE", "tokenValue" );
+defined( 'T_TOKEN_KEY' ) || define( 'T_TOKEN_KEY', 'tokenKey' );
+defined( 'T_TOKEN_NAME' ) || define( 'T_TOKEN_NAME', 'tokenName' );
+defined( 'T_TOKEN_VALUE' ) || define( 'T_TOKEN_VALUE', 'tokenValue' );
 
-define( "T_SUB_QUERY_LIST", [ "any" ] );
+defined( 'T_SUB_QUERY_LIST' ) || define( 'T_SUB_QUERY_LIST', [ 'any' ] );
 
 class Utils
 {
@@ -481,7 +482,7 @@ class Utils
     array $childs = []
   ): array {
     [ $variable, $column 
-    ] = $this->fieldProps($childs);
+    ] = $this->fieldProps( $childs );
    
     return [ 
       T_OBJECT => T_EXP_FIELD, 
@@ -490,7 +491,7 @@ class Utils
           $this->scopeByField( 
             $scopes, $variable 
           ), $column
-        ), $this->fieldMethods($childs)
+        ), $this->fieldMethods( $childs )
       )
     ];
   }

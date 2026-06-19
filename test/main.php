@@ -22,16 +22,16 @@ class UserRepository
     $repository = new Repository( PropostaEntity::class );
     $repository->where( 
       fn( PropostaEntity $p ) => 
-        $p->Created >= $dateStart 
+        "98%" == $p->NomeProposta
+        && !$p->NomeProposta->isNotNull()
+        && $p->Created >= $dateStart 
         && $p->Created <= $dateEnd
         && $p->Status == Status::Aprovada
-        //&& "98%" == $p->NomeProposta
-        //&& !$p->NomeProposta->isNotNull()
-        //&& "EMERSON" != $p->NomeContato
-        //&& !$p->NomeProposta->trim()->upper()->endsWith( $startsWith, "TEST" )
-        //&& $p->NomeProposta->in( "TESTA", "TESTB" )
-        //&& !$p->itemsProposta->any( fn(ItemPropostaEntity $i) => $i->PropostaId == $p->Id && !$i->IsActive && $p->Created >= $dateStart && $p->Created <= $dateEnd )
-        //&& $p->IsActive == true
+        && "EMERSON" != $p->NomeContato
+        && !$p->NomeProposta->trim()->upper()->endsWith( $startsWith, "TEST" )
+        && $p->NomeProposta->in( "TESTA", "TESTB" )
+        && $p->itemsProposta->any( fn(ItemPropostaEntity $i) => $i->PropostaId == $p->Id && !$i->IsActive && $p->Created >= $dateStart && $p->Created <= $dateEnd )
+        && $p->IsActive
       
     );
     $repository->select(fn( PropostaEntity $p ) => $p->NomeProposta->sum() );   
