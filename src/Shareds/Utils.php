@@ -3,7 +3,7 @@
 namespace Websyspro\Entity\Shareds;
 
 use Closure;
-use function array_slice, is_string, is_array, array_map, count, in_array;
+use function array_slice, is_string, is_array, defined, count, in_array;
 
 defined( 'T_HASH' ) || define( 'T_HASH', 'hash' );
 defined( 'T_CONTEXTS' ) || define( 'T_CONTEXTS', 'contexts' );
@@ -535,72 +535,109 @@ class Utils
     }
 
     return $contexts;
-  }  
+  } 
   
-  public function isEnumValueNotProperty(
-    array $contexts
+  public function isWithProperty(
+    array $values
   ): bool {
-    if(count($contexts) < 3){
+    if( count( $values ) < 5 ){
       return false;
     }
 
-    if( count($contexts) === 3 ){
-      [ $enum, $double, $case ] = $contexts;
-        return $enum[0] === T_STRING 
-            && $double[0] === T_DOUBLE_COLON 
-            && $case[0] === T_STRING;
+    if( count( $values ) === 5 ){
+      return $values[0][T_TOKEN_KEY] === T_STRING
+          && $values[1][T_TOKEN_KEY] === T_DOUBLE_COLON
+          && $values[2][T_TOKEN_KEY] === T_STRING
+          && $values[3][T_TOKEN_KEY] === T_OBJECT_OPERATOR
+          && $values[4][T_TOKEN_KEY] === T_STRING;
+    }
+
+    return false;
+  }  
+  
+  public function isNotProperty(
+    array $values
+  ): bool {
+    if( count( $values ) < 3 ){
+      return false;
+    }
+
+    if( count( $values ) === 3 ){
+      return $values[0][T_TOKEN_KEY] === T_STRING
+          && $values[1][T_TOKEN_KEY] === T_DOUBLE_COLON
+          && $values[2][T_TOKEN_KEY] === T_STRING;
     }
 
     return false;
   }
   
-  public function parseEnumValue(
-    array $contexts,
+  public function changeEnumValue(
     array $statements,
-     bool $isWithProps
+    string $enum,
+    string $case,
+    string|null $proerty = null
   ): array {
-    if( $isWithProps ){
-      [ $enum, $_, $case, $_, $property ] = $contexts;
-    } else {
-      [ $enum, $_, $case ] = $contexts;
-    }
-
-    $useEnum = $this->filter(
-      $statements, fn(array $use) => $use[1] === $enum[1]
+    $statementsEnum = $this->filter(
+      $statements, fn( array $statement ) => $statement[K_VARIABLE] === $enum
     );
 
-    if( $useEnum ){
-      [ $use ] = $useEnum;
-
-      $constantEnum = sprintf( "%s::%s", $use[0], $case[1]);
+    if( $statementsEnum ){
+      [ $statementsEnum ] = $statementsEnum;
+      $constantEnum = "{$statementsEnum[K_STATEMENTS]}::{$case}";
       if( defined( $constantEnum )){
-        $enumCase = constant( $constantEnum );
-        if( isset( $property )){
-          return [
-            T_STRING,
-            $property[0] === T_STRING && $property[1] === 'name'
-              ? $enumCase->name : $enumCase->value, token_name(T_STRING)
-          ];
-        } else {
-          return [
-            T_STRING, 
-            $enumCase->value,
-            token_name(T_STRING)
-          ];
-        }
+        $constantEnum = constant( $constantEnum );
+        return $proerty !== null
+          ? $this->createToken([ T_STRING, $proerty === "name" ? $constantEnum->name : $constantEnum->value ])
+          : $this->createToken([ T_STRING, $constantEnum->value ]);
       }
     }
 
-    return [ T_STRING, implode(
-      '', array_map( fn(array $context) => $context[1], $contexts )
-      ), token_name( T_STRING )
-    ];
+    return $proerty !== null
+       ? [ $this->createToken([ T_STRING, $enum ]),
+           $this->createToken([ T_DOUBLE_COLON, "::" ]),
+           $this->createToken([ T_STRING, $case ]),
+           $this->createToken([ T_OBJECT_OPERATOR, "->" ]),
+           $this->createToken([ T_STRING, $proerty ])]
+       : [ $this->createToken([ T_STRING, $enum ]),
+           $this->createToken([ T_DOUBLE_COLON, "::" ]),
+           $this->createToken([ T_STRING, $case ])];
   }
   
   public function enumToStatic(
     array $values = [],
     array $statements = []
   ): array {
+    for($i=0; $i<count($values); $i++){
+      $withProperty = $this->slice( $values, $i, 5 );
+      $notProperty = $this->slice( $values, $i, 3 );
+
+      $isWithProperty = $this->isWithProperty( $withProperty );
+      $isNotProperty = $this->isNotProperty( $notProperty );
+
+      var_dump($isNotProperty);
+
+      if( $isWithProperty ){
+        $values[$i] = $this->changeEnumValue(
+          $statements, 
+          $withProperty[0][T_TOKEN_VALUE],
+          $withProperty[2][T_TOKEN_VALUE],
+          $withProperty[4][T_TOKEN_VALUE]
+        );
+      } else if( $isNotProperty ){
+        $values[$i] = $this->changeEnumValue(
+          $statements, 
+          $withProperty[0][T_TOKEN_VALUE],
+          $withProperty[2][T_TOKEN_VALUE]
+        );
+      } 
+      
+      if( $isWithProperty ){
+        array_splice( $values, $i + 1, 4 );
+      } else if( $isNotProperty ) {
+        array_splice( $values, $i + 1, 2 );
+      }      
+    };
+
     return $values;
   }
 }

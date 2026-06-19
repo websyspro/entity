@@ -69,13 +69,9 @@ extends Utils
     return [ 
       T_OBJECT => T_EXP_DENYING, 
       T_PARENT => $parent,
-      T_CHILDS => [
-        $isGroups ? $this->analysisLexicalHierarchyApply(
-          T_EXP_DENYING, $scopes, $this->slice( $childs, 1 )
-        ) : $this->analysisLexicalHierarchyApplyUnary(
-          T_EXP_DENYING, $scopes, $this->slice( $childs, 1 )
-        )
-      ]
+      T_CHILDS => $isGroups 
+        ? $this->analysisLexicalHierarchyApply( T_EXP_DENYING, $scopes, $this->slice( $childs, 1 )) 
+        : [ $this->analysisLexicalHierarchyApplyUnary( T_EXP_DENYING, $scopes, $this->slice( $childs, 1 ))]
     ];
   }
 
@@ -191,8 +187,7 @@ extends Utils
 
     if( $childs[0][T_OBJECT] === T_EXP_FIELD && $childs[2][T_OBJECT] === T_EXP_VALUE ){
       $childs[2][T_VALUES_TYPE] = $childs[0][T_COLUMN_TYPE];
-    } else 
-    if( $childs[2][T_OBJECT] === T_EXP_FIELD && $childs[0][T_OBJECT] === T_EXP_VALUE ){
+    } else if( $childs[2][T_OBJECT] === T_EXP_FIELD && $childs[0][T_OBJECT] === T_EXP_VALUE ){
       $childs[0][T_VALUES_TYPE] = $childs[2][T_COLUMN_TYPE];
     }
 
@@ -585,10 +580,11 @@ extends Utils
   }
 
   public function analysisLexical(
-  ): void {
+  ): array {
     $this->analysisLexicalHierarchy();
     $this->analysisLexicalSemantics();
     $this->analysisLexicalSave();
+    return [ T_CONTEXTS => $this->contexts ]; 
   }
 
   public function analysisValuesApplyInChildAlls(
@@ -596,13 +592,8 @@ extends Utils
   ): array {
     for($i=1; $i < count($childs[T_CHILDS]); $i++){
       if($childs[T_CHILDS][$i][T_OBJECT] === T_EXP_VALUE){
-        $childs[T_CHILDS][$i][T_VALUES] = $this->variableToStatic( 
-          $childs[T_CHILDS][$i][T_VALUES], $this->statics
-        );
-
-        $childs[T_CHILDS][$i][T_VALUES] = $this->enumToStatic( 
-          $childs[T_CHILDS][$i][T_VALUES], $this->statements
-        );
+        $childs[T_CHILDS][$i][T_VALUES] = $this->variableToStatic( $childs[T_CHILDS][$i][T_VALUES], $this->statics );
+        $childs[T_CHILDS][$i][T_VALUES] = $this->enumToStatic( $childs[T_CHILDS][$i][T_VALUES], $this->statements );
       }
     }
 
@@ -635,14 +626,29 @@ extends Utils
     $this->contexts = $this->analysisValuesApply($this->contexts);
   } 
 
+  public function analysisLexicalFromCache(
+  ): array {
+    return Cache::load( "orm-where-{$this->signary}" );
+  }  
+
+  public function analysisLexicalExistCache(
+  ): string {
+    if( Cache::exist( "orm-where-{$this->signary}" )){
+      [ T_HASH => $hash ] = $this->analysisLexicalFromCache();
+      return $this->hash === $hash;
+    } 
+
+    return false;
+  }  
+
   public function analysisLexicalInitial(
   ): array {
-    $cacheExists = Cache::getWhereOrNull( $this->signary );
-    if( $cacheExists === false || $cacheExists[T_HASH] !== $this->hash ){
-      $this->analysisLexical();
-    } else [ T_CONTEXTS => $this->contexts ] = $cacheExists;
+    [ T_CONTEXTS => $this->contexts ] = $this->analysisLexicalExistCache() 
+      ? $this->analysisLexicalFromCache()
+      : $this->analysisLexical();
 
-    // $this->analysisValues();
+    $this->analysisValues();
+
     print_r( $this->contexts );
     return [];
   }  
