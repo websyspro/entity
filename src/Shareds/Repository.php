@@ -14,6 +14,7 @@ extends Utils
 {
   public string $signary;
   public array $statements;
+  public array $statics;
   public ReflectionFunction $reflectionFunction;
  
   public function __construct(
@@ -59,6 +60,10 @@ extends Utils
       $this->signary = md5(
         $this->reflectionFunction->getShortName()
       );
+    }
+
+    if( isset( $this->statics ) === false ){
+      $this->statics = $this->reflectionFunction->getStaticVariables();
     }
 
     if( isset( $this->statements ) === false ){
@@ -155,7 +160,7 @@ extends Utils
     if( $this->reflectionFunction instanceof ReflectionFunction ){
       $this->setSignaryAndUsesStatements();
       [ $scope, $tokens, $hash ] = $this->extractScopeAndTokens( $this->reflectionFunction );
-      $expresionWhere = new ExpressionWhere( $this->signary, $hash, $this->statements, $scope, $tokens );
+      $expresionWhere = new ExpressionWhere( $this->signary, $hash, $this->statements, $this->statics, $scope, $tokens );
       $expresionWhere->analysisLexicalInitial();
     }
 

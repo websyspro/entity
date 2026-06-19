@@ -32,7 +32,7 @@ extends AbstractEntity
 
   #[Datetime()]
   #[NotNull()]
-  public string $Created;
+  public \Websyspro\Entity\Types\Datetime $Created;
 
   #[Text(36)]
   #[NotNull()]

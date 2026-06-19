@@ -2,7 +2,7 @@
 
 namespace Websyspro\Entity\Types;
 
-class Varchar
+class Datetime
 extends ColumnAbstract
 {
   private string $data = [];

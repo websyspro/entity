@@ -3,6 +3,7 @@
 use Websyspro\Entity\Shareds\Repository;
 use Websyspro\Test\Crm\Entitys\ItemPropostaEntity;
 use Websyspro\Test\Crm\Entitys\PropostaEntity;
+use Websyspro\Test\Enums\Status;
 
 class UserRepository
 {
@@ -22,14 +23,15 @@ class UserRepository
     $repository->where( 
       fn( PropostaEntity $p ) => 
         $p->Created >= $dateStart 
-        && $p->Created <= $dateEnd 
-        && "98%" == $p->NomeProposta
-        && !$p->NomeProposta->isNotNull()
-        && "EMERSON" != $p->NomeContato
-        && !$p->NomeProposta->trim()->upper()->endsWith( $startsWith, "TEST" )
-        && $p->NomeProposta->in( "TESTA", "TESTB" )
-        && !$p->itemsProposta->any( fn(ItemPropostaEntity $i) => $i->PropostaId == $p->Id && !$i->IsActive && $p->Created >= $dateStart && $p->Created <= $dateEnd )
-        && $p->IsActive == true
+        && $p->Created <= $dateEnd
+        && $p->Status == Status::Aprovada
+        //&& "98%" == $p->NomeProposta
+        //&& !$p->NomeProposta->isNotNull()
+        //&& "EMERSON" != $p->NomeContato
+        //&& !$p->NomeProposta->trim()->upper()->endsWith( $startsWith, "TEST" )
+        //&& $p->NomeProposta->in( "TESTA", "TESTB" )
+        //&& !$p->itemsProposta->any( fn(ItemPropostaEntity $i) => $i->PropostaId == $p->Id && !$i->IsActive && $p->Created >= $dateStart && $p->Created <= $dateEnd )
+        //&& $p->IsActive == true
       
     );
     $repository->select(fn( PropostaEntity $p ) => $p->NomeProposta->sum() );   
@@ -41,20 +43,14 @@ if(!defined('MICROTIMER_START')) {
     define('MICROTIMER_START', hrtime(true));
 }
 
-$microtimerPrev = MICROTIMER_START;
-
 function calcTimer(
   string $description
 ): void {
-  global $microtimerPrev;
   $now = hrtime(true);
-
   $total = ($now - MICROTIMER_START) / 1_000_000;
-  $delta = ($now - $microtimerPrev) / 1_000_000;
-
   $microtimerPrev = $now;
 
-  printf( "%-64s: %.6f(ms) +(%.6f)\n", $description, $total, $delta );
+  printf( "%s: %.6f(ms)\n", $description, $total );
 }
 
 calcTimer( "Iniciar Processso" );

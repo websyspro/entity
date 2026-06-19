@@ -13,6 +13,7 @@ extends Utils
     public string $signary,
     public string $hash,
     public array $statements = [],
+    public array $statics = [],
     public array $scopes = [],
     public array $tokens = [],
   ){}
@@ -498,7 +499,7 @@ extends Utils
     return $this->analysisLexicalSemanticsApply( $contexts );
   }  
 
-  public function analysisLexicalSemanticsApplyInLote(
+  public function analysisLexicalSemanticsApplyInChilds(
     array $childs = []
   ): array {
     $childs = $this->analysisLexicalSemanticsApplyAction( T_ACTION_TO_ADJUST_SIDE, $childs);
@@ -525,7 +526,7 @@ extends Utils
     $contexts = $this->mapper( 
       $contexts, function( array $context ){
         if( $this->isSemanticsChilds( $context )){
-          $context[T_CHILDS] = $this->analysisLexicalSemanticsApplyInLote(
+          $context[T_CHILDS] = $this->analysisLexicalSemanticsApplyInChilds(
             $context[T_CHILDS]
           );
         }
@@ -541,7 +542,7 @@ extends Utils
   ): void {
     $this->contexts = $this->analysisLexicalSemanticsApply( 
       $this->isSemanticsChilds( $this->contexts[ 0 ]) === false 
-        ? $this->analysisLexicalSemanticsApplyInLote( $this->contexts ) 
+        ? $this->analysisLexicalSemanticsApplyInChilds( $this->contexts ) 
         : $this->contexts 
     );
   }
@@ -561,23 +562,46 @@ extends Utils
     $this->analysisLexicalSave();
   }
 
+  public function analysisValuesApplyInChildAlls(
+    array $childs = []
+  ): array {
+    for($i=1; $i < count($childs[T_CHILDS]); $i++){
+      $childs[T_CHILDS][$i][T_VALUES] = $this->variableToStatic( 
+        $childs[T_CHILDS][$i][T_VALUES], $this->statics
+      );
+
+      $childs[T_CHILDS][$i][T_VALUES] = $this->enumToStatic( 
+        $childs[T_CHILDS][$i][T_VALUES], $this->statements
+      );
+    }
+
+    return $childs;
+  }
+
+  public function analysisValuesApplyInChild(
+    array $childs = []
+  ): array {
+    $childs[T_CHILDS] = $childs[ T_OBJECT ] !== T_EXP_LOGICAL
+      ? $this->analysisValuesApplyInChildAlls( $childs ) 
+      : $childs[T_CHILDS];
+
+    return $childs;
+  }
+
   public function analysisValuesApply(
     array $contexts = []
   ): array {
     return $this->mapper( 
-      $contexts, function(array $context){
-        if( in_array( $context[ T_OBJECT ], [T_EXP_GROUP, T_EXP_DENYING, T_EXP_SUBQUERY ])){
-        }
-
-        return $context;
-      }
+      $contexts, fn( array $context ) =>
+        $context[ T_CHILDS ] = $this->isSemanticsChilds( $context )
+          ? $this->analysisValuesApply( $context[ T_CHILDS ]) 
+          : $this->analysisValuesApplyInChild( $context )
     );
   }  
 
   public function analysisValues(
-  ): array {
-    $this->contexts = $this->analysisValuesApply();
-    return [];
+  ): void {
+    $this->contexts = $this->analysisValuesApply($this->contexts);
   } 
 
   public function analysisLexicalInitial(
@@ -587,6 +611,9 @@ extends Utils
       $this->analysisLexical();
     } else [ T_CONTEXTS => $this->contexts ] = $cacheExists;
 
-    return $this->analysisValues();
+    $this->analysisValues();
+
+    print_r( $this->contexts );
+    return [];
   }  
 }

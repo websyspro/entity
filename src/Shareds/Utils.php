@@ -3,7 +3,7 @@
 namespace Websyspro\Entity\Shareds;
 
 use Closure;
-use function array_slice, is_string, is_array, array_map, array_filter, array_values, in_array;
+use function array_slice, is_string, is_array, array_map, count, in_array;
 
 define( 'T_HASH', 'hash' ); 
 define( 'T_CONTEXTS', 'contexts' );
@@ -495,14 +495,12 @@ class Utils
     ];
   }
 
-  private function startupVariable(
+  public function variableToStatic(
     array $contexts,
     array $statics
   ): array {
-    [ $_, $contexts ] = $contexts;
-
     for($i=0; $i < count($contexts); $i++){
-      [ $_, $value ] = $contexts[$i];
+      $value = $contexts[$i][T_TOKEN_VALUE];
       
       if( is_array( $statics )){
         $staticValue = $statics[
@@ -555,7 +553,7 @@ class Utils
     return false;
   }
   
-  private function updateEnumValue(
+  public function parseEnumValue(
     array $contexts,
     array $statements,
      bool $isWithProps
@@ -596,5 +594,12 @@ class Utils
       '', array_map( fn(array $context) => $context[1], $contexts )
       ), token_name( T_STRING )
     ];
-  }  
+  }
+  
+  public function enumToStatic(
+    array $values = [],
+    array $statements = []
+  ): array {
+    return $values;
+  }
 }
