@@ -23,19 +23,19 @@ class UserRepository
     $repository->where( 
       fn( PropostaEntity $p ) => 
         $p->Status == Status::Aprovada
-        // && "98%" == $p->NomeProposta
-        // && !$p->NomeProposta->isNotNull()
-        // && $p->Created >= $dateStart 
-        // && $p->Created <= $dateEnd
-        // && "EMERSON" != $p->NomeContato
-        // && !$p->NomeProposta->trim()->upper()->endsWith( $startsWith, "TEST" )
-        // && $p->NomeProposta->in( "TESTA", "TESTB" )
-        // && !$p->itemsProposta->any( fn(ItemPropostaEntity $i) => $i->PropostaId == $p->Id && !$i->IsActive && $p->Created >= $dateStart && $p->Created <= $dateEnd )
-        // && $p->IsActive
+        && $p->NomeProposta->in( $startsWith, "TESTB" )
+        && "98%" == $p->NomeProposta
+        && $p->NomeProposta->isNotNull()
+        && $p->Created >= $dateStart 
+        && $p->Created <= $dateEnd
+        && "EMERSON" != $p->NomeContato
+        && $p->NomeProposta->trim()->upper()->endsWith( $startsWith, "TEST" )
+        && !$p->itemsProposta->any( fn(ItemPropostaEntity $i) => $i->PropostaId == $p->Id && !$i->IsActive && $p->Created >= $dateStart && $p->Created <= $dateEnd )
+        && $p->IsActive
       
     );
     $repository->select(fn( PropostaEntity $p ) => $p->NomeProposta->sum() );   
-    return $repository;
+    return $repository->get();
   }
 }
 

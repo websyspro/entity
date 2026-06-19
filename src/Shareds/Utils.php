@@ -3,7 +3,7 @@
 namespace Websyspro\Entity\Shareds;
 
 use Closure;
-use function array_slice, is_string, is_array, defined, count, in_array;
+use function array_slice, is_string, is_array, defined, count, in_array, sprintf;
 
 defined( 'T_HASH' ) || define( 'T_HASH', 'hash' );
 defined( 'T_CONTEXTS' ) || define( 'T_CONTEXTS', 'contexts' );
@@ -516,11 +516,9 @@ class Utils
       
       if( $staticValue !== null ){
         if( is_string( $staticValue )){
-          $contexts[$i] = [
-            T_STRING, 
-            $staticValue,
-            token_name(T_STRING)
-          ];
+          $contexts[$i] = $this->createToken([
+            T_STRING, $staticValue
+          ]);
         } else
         if( is_object( $staticValue )){
           $statics = $staticValue;
@@ -614,8 +612,6 @@ class Utils
       $isWithProperty = $this->isWithProperty( $withProperty );
       $isNotProperty = $this->isNotProperty( $notProperty );
 
-      var_dump($isNotProperty);
-
       if( $isWithProperty ){
         $values[$i] = $this->changeEnumValue(
           $statements, 
@@ -639,5 +635,49 @@ class Utils
     };
 
     return $values;
+  }
+
+  private function createParams(
+    string $value,
+    string $type,
+    ExpressionWhere $expressionWhere
+  ): string {
+    if( isset( $expressionWhere->params[ "signaryId-{$expressionWhere->signaryId}"]) === false){
+      $expressionWhere->params[ "signaryId-{$expressionWhere->signaryId}"] = [];
+    }
+
+    $paramOrder = count(
+      $expressionWhere->params[
+        "signaryId-{$expressionWhere->signaryId}"
+      ]
+    );
+
+    $expressionWhere->params[
+      "signaryId-{$expressionWhere->signaryId}"
+    ][ ":param_{$expressionWhere->signaryId}_{$paramOrder}" ] = $expressionWhere->expressionType->encode($value, $type);
+    
+    return '?';
+  }  
+
+  public function staticToParam(
+    array $values,
+    string $type,
+    ExpressionWhere $expressionWhere
+  ): string {
+    $isStartBracket = $this->slice($values, 0, 1)[0][T_TOKEN_KEY] === T_START_BRACKET;
+    $isEndBracket = $this->slice($values,-1, 1)[0][T_TOKEN_KEY] === T_END_BRACKET;
+
+    if( $isStartBracket && $isEndBracket ){
+      $valuesItems = $this->groupByTypes([ T_COMMA ], $this->slice($values, 1, -1));
+      $valuesItems = $this->mapper( $valuesItems, fn(array $items) => (
+        $this->createParams( $items[0][T_TOKEN_VALUE], $type, $expressionWhere )
+      ));
+
+      return sprintf( "(%s)", implode( ",", $valuesItems ));
+    }
+
+    return implode( "", $this->mapper($values, fn( array $token ) => (
+      $this->createParams( $token[T_TOKEN_VALUE], $type, $expressionWhere )
+    )));
   }
 }

@@ -8,14 +8,17 @@ class ExpressionWhere
 extends Utils
 {
   public array $contexts = [];
+  public array $params = [];
 
   public function __construct(
     public string $signary,
     public string $hash,
-    public array $statements = [],
-    public array $statics = [],
-    public array $scopes = [],
-    public array $tokens = [],
+    public int $signaryId,
+    public array $statements,
+    public array $statics,
+    public array $scopes,
+    public array $tokens,
+    public ExpressionType $expressionType
   ){}
 
   public function analysisLexicalScopesExtracts(
@@ -592,8 +595,18 @@ extends Utils
   ): array {
     for($i=1; $i < count($childs[T_CHILDS]); $i++){
       if($childs[T_CHILDS][$i][T_OBJECT] === T_EXP_VALUE){
-        $childs[T_CHILDS][$i][T_VALUES] = $this->variableToStatic( $childs[T_CHILDS][$i][T_VALUES], $this->statics );
-        $childs[T_CHILDS][$i][T_VALUES] = $this->enumToStatic( $childs[T_CHILDS][$i][T_VALUES], $this->statements );
+        $childs[T_CHILDS][$i][T_VALUES] = $this->variableToStatic(
+          $childs[T_CHILDS][$i][T_VALUES], $this->statics
+        );
+        
+        $childs[T_CHILDS][$i][T_VALUES] = $this->enumToStatic(
+          $childs[T_CHILDS][$i][T_VALUES], $this->statements
+        );
+        
+        $childs[T_CHILDS][$i][T_VALUES] = $this->staticToParam( 
+          $childs[T_CHILDS][$i][T_VALUES], 
+          $childs[T_CHILDS][$i][T_VALUES_TYPE], $this
+        );
       }
     }
 
@@ -647,9 +660,7 @@ extends Utils
       ? $this->analysisLexicalFromCache()
       : $this->analysisLexical();
 
-    $this->analysisValues();
-
-    print_r( $this->contexts );
-    return [];
+    //$this->analysisValues();
+    return [ $this->contexts, $this->params ];
   }  
 }

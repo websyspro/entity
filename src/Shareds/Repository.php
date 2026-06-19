@@ -13,9 +13,16 @@ class Repository
 extends Utils
 {
   public string $signary;
+  public string $signaryId;
+  public string $hash;
   public array $statements;
   public array $statics;
+  public array $scopes = [];
+  public array $tokens = [];
   public ReflectionFunction $reflectionFunction;
+  public ExpressionType $expressionType;
+  public array $contextsWhere = [];
+  public array $paramsWhere = []; 
  
   public function __construct(
     public string $class,
@@ -58,17 +65,29 @@ extends Utils
   ): void {
     if( isset( $this->signary ) === false){
       $this->signary = md5(
-        $this->reflectionFunction->getShortName()
+        $this->reflectionFunction
+          ->getShortName()
       );
     }
 
+    if( isset( $this->signaryId ) === false ){
+      $this->signaryId = spl_object_id(
+        $this->reflectionFunction
+      );
+    }    
+
     if( isset( $this->statics ) === false ){
-      $this->statics = $this->reflectionFunction->getStaticVariables();
+      $this->statics = $this->reflectionFunction
+        ->getStaticVariables();
     }
 
     if( isset( $this->statements ) === false ){
       $this->statements = $this->extractUseStatements();
     }
+
+    if( isset( $this->expressionType ) === false ){
+      $this->expressionType = new ExpressionType();
+    }    
   }
 
   private function getStatementByVariable(
@@ -159,9 +178,16 @@ extends Utils
     $this->reflectionFunction = new ReflectionFunction( $closure );
     if( $this->reflectionFunction instanceof ReflectionFunction ){
       $this->setSignaryAndUsesStatements();
-      [ $scope, $tokens, $hash ] = $this->extractScopeAndTokens( $this->reflectionFunction );
-      $expresionWhere = new ExpressionWhere( $this->signary, $hash, $this->statements, $this->statics, $scope, $tokens );
-      $expresionWhere->analysisLexicalInitial();
+      [ $this->scopes, $this->tokens, $this->hash 
+      ] = $this->extractScopeAndTokens( $this->reflectionFunction );
+
+      $expresionWhere = new ExpressionWhere( 
+        $this->signary, $this->hash, $this->signaryId, $this->statements, $this->statics, $this->scopes, $this->tokens, $this->expressionType
+      );
+      
+      if( $expresionWhere && $expresionWhere instanceof ExpressionWhere ){
+        [ $this->contextsWhere, $this->paramsWhere ] = $expresionWhere->analysisLexicalInitial();
+      }
     }
 
     return $this;
@@ -191,5 +217,12 @@ extends Utils
       $this->setSignaryAndUsesStatements();
     }
     return $this;
-  }  
+  }
+  
+  public function get(
+  ): self {
+    unset( $this->scopes );
+    unset( $this->tokens );
+    return $this;
+  }
 }
