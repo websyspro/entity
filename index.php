@@ -8,7 +8,7 @@ if(!defined( "MICROTIMER_END" ))
   define( "MICROTIMER_END", 0 );
 
 if(!defined( "CACHE_DISABLED" )) 
-  define( "CACHE_DISABLED", true );
+  define( "CACHE_DISABLED", false );
 if(!defined( "DRIVER" )) 
   define( "DRIVER", "sqlserver" );
 if(!defined( "HOSTNAME" )) 

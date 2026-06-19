@@ -25,11 +25,11 @@ class UserRepository
         $p->Status == Status::Aprovada
         && $p->NomeProposta->in( $startsWith, "TESTB" )
         && "98%" == $p->NomeProposta
-        && $p->NomeProposta->isNotNull()
+        && !$p->NomeProposta->isNotNull()
         && $p->Created >= $dateStart 
         && $p->Created <= $dateEnd
         && "EMERSON" != $p->NomeContato
-        && $p->NomeProposta->trim()->upper()->endsWith( $startsWith, "TEST" )
+        && !$p->NomeProposta->trim()->upper()->endsWith( $startsWith, "TEST" )
         && !$p->itemsProposta->any( fn(ItemPropostaEntity $i) => $i->PropostaId == $p->Id && !$i->IsActive && $p->Created >= $dateStart && $p->Created <= $dateEnd )
         && $p->IsActive
       

@@ -1,7 +1,7 @@
 <?php
 
 return array (
-  'hash' => '91a1ab1593c7a655c359ee8898ea2f56',
+  'hash' => '1c81ff2a7607ff9799e4138485d21ced',
   'contexts' => 
   array (
     0 => 
@@ -162,18 +162,26 @@ return array (
     ),
     6 => 
     array (
-      'object' => 'ExpNotNull',
+      'object' => 'ExpDenying',
       'parent' => 'ExpIntial',
       'childs' => 
       array (
         0 => 
         array (
-          'object' => 'ExpField',
-          'scheme' => 'Proposta',
-          'column' => 'NomeProposta',
-          'columnType' => 'Text',
-          'columnMethods' => 
+          'object' => 'ExpNotNull',
+          'parent' => 'ExpDenying',
+          'childs' => 
           array (
+            0 => 
+            array (
+              'object' => 'ExpField',
+              'scheme' => 'Proposta',
+              'column' => 'NomeProposta',
+              'columnType' => 'Text',
+              'columnMethods' => 
+              array (
+              ),
+            ),
           ),
         ),
       ),
@@ -291,120 +299,128 @@ return array (
     ),
     12 => 
     array (
-      'object' => 'ExpGroup',
+      'object' => 'ExpDenying',
       'parent' => 'ExpIntial',
       'childs' => 
       array (
         0 => 
         array (
-          'object' => 'ExpLike',
-          'parent' => 'ExpGroup',
+          'object' => 'ExpGroup',
+          'parent' => 'ExpDenying',
           'childs' => 
           array (
             0 => 
             array (
-              'object' => 'ExpField',
-              'scheme' => 'Proposta',
-              'column' => 'NomeProposta',
-              'columnType' => 'Text',
-              'columnMethods' => 
+              'object' => 'ExpLike',
+              'parent' => 'ExpDenying',
+              'childs' => 
               array (
                 0 => 
                 array (
-                  'name' => 'trim',
-                  'type' => 'modify',
-                  'args' => 
+                  'object' => 'ExpField',
+                  'scheme' => 'Proposta',
+                  'column' => 'NomeProposta',
+                  'columnType' => 'Text',
+                  'columnMethods' => 
                   array (
+                    0 => 
+                    array (
+                      'name' => 'trim',
+                      'type' => 'modify',
+                      'args' => 
+                      array (
+                      ),
+                    ),
+                    1 => 
+                    array (
+                      'name' => 'upper',
+                      'type' => 'modify',
+                      'args' => 
+                      array (
+                      ),
+                    ),
                   ),
                 ),
                 1 => 
                 array (
-                  'name' => 'upper',
-                  'type' => 'modify',
-                  'args' => 
+                  'object' => 'ExpValue',
+                  'values' => 
                   array (
+                    0 => 
+                    array (
+                      'tokenKey' => 313,
+                      'tokenValue' => '%',
+                      'tokenName' => 'T_STRING',
+                    ),
+                    1 => 
+                    array (
+                      'tokenKey' => 317,
+                      'tokenValue' => '$startsWith',
+                      'tokenName' => 'T_VARIABLE',
+                    ),
                   ),
+                  'valuesType' => 'Text',
                 ),
               ),
             ),
             1 => 
             array (
-              'object' => 'ExpValue',
-              'values' => 
-              array (
-                0 => 
-                array (
-                  'tokenKey' => 313,
-                  'tokenValue' => '%',
-                  'tokenName' => 'T_STRING',
-                ),
-                1 => 
-                array (
-                  'tokenKey' => 317,
-                  'tokenValue' => '$startsWith',
-                  'tokenName' => 'T_VARIABLE',
-                ),
-              ),
-              'valuesType' => 'Text',
+              'object' => 'ExpLogical',
+              'values' => 'Or',
             ),
-          ),
-        ),
-        1 => 
-        array (
-          'object' => 'ExpLogical',
-          'values' => 'Or',
-        ),
-        2 => 
-        array (
-          'object' => 'ExpLike',
-          'parent' => 'ExpIntial',
-          'childs' => 
-          array (
-            0 => 
+            2 => 
             array (
-              'object' => 'ExpField',
-              'scheme' => 'Proposta',
-              'column' => 'NomeProposta',
-              'columnType' => 'Text',
-              'columnMethods' => 
+              'object' => 'ExpLike',
+              'parent' => 'ExpDenying',
+              'childs' => 
               array (
                 0 => 
                 array (
-                  'name' => 'trim',
-                  'type' => 'modify',
-                  'args' => 
+                  'object' => 'ExpField',
+                  'scheme' => 'Proposta',
+                  'column' => 'NomeProposta',
+                  'columnType' => 'Text',
+                  'columnMethods' => 
                   array (
+                    0 => 
+                    array (
+                      'name' => 'trim',
+                      'type' => 'modify',
+                      'args' => 
+                      array (
+                      ),
+                    ),
+                    1 => 
+                    array (
+                      'name' => 'upper',
+                      'type' => 'modify',
+                      'args' => 
+                      array (
+                      ),
+                    ),
                   ),
                 ),
                 1 => 
                 array (
-                  'name' => 'upper',
-                  'type' => 'modify',
-                  'args' => 
+                  'object' => 'ExpValue',
+                  'values' => 
                   array (
+                    0 => 
+                    array (
+                      'tokenKey' => 313,
+                      'tokenValue' => '%',
+                      'tokenName' => 'T_STRING',
+                    ),
+                    1 => 
+                    array (
+                      'tokenKey' => 320,
+                      'tokenValue' => 'TEST',
+                      'tokenName' => 'T_CONSTANT_ENCAPSED_STRING',
+                    ),
                   ),
+                  'valuesType' => 'Text',
                 ),
               ),
-            ),
-            1 => 
-            array (
-              'object' => 'ExpValue',
-              'values' => 
-              array (
-                0 => 
-                array (
-                  'tokenKey' => 313,
-                  'tokenValue' => '%',
-                  'tokenName' => 'T_STRING',
-                ),
-                1 => 
-                array (
-                  'tokenKey' => 320,
-                  'tokenValue' => 'TEST',
-                  'tokenName' => 'T_CONSTANT_ENCAPSED_STRING',
-                ),
-              ),
-              'valuesType' => 'Text',
             ),
           ),
         ),
