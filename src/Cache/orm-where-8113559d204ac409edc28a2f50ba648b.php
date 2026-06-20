@@ -1,10 +1,80 @@
 <?php
 
 return array (
-  'hash' => '1c81ff2a7607ff9799e4138485d21ced',
+  'hash' => '95d1812b07d94fd49e8fdeeefc55611c',
   'contexts' => 
   array (
     0 => 
+    array (
+      'object' => 'ExpCompare',
+      'parent' => 'ExpDenying',
+      'childs' => 
+      array (
+        0 => 
+        array (
+          'object' => 'ExpField',
+          'scheme' => 'Proposta',
+          'column' => 'IsActive',
+          'columnType' => 'Flag',
+          'columnMethods' => 
+          array (
+          ),
+        ),
+        1 => 
+        array (
+          'object' => 'ExpEqual',
+          'values' => 
+          array (
+            'tokenKey' => 61,
+            'tokenValue' => '=',
+            'tokenName' => 'T_EQUAL',
+          ),
+        ),
+        2 => 
+        array (
+          'object' => 'ExpValue',
+          'values' => 
+          array (
+            0 => 
+            array (
+              'tokenKey' => 313,
+              'tokenValue' => 'false',
+              'tokenName' => 'T_STRING',
+            ),
+          ),
+          'valuesType' => 'Flag',
+        ),
+      ),
+    ),
+    1 => 
+    array (
+      'object' => 'ExpLogical',
+      'values' => 'And',
+    ),
+    2 => 
+    array (
+      'object' => 'ExpNotNull',
+      'parent' => 'ExpIntial',
+      'childs' => 
+      array (
+        0 => 
+        array (
+          'object' => 'ExpField',
+          'scheme' => 'Proposta',
+          'column' => 'ConsultorVendasEspeciaisId',
+          'columnType' => 'Text',
+          'columnMethods' => 
+          array (
+          ),
+        ),
+      ),
+    ),
+    3 => 
+    array (
+      'object' => 'ExpLogical',
+      'values' => 'And',
+    ),
+    4 => 
     array (
       'object' => 'ExpCompare',
       'parent' => 'ExpIntial',
@@ -58,73 +128,12 @@ return array (
         ),
       ),
     ),
-    1 => 
+    5 => 
     array (
       'object' => 'ExpLogical',
       'values' => 'And',
     ),
-    2 => 
-    array (
-      'object' => 'ExpIn',
-      'parent' => 'ExpIntial',
-      'childs' => 
-      array (
-        0 => 
-        array (
-          'object' => 'ExpField',
-          'scheme' => 'Proposta',
-          'column' => 'NomeProposta',
-          'columnType' => 'Text',
-          'columnMethods' => 
-          array (
-          ),
-        ),
-        1 => 
-        array (
-          'object' => 'ExpValue',
-          'values' => 
-          array (
-            0 => 
-            array (
-              'tokenKey' => 91,
-              'tokenValue' => '[',
-              'tokenName' => 'T_START_BRACKET',
-            ),
-            1 => 
-            array (
-              'tokenKey' => 317,
-              'tokenValue' => '$startsWith',
-              'tokenName' => 'T_VARIABLE',
-            ),
-            2 => 
-            array (
-              'tokenKey' => 44,
-              'tokenValue' => ',',
-              'tokenName' => 'T_COMMA',
-            ),
-            3 => 
-            array (
-              'tokenKey' => 320,
-              'tokenValue' => 'TESTB',
-              'tokenName' => 'T_CONSTANT_ENCAPSED_STRING',
-            ),
-            4 => 
-            array (
-              'tokenKey' => 93,
-              'tokenValue' => ']',
-              'tokenName' => 'T_END_BRACKET',
-            ),
-          ),
-          'valuesType' => 'Text',
-        ),
-      ),
-    ),
-    3 => 
-    array (
-      'object' => 'ExpLogical',
-      'values' => 'And',
-    ),
-    4 => 
+    6 => 
     array (
       'object' => 'ExpLike',
       'parent' => 'ExpIntial',
@@ -152,15 +161,16 @@ return array (
               'tokenName' => 'T_CONSTANT_ENCAPSED_STRING',
             ),
           ),
+          'valuesType' => 'Text',
         ),
       ),
     ),
-    5 => 
+    7 => 
     array (
       'object' => 'ExpLogical',
       'values' => 'And',
     ),
-    6 => 
+    8 => 
     array (
       'object' => 'ExpDenying',
       'parent' => 'ExpIntial',
@@ -182,16 +192,109 @@ return array (
               array (
               ),
             ),
+            1 => 
+            array (
+              'object' => 'ExpEqual',
+              'values' => 
+              array (
+                'tokenKey' => 61,
+                'tokenValue' => '=',
+                'tokenName' => 'T_EQUAL',
+              ),
+            ),
+            2 => 
+            array (
+              'object' => 'ExpValue',
+              'values' => 
+              array (
+                0 => 
+                array (
+                  'tokenKey' => 313,
+                  'tokenValue' => 'null',
+                  'tokenName' => 'T_STRING',
+                ),
+              ),
+              'valuesType' => 'Text',
+            ),
           ),
         ),
       ),
     ),
-    7 => 
+    9 => 
     array (
       'object' => 'ExpLogical',
       'values' => 'And',
     ),
-    8 => 
+    10 => 
+    array (
+      'object' => 'ExpDenying',
+      'parent' => 'ExpIntial',
+      'childs' => 
+      array (
+        0 => 
+        array (
+          'object' => 'ExpIn',
+          'parent' => 'ExpDenying',
+          'childs' => 
+          array (
+            0 => 
+            array (
+              'object' => 'ExpField',
+              'scheme' => 'Proposta',
+              'column' => 'NomeProposta',
+              'columnType' => 'Text',
+              'columnMethods' => 
+              array (
+              ),
+            ),
+            1 => 
+            array (
+              'object' => 'ExpValue',
+              'values' => 
+              array (
+                0 => 
+                array (
+                  'tokenKey' => 91,
+                  'tokenValue' => '[',
+                  'tokenName' => 'T_START_BRACKET',
+                ),
+                1 => 
+                array (
+                  'tokenKey' => 317,
+                  'tokenValue' => '$startsWith',
+                  'tokenName' => 'T_VARIABLE',
+                ),
+                2 => 
+                array (
+                  'tokenKey' => 44,
+                  'tokenValue' => ',',
+                  'tokenName' => 'T_COMMA',
+                ),
+                3 => 
+                array (
+                  'tokenKey' => 320,
+                  'tokenValue' => 'TESTB',
+                  'tokenName' => 'T_CONSTANT_ENCAPSED_STRING',
+                ),
+                4 => 
+                array (
+                  'tokenKey' => 93,
+                  'tokenValue' => ']',
+                  'tokenName' => 'T_END_BRACKET',
+                ),
+              ),
+              'valuesType' => 'Text',
+            ),
+          ),
+        ),
+      ),
+    ),
+    11 => 
+    array (
+      'object' => 'ExpLogical',
+      'values' => 'And',
+    ),
+    12 => 
     array (
       'object' => 'ExpBetween',
       'parent' => 'ExpIntial',
@@ -245,12 +348,12 @@ return array (
         ),
       ),
     ),
-    9 => 
+    13 => 
     array (
       'object' => 'ExpLogical',
       'values' => 'And',
     ),
-    10 => 
+    14 => 
     array (
       'object' => 'ExpCompare',
       'parent' => 'ExpIntial',
@@ -292,12 +395,12 @@ return array (
         ),
       ),
     ),
-    11 => 
+    15 => 
     array (
       'object' => 'ExpLogical',
       'values' => 'And',
     ),
-    12 => 
+    16 => 
     array (
       'object' => 'ExpDenying',
       'parent' => 'ExpIntial',
@@ -426,12 +529,12 @@ return array (
         ),
       ),
     ),
-    13 => 
+    17 => 
     array (
       'object' => 'ExpLogical',
       'values' => 'And',
     ),
-    14 => 
+    18 => 
     array (
       'object' => 'ExpDenying',
       'parent' => 'ExpIntial',
@@ -440,6 +543,7 @@ return array (
         0 => 
         array (
           'object' => 'ExpSubQuery',
+          'scheme' => 'ItemProposta',
           'parent' => 'ExpDenying',
           'method' => 'any',
           'childs' => 
@@ -490,7 +594,7 @@ return array (
             2 => 
             array (
               'object' => 'ExpCompare',
-              'parent' => 'ExpSubQuery',
+              'parent' => 'ExpDenying',
               'childs' => 
               array (
                 0 => 
@@ -589,53 +693,6 @@ return array (
               ),
             ),
           ),
-        ),
-      ),
-    ),
-    15 => 
-    array (
-      'object' => 'ExpLogical',
-      'values' => 'And',
-    ),
-    16 => 
-    array (
-      'object' => 'ExpCompare',
-      'parent' => 'ExpIntial',
-      'childs' => 
-      array (
-        0 => 
-        array (
-          'object' => 'ExpField',
-          'scheme' => 'Proposta',
-          'column' => 'IsActive',
-          'columnType' => 'Flag',
-          'columnMethods' => 
-          array (
-          ),
-        ),
-        1 => 
-        array (
-          'object' => 'ExpEqual',
-          'values' => 
-          array (
-            'tokenKey' => 61,
-            'tokenValue' => '=',
-            'tokenName' => 'T_EQUAL',
-          ),
-        ),
-        2 => 
-        array (
-          'object' => 'ExpValue',
-          'values' => 
-          array (
-            0 => 
-            array (
-              'tokenKey' => 313,
-              'tokenValue' => 'true',
-              'tokenName' => 'T_STRING',
-            ),
-          ),
-          'valuesType' => 'Flag',
         ),
       ),
     ),

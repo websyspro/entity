@@ -21,7 +21,7 @@ extends Utils
   public array $tokens = [];
   public ReflectionFunction $reflectionFunction;
   public ExpressionType $expressionType;
-  public array $contextsWhere = [];
+  public string $contextsWhere;
   public array $paramsWhere = []; 
  
   public function __construct(
@@ -199,11 +199,11 @@ extends Utils
     $this->reflectionFunction = new ReflectionFunction( $closure );
     if( $this->reflectionFunction instanceof ReflectionFunction ){
       $this->setSignaryAndUsesStatements();
-      [ $scope, $tokens ] = $this->extractScopeAndTokens(
+      [ $this->scopes, $this->tokens ] = $this->extractScopeAndTokens(
         $this->reflectionFunction
       );
 
-      $expresionSelect = new ExpressionSelect( $this->signary, $scope, $tokens );
+      $expresionSelect = new ExpressionSelect( $this->signary, $this->scopes );
     }
 
     return $this;

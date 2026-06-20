@@ -60,7 +60,8 @@ defined( 'T_ACTION_TO_ADJUST_EQUALS' ) || define( 'T_ACTION_TO_ADJUST_EQUALS', 2
 defined( 'T_ACTION_TO_METHODS' ) || define( 'T_ACTION_TO_METHODS', 3 );
 defined( 'T_ACTION_TO_BETWEEN' ) || define( 'T_ACTION_TO_BETWEEN', 4 );
 defined( 'T_ACTION_TO_LIKE' ) || define( 'T_ACTION_TO_LIKE', 5 );
-defined( 'T_ACTION_TO_IN' ) || define( 'T_ACTION_TO_IN', 6 );
+defined( 'T_ACTION_TO_NULL' ) || define( 'T_ACTION_TO_NULL', 6 );
+defined( 'T_ACTION_TO_IN' ) || define( 'T_ACTION_TO_IN', 7 );
 
 defined( 'T_OBJECT' ) || define( 'T_OBJECT', 'object' );
 defined( 'T_PARENT' ) || define( 'T_PARENT', 'parent' );
@@ -81,6 +82,7 @@ defined( 'T_TOKEN_NAME' ) || define( 'T_TOKEN_NAME', 'tokenName' );
 defined( 'T_TOKEN_VALUE' ) || define( 'T_TOKEN_VALUE', 'tokenValue' );
 
 defined( 'T_SUB_QUERY_LIST' ) || define( 'T_SUB_QUERY_LIST', [ 'any' ] );
+defined( 'T_SUB_QUERY_LIST_STR' ) || define( 'T_SUB_QUERY_LIST_STR', [ 'any' => 'Exists' ] );
 
 class Utils
 {
@@ -498,8 +500,9 @@ class Utils
 
   public function variableToStatic(
     array $contexts,
-    array $statics
+    ExpressionWhere $expressionWhere
   ): array {
+    $statics = $expressionWhere->statics;
     for($i=0; $i < count($contexts); $i++){
       $value = $contexts[$i][T_TOKEN_VALUE];
       
@@ -533,7 +536,7 @@ class Utils
     }
 
     return $contexts;
-  } 
+  }  
   
   public function isWithProperty(
     array $values
@@ -602,8 +605,8 @@ class Utils
   }
   
   public function enumToStatic(
-    array $values = [],
-    array $statements = []
+    array $values,
+    ExpressionWhere $expressionWhere
   ): array {
     for($i=0; $i<count($values); $i++){
       $withProperty = $this->slice( $values, $i, 5 );
@@ -614,14 +617,14 @@ class Utils
 
       if( $isWithProperty ){
         $values[$i] = $this->changeEnumValue(
-          $statements, 
+          $expressionWhere->statements, 
           $withProperty[0][T_TOKEN_VALUE],
           $withProperty[2][T_TOKEN_VALUE],
           $withProperty[4][T_TOKEN_VALUE]
         );
       } else if( $isNotProperty ){
         $values[$i] = $this->changeEnumValue(
-          $statements, 
+          $expressionWhere->statements, 
           $withProperty[0][T_TOKEN_VALUE],
           $withProperty[2][T_TOKEN_VALUE]
         );
@@ -654,9 +657,10 @@ class Utils
 
     $expressionWhere->params[
       "signaryId-{$expressionWhere->signaryId}"
-    ][ ":param_{$expressionWhere->signaryId}_{$paramOrder}" ] = $expressionWhere->expressionType->encode($value, $type);
+    ][ ":param_{$expressionWhere->signaryId}_{$paramOrder}" ] = $expressionWhere->expressionType
+      ->encode($value, $type);
     
-    return '?';
+    return ":param_{$expressionWhere->signaryId}_{$paramOrder}";
   }  
 
   public function staticToParam(
@@ -673,11 +677,37 @@ class Utils
         $this->createParams( $items[0][T_TOKEN_VALUE], $type, $expressionWhere )
       ));
 
-      return sprintf( "(%s)", implode( ",", $valuesItems ));
+      return sprintf( "(%s)", implode( ", ", $valuesItems ));
     }
 
-    return implode( "", $this->mapper($values, fn( array $token ) => (
-      $this->createParams( $token[T_TOKEN_VALUE], $type, $expressionWhere )
-    )));
+    $values = $this->mapper($values, fn( array $token ) => $token[T_TOKEN_VALUE]);
+    return $this->createParams( 
+      implode( "", $values ), $type, $expressionWhere
+    );
   }
+  
+  public function getMethodModify(
+    string $column,
+    string $driver,
+    array $methods = []
+  ): string {
+    foreach( $methods as $method ){
+      if( $method[T_COLUMN_METHOD_NAME] === "date" ){
+        $column = $driver !== "mysql"
+          ? "Cast({$column} As Date)" 
+          : "Date({$column})";
+      } else
+      if( $method[T_COLUMN_METHOD_NAME] === "upper" ){
+        $column = "Upper({$column})";
+      } else
+      if( $method[T_COLUMN_METHOD_NAME] === "lower" ){
+        $column = "Lower({$column})";
+      } else
+      if( $method[T_COLUMN_METHOD_NAME] === "trim" ){
+        $column = "Trim({$column})";
+      }
+    }
+
+    return $column;
+  }  
 }

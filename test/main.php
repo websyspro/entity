@@ -22,19 +22,20 @@ class UserRepository
     $repository = new Repository( PropostaEntity::class );
     $repository->where( 
       fn( PropostaEntity $p ) => 
-        $p->Status == Status::Aprovada
-        && $p->NomeProposta->in( $startsWith, "TESTB" )
+        !$p->IsActive
+        && $p->ConsultorVendasEspeciaisId
+        && $p->Status == Status::Aprovada
         && "98%" == $p->NomeProposta
         && !$p->NomeProposta->isNotNull()
+        && !$p->NomeProposta->in( $startsWith, "TESTB" )
         && $p->Created >= $dateStart 
         && $p->Created <= $dateEnd
         && "EMERSON" != $p->NomeContato
         && !$p->NomeProposta->trim()->upper()->endsWith( $startsWith, "TEST" )
         && !$p->itemsProposta->any( fn(ItemPropostaEntity $i) => $i->PropostaId == $p->Id && !$i->IsActive && $p->Created >= $dateStart && $p->Created <= $dateEnd )
-        && $p->IsActive
       
     );
-    $repository->select(fn( PropostaEntity $p ) => $p->NomeProposta->sum() );   
+    $repository->select(fn( PropostaEntity $p ) => $p->NomeProposta->sum( $p->DescontoFinalCliente ) );   
     return $repository->get();
   }
 }

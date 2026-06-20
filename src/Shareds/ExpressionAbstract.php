@@ -61,6 +61,7 @@ define( 'T_ACTION_TO_ADJUST_EQUALS', 2 );
 define( 'T_ACTION_TO_METHODS', 3 );
 define( 'T_ACTION_TO_BETWEEN', 4 );
 define( 'T_ACTION_TO_LIKE', 5 );
+define( 'T_ACTION_TO_NULL', 5 );
 define( 'T_ACTION_TO_IN', 6 );
 
 define( "T_OBJECT", "object" );
