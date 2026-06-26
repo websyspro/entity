@@ -33,9 +33,11 @@ class UserRepository
         && "EMERSON" != $p->NomeContato
         && !$p->NomeProposta->trim()->upper()->endsWith( $startsWith, "TEST" )
         && !$p->itemsProposta->any( fn(ItemPropostaEntity $i) => $i->PropostaId == $p->Id && !$i->IsActive && $p->Created >= $dateStart && $p->Created <= $dateEnd )
-      
     );
-    $repository->select(fn( PropostaEntity $p ) => $p->NomeProposta->sum( $p->DescontoFinalCliente ) );   
+    $repository->select( fn(PropostaEntity $p) => [ 
+      $p->DescontoFinalCliente,
+      $p->DistribuidorId
+    ]);   
     return $repository->get();
   }
 }

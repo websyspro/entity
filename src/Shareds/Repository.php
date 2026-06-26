@@ -22,7 +22,9 @@ extends Utils
   public ReflectionFunction $reflectionFunction;
   public ExpressionType $expressionType;
   public string $contextsWhere;
-  public array $paramsWhere = []; 
+  public array $paramsWhere = [];
+  public array $contextsSelect;
+  public array $paramsSelect = [];   
  
   public function __construct(
     public string $class,
@@ -111,6 +113,12 @@ extends Utils
     array $tokens
   ): array {
     $tokens = $this->slice(
+      $tokens, $this->indexOf(
+        $tokens, T_FN
+      )
+    );
+
+    $tokens = $this->slice(
       $this->slice( $tokens, $this->inc( $this->indexOf( $tokens, T_START_PARENTESES ))), 
         0, $this->dec( $this->indexOf( $tokens, T_END_PARENTESES ), 1 )
     );
@@ -131,9 +139,11 @@ extends Utils
   private function extractTokens(
     array $tokens
   ): array {
-    return $this->slice( 
-      $tokens, $this->inc(
-        $this->indexOf( $tokens, T_DOUBLE_ARROW )
+    return $this->contextsNotEnds(
+      $this->slice( 
+        $tokens, $this->inc(
+          $this->indexOf( $tokens, T_DOUBLE_ARROW )
+        )
       )
     );
   }
@@ -163,11 +173,10 @@ extends Utils
       }
 
       $tokens[] = $handleFGets;
-      if( $handle->key() >= $reflectionFunction->getEndLine() - 1){
+      if( $handle->key() >= $reflectionFunction->getEndLine()){
         break;
       }
     }
-
     $tokens = $this->tokenized( $tokens );
     return [ $this->extractScope( $tokens ), $this->extractTokens( $tokens ), $this->extractHash( $tokens )];
   }
@@ -182,7 +191,9 @@ extends Utils
       ] = $this->extractScopeAndTokens( $this->reflectionFunction );
 
       $expresionWhere = new ExpressionWhere( 
-        $this->signary, $this->hash, $this->signaryId, $this->statements, $this->statics, $this->scopes, $this->tokens, $this->expressionType
+        $this->signary, $this->hash, $this->signaryId,
+        $this->statements, $this->statics, $this->scopes,
+        $this->tokens, $this->expressionType
       );
       
       if( $expresionWhere && $expresionWhere instanceof ExpressionWhere ){
@@ -199,11 +210,18 @@ extends Utils
     $this->reflectionFunction = new ReflectionFunction( $closure );
     if( $this->reflectionFunction instanceof ReflectionFunction ){
       $this->setSignaryAndUsesStatements();
-      [ $this->scopes, $this->tokens ] = $this->extractScopeAndTokens(
+      [ $this->scopes, $this->tokens, $this->hash ] = $this->extractScopeAndTokens(
         $this->reflectionFunction
       );
 
-      $expresionSelect = new ExpressionSelect( $this->signary, $this->scopes );
+      $expresionSelect = new ExpressionSelect(
+        $this->signary, $this->hash, $this->signaryId, 
+        $this->statements, $this->statics, $this->scopes, $this->tokens
+      );
+
+      if( $expresionSelect && $expresionSelect instanceof ExpressionSelect ){
+        [ $this->contextsSelect, $this->paramsSelect ] = $expresionSelect->analysisLexicalInitial();
+      }      
     }
 
     return $this;

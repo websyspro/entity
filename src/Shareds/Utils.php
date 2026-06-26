@@ -84,6 +84,10 @@ defined( 'T_TOKEN_VALUE' ) || define( 'T_TOKEN_VALUE', 'tokenValue' );
 defined( 'T_SUB_QUERY_LIST' ) || define( 'T_SUB_QUERY_LIST', [ 'any' ] );
 defined( 'T_SUB_QUERY_LIST_STR' ) || define( 'T_SUB_QUERY_LIST_STR', [ 'any' => 'Exists' ] );
 
+defined( 'T_SEL_SEPARETOR' ) || define( 'T_SEL_SEPARETOR', 'SelSeparetor' );
+defined( 'T_SEL_METHODS' ) || define( 'T_SEL_METHODS', 'SelMethods' );
+defined( 'T_SEL_FIELD' ) || define( 'T_SEL_FIELD', 'SelField' );
+
 class Utils
 {
   public function inc(
@@ -189,6 +193,12 @@ class Utils
     return $this->groupByTypes([ 
       T_LOGICAL_AND, T_LOGICAL_OR, T_BOOLEAN_AND, T_BOOLEAN_OR 
     ], $contexts, true );
+  }
+  
+  public function groupByTypesComma(
+    array $contexts = []
+  ): array {
+    return $this->groupByTypes([ T_COMMA ], $contexts, true );
   }  
 
   public function contextsNotEnds(
@@ -218,6 +228,12 @@ class Utils
         }
       }
     };
+
+    if( $contexts[0][T_TOKEN_KEY] === T_START_BRACKET ){
+      if( $contexts[count($contexts) - 1][T_TOKEN_KEY] === T_END_BRACKET ){
+        $contexts = $this->slice( $contexts, 1, -1 );
+      }
+    }
 
     return $contexts;
   }  
@@ -277,7 +293,7 @@ class Utils
         "<?php %s", implode( "", $codeArr )
       )), 1 , null, true
     );
-
+    
     $tokens = $this->filter( $tokens,
       fn( array|string $token ) => (
         is_string( $token ) || is_array( $token ) && $token[0] !== T_WHITESPACE
@@ -289,8 +305,8 @@ class Utils
         $this->createToken( $token )
       )
     );
-
-    return $this->contextsNotEnds( $tokens );
+  
+    return $tokens;
   }
 
   public function isDenying(
@@ -373,6 +389,34 @@ class Utils
       
     return null;
   }
+
+  public function isSeparetor(
+    array $tokens = []
+  ): bool {
+    return count($tokens) === 1 && $tokens[0][T_TOKEN_KEY] === T_COMMA;
+  }
+  
+  public function isMethods(
+    array $tokens = []
+  ): bool {
+    return count($tokens) >= 1 && $this->indexOf(
+      $tokens, T_START_PARENTESES 
+    ) === true;
+  }  
+
+  public function getSelType(
+    array $contexts = []
+  ): string|null {
+    if( $this->isSeparetor( $contexts )){
+      return T_SEL_SEPARETOR;
+    } else if( $this->isMethods( $contexts )){
+      return T_SEL_METHODS;
+    } else if( $this->isField( $contexts )){
+      return T_SEL_FIELD;
+    }
+      
+    return null;
+  }  
 
   public function fieldProps(
     array $contexts = []
