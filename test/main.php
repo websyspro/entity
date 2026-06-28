@@ -36,7 +36,8 @@ class UserRepository
     );
     $repository->select( fn(PropostaEntity $p) => [ 
       $p->DescontoFinalCliente,
-      $p->DistribuidorId
+      $p->DistribuidorId,
+      $p->sum( $p->DescontoFinalCliente * $p->DescontoFinalCliente)
     ]);   
     return $repository->get();
   }

@@ -51,6 +51,40 @@ extends Utils
       T_VALUES => $tokens[0][T_TOKEN_VALUE]
     ];
   }
+
+  public function analysisLexicalSemanticsMethodsFields(
+    array $scopes,
+    array $tokens
+  ): array {
+    for( $x = 0; $x < count( $tokens ); $x++ ){
+      $fieldTokens = $this->slice(
+        $tokens, $x, $x + 3
+      );
+
+      if( $this->isField( $fieldTokens )){
+        $tokens[$x] = $this->createField(
+          $scopes, $fieldTokens
+        );
+
+        array_splice( $tokens, $x + 1, 2 );
+      }
+    }
+
+    return $tokens;
+  }
+
+  public function analysisLexicalSemanticsMethods(
+    array $scopes,
+    array $tokens
+  ): array {
+    return [
+      T_OBJECT => T_SEL_METHODS,
+      T_METHOD => $tokens[2][T_TOKEN_VALUE],
+      T_CHILDS => $this->analysisLexicalSemanticsMethodsFields( 
+        $scopes, $this->slice( $tokens, 4, -1 )
+      )
+    ];
+  }
   
   public function analysisLexicalSemanticsField(
     array $scopes,
@@ -72,6 +106,7 @@ extends Utils
       $this->groupByTypesComma( $contexts ), fn( array $tokens ) => (
         match( $this->getSelType( $tokens )){
           T_SEL_SEPARETOR => $this->analysisLexicalSemanticsSeparator( $tokens ),
+          T_SEL_METHODS => $this->analysisLexicalSemanticsMethods( $scopes, $tokens ),
           T_SEL_FIELD => $this->analysisLexicalSemanticsField( $scopes, $tokens ),
             default => $tokens
         }

@@ -399,9 +399,9 @@ class Utils
   public function isMethods(
     array $tokens = []
   ): bool {
-    return count($tokens) >= 1 && $this->indexOf(
+    return count($tokens) >= 4 && $this->indexOf(
       $tokens, T_START_PARENTESES 
-    ) === true;
+    ) !== false;
   }  
 
   public function getSelType(
