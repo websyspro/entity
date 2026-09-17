@@ -1,6 +1,6 @@
 <?php
 
-namespace Websyspro\ArrowToSql\Types;
+namespace Websyspro\Entity\Types;
 
 class ColumnLongText 
 extends ColumnAbstract
