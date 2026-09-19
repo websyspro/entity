@@ -2,6 +2,7 @@
 
 namespace Websyspro\Entity\Schemas;
 
+use Websyspro\Entity\Interfaces\CommandScript;
 use Websyspro\Entity\Types\ColumnAutoIncrement;
 use Websyspro\Entity\Types\ColumnAutoUUID;
 use Websyspro\Entity\Types\ColumnBigInt;
