@@ -41,18 +41,13 @@ extends AbstractSchemaManager
   public function entityCreateIndexes(
   ): void {
     foreach( $this->entityStructure->indexes->items as $indexName ){
-      if( $indexName instanceof Stringable ){
-        $columns = implode( ",", array_slice(
+      if( is_string( $indexName )){
+        $columns = implode( ", ", array_slice(
           explode( "_", $indexName ), 2
         ));
 
-        /*
-        CREATE INDEX nome_do_index
-          ON nome_da_tabela (nome_da_coluna);
-        */
-
         $this->commandScritps[] = new CommandScript(
-          command: "Create Index_ {$indexName} On {$this->getAliasFromEntity()} ({$columns})",
+          command: "Create Index {$indexName} On {$this->getAliasFromEntity()} ({$columns})",
           message: "Creating table {$this->getAliasFromEntity()}"
         );        
       }
