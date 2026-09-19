@@ -4,8 +4,49 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "88010a2933ec0b50f5adb22b62915afe",
+    "content-hash": "104d89b0b9742c7e3b5c7b822ad7be83",
     "packages": [
+        {
+            "name": "websyspro/connection",
+            "version": "1.0.6",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/websyspro/connection.git",
+                "reference": "7c83f38a72bf6e89ff972f17b5be06ee339073c0"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/websyspro/connection/zipball/7c83f38a72bf6e89ff972f17b5be06ee339073c0",
+                "reference": "7c83f38a72bf6e89ff972f17b5be06ee339073c0",
+                "shasum": ""
+            },
+            "require": {
+                "websyspro/package": "^1.0",
+                "websyspro/utils": "^1.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Websyspro\\Connection\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "websyspro",
+                    "email": "websyspro.services@gmail.com"
+                }
+            ],
+            "description": "Connection to MySQL, PostgreSQL, and SQL Server databases",
+            "support": {
+                "issues": "https://github.com/websyspro/connection/issues",
+                "source": "https://github.com/websyspro/connection/tree/1.0.6"
+            },
+            "time": "2026-09-19T02:40:43+00:00"
+        },
         {
             "name": "websyspro/package",
             "version": "1.0.84",
