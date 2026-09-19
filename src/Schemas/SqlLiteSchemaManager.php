@@ -31,9 +31,8 @@ extends AbstractSchemaManager
   public function entityCreateScript(
   ): void {
     $this->commandScritps[] = new CommandScript(
-      command: 'Create Table %1$s (%2$s)',
-      message: 'Creating table %1$s',
-      args: [ $this->getAliasFromEntity(), $this->getColumnsFromEntity() ]
+      command: "Create Table {$this->getAliasFromEntity()} ({$this->getColumnsFromEntity()})",
+      message: "Creating table {$this->getAliasFromEntity()}"
     );
   }
 

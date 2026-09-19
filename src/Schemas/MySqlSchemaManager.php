@@ -31,9 +31,8 @@ extends AbstractSchemaManager
   public function entityCreateScript(
   ): void {
     $this->commandScritps[] = new CommandScript(
-      command: 'Create Table If Not Exists %1$s (%2$s) Engine=InnoDB Default Charset=utf8mb4 collate=utf8mb4_unicode_ci',
-      message: 'Creating table %1$s',
-      args: [ $this->getAliasFromEntity(), $this->getColumnsFromEntity() ]
+      command: "Create Table If Not Exists {$this->getAliasFromEntity()} ({$this->getColumnsFromEntity()}) Engine=InnoDB Default Charset=utf8mb4 collate=utf8mb4_unicode_ci",
+      message: "Creating table {$this->getAliasFromEntity()}"
     );
   }
 
