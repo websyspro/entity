@@ -66,7 +66,7 @@ abstract class AbstractSchemaManager
 
   public function asyncEntity(
   ): void {
-    if( $this->entityStructure->synchronize === false ){
+    if( $this->entityStructure->synchronize === true ){
       if( $this->entityExists() === false ){
         $this->entityCreateScript();
       } else {

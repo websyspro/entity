@@ -4,6 +4,7 @@ namespace Websyspro\Entity\Interfaces;
 
 use Websyspro\Connection\Database;
 use Websyspro\Utils\Collection;
+use function sprintf;
 
 class CommandScript
 {
@@ -15,9 +16,11 @@ class CommandScript
 
   public function execute(
   ): void {
-    Database::execute(
-      $this->command,
-      $this->args
+    Database::execute( 
+      sprintf( 
+        $this->command,
+        $this->args
+      )
     );
   }
 }
