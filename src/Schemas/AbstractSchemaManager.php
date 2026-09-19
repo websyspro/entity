@@ -62,6 +62,7 @@ abstract class AbstractSchemaManager
   abstract protected function columnUUID( string $column ): string;  
   abstract protected function columnYear( string $column ): string;  
   abstract protected function entityCreateScript(): void;
+  abstract protected function entityCreateIndexes(): void;
   abstract protected function getColumnsFromEntityPersisteds(): array;
 
   public function asyncEntity(
@@ -69,6 +70,7 @@ abstract class AbstractSchemaManager
     if( $this->entityStructure->synchronize === true ){
       if( $this->entityExists() === false ){
         $this->entityCreateScript();
+        $this->entityCreateIndexes();
       } else {
         $this->getColumnsFromEntityPersisteds();
       }

@@ -2,10 +2,12 @@
 
 namespace Websyspro\Entity\Schemas;
 
+use Stringable;
 use Websyspro\Connection\Database;
 use Websyspro\Entity\Interfaces\ColumnType;
 use Websyspro\Entity\Interfaces\CommandScript;
 use function sprintf;
+use function array_slice;
 
 class MySqlSchemaManager 
 extends AbstractSchemaManager
@@ -35,6 +37,32 @@ extends AbstractSchemaManager
       message: "Creating table {$this->getAliasFromEntity()}"
     );
   }
+
+  public function entityCreateIndexes(
+  ): void {
+    foreach( $this->entityStructure->indexes->items as $indexName ){
+      if( $indexName instanceof Stringable ){
+        $columns = implode( ",", array_slice(
+          explode( "_", $indexName ), 2
+        ));
+
+        /*
+        CREATE INDEX nome_do_index
+          ON nome_da_tabela (nome_da_coluna);
+        */
+
+        $this->commandScritps[] = new CommandScript(
+          command: "Create Index_ {$indexName} On {$this->getAliasFromEntity()} ({$columns})",
+          message: "Creating table {$this->getAliasFromEntity()}"
+        );        
+      }
+    }
+
+    // $this->commandScritps[] = new CommandScript(
+    //   command: "Create Table If Not Exists {$this->getAliasFromEntity()} ({$this->getColumnsFromEntity()}) Engine=InnoDB Default Charset=utf8mb4 collate=utf8mb4_unicode_ci",
+    //   message: "Creating table {$this->getAliasFromEntity()}"
+    // );
+  }  
 
   public function columnAutoIncrement(
     string $column
