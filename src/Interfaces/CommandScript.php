@@ -15,12 +15,12 @@ class CommandScript
   ){}
 
   public function execute(
+    string|null $commandParse = null
   ): void {
-    Database::execute( 
-      sprintf( 
-        $this->command,
-        $this->args
-      )
+    $commandParse = sprintf( 
+      $this->command, ...$this->args
     );
+
+    Database::execute( $commandParse, []);
   }
 }
