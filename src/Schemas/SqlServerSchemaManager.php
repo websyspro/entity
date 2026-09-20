@@ -75,7 +75,7 @@ extends AbstractSchemaManager
   public function columnBlob(
     string $column
   ): string {
-    return sprintf( "{$column} Blob %s",
+    return sprintf( "{$column} NVarchar(Max) %s",
       $this->getColumnRequired( $column )
     );    
   }
@@ -116,7 +116,7 @@ extends AbstractSchemaManager
   public function columnDouble(
     string $column
   ): string {
-    return sprintf( "{$column} Double %s",
+    return sprintf( "{$column} Float %s",
       $this->getColumnRequired( $column )
     );    
   }
@@ -130,7 +130,7 @@ extends AbstractSchemaManager
   public function columnFlag(
     string $column
   ): string {
-    return sprintf( "{$column} TinyInt(1) %s",
+    return sprintf( "{$column} TinyInt %s",
       $this->getColumnRequired( $column )
     );    
   }
@@ -162,7 +162,7 @@ extends AbstractSchemaManager
   public function columnLongBlob(
     string $column
   ): string {
-    return sprintf( "{$column} LongBlob %s",
+    return sprintf( "{$column} NVarchar(Max) %s",
       $this->getColumnRequired( $column )
     );    
   }
@@ -170,7 +170,7 @@ extends AbstractSchemaManager
   public function columnLongText(
     string $column
   ): string {
-    return sprintf( "{$column} LongText %s",
+    return sprintf( "{$column} NVarchar(Max) %s",
       $this->getColumnRequired( $column )
     );    
   }
@@ -178,7 +178,7 @@ extends AbstractSchemaManager
   public function columnMediumBlob(
     string $column
   ): string {
-    return sprintf( "{$column} MediumBlob %s",
+    return sprintf( "{$column} NVarchar(Max) %s",
       $this->getColumnRequired( $column )
     );    
   }
@@ -194,7 +194,7 @@ extends AbstractSchemaManager
   public function columnMediumText(
     string $column
   ): string {
-    return sprintf( "{$column} MediumText %s",
+    return sprintf( "{$column} NVarchar(Max) %s",
       $this->getColumnRequired( $column )
     );    
   }
@@ -227,7 +227,7 @@ extends AbstractSchemaManager
   public function columnTimeStamp(
     string $column
   ): string {
-    return sprintf( "{$column} TimeStamp %s",
+    return sprintf( "{$column} Datetime2 %s",
       $this->getColumnRequired( $column )
     );    
   }
