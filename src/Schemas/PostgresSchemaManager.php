@@ -5,6 +5,7 @@ namespace Websyspro\Entity\Schemas;
 use Websyspro\Connection\Database;
 use Websyspro\Entity\Interfaces\ColumnType;
 use Websyspro\Entity\Interfaces\CommandScript;
+use function array_slice;
 use function sprintf;
 
 class PostgresSchemaManager
@@ -34,6 +35,22 @@ extends AbstractSchemaManager
       message: "Creating table {$this->getAliasFromEntity()}"
     );
   }
+
+  public function entityCreateIndexes(
+  ): void {
+    foreach( $this->entityStructure->indexes->items as $indexName ){
+      if( is_string( $indexName )){
+        $columns = implode( ", ", array_slice(
+          explode( "_", $indexName ), 2
+        ));
+
+        $this->commandScritps[] = new CommandScript(
+          command: "Create Index {$indexName} On {$this->getAliasFromEntity()} ({$columns})",
+          message: "Creating table {$this->getAliasFromEntity()}"
+        );        
+      }
+    }
+  }  
 
   public function columnAutoIncrement(
     string $column

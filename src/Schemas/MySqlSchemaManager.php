@@ -52,11 +52,6 @@ extends AbstractSchemaManager
         );        
       }
     }
-
-    // $this->commandScritps[] = new CommandScript(
-    //   command: "Create Table If Not Exists {$this->getAliasFromEntity()} ({$this->getColumnsFromEntity()}) Engine=InnoDB Default Charset=utf8mb4 collate=utf8mb4_unicode_ci",
-    //   message: "Creating table {$this->getAliasFromEntity()}"
-    // );
   }  
 
   public function columnAutoIncrement(
