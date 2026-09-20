@@ -55,19 +55,13 @@ extends AbstractSchemaManager
   public function columnAutoIncrement(
     string $column
   ): string {
-    return sprintf( "{$column} BigInt %s %s auto_increment",
-      $this->getColumnRequired( $column ),
-      $this->getColumnPrimaryKey( $column )
-    );
+    return "{$column} Int Identity(1,1) Not Null";
   }
 
   public function columnAutoUUID(
     string $column
   ): string {
-    return sprintf( "{$column} Varchar(36) %s %s",
-      $this->getColumnRequired( $column ),
-      $this->getColumnPrimaryKey( $column )
-    );    
+    return "{$column} UniqueIdentifier Not Null Default NewId() Primary Key";    
   }
 
   public function columnBigInt(
