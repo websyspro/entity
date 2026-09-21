@@ -55,19 +55,13 @@ extends AbstractSchemaManager
   public function columnAutoIncrement(
     string $column
   ): string {
-    return sprintf( "{$column} BigInt %s %s auto_increment",
-      $this->getColumnRequired( $column ),
-      $this->getColumnPrimaryKey( $column )
-    );
+    return "{$column} BigSerial Primary Key";
   }
 
   public function columnAutoUUID(
     string $column
   ): string {
-    return sprintf( "{$column} Varchar(36) %s %s",
-      $this->getColumnRequired( $column ),
-      $this->getColumnPrimaryKey( $column )
-    );    
+    return "{$column} UUID Not Null Default gen_random_uuid() Primary Key";
   }
 
   public function columnBigInt(
@@ -81,7 +75,7 @@ extends AbstractSchemaManager
   public function columnBlob(
     string $column
   ): string {
-    return sprintf( "{$column} Blob %s",
+    return sprintf( "{$column} Bytea %s",
       $this->getColumnRequired( $column )
     );    
   }
@@ -105,7 +99,7 @@ extends AbstractSchemaManager
   public function columnDatetime(
     string $column
   ): string {
-    return sprintf( "{$column} Datetime %s",
+    return sprintf( "{$column} Timestamp %s",
       $this->getColumnRequired( $column )
     );    
   }
@@ -122,7 +116,7 @@ extends AbstractSchemaManager
   public function columnDouble(
     string $column
   ): string {
-    return sprintf( "{$column} Double %s",
+    return sprintf( "{$column} Double Precision %s",
       $this->getColumnRequired( $column )
     );    
   }
@@ -136,7 +130,7 @@ extends AbstractSchemaManager
   public function columnFlag(
     string $column
   ): string {
-    return sprintf( "{$column} TinyInt(1) %s",
+    return sprintf( "{$column} SmallInt %s",
       $this->getColumnRequired( $column )
     );    
   }
@@ -144,7 +138,7 @@ extends AbstractSchemaManager
   public function columnFloat(
     string $column
   ): string {
-    return sprintf( "{$column} Float %s",
+    return sprintf( "{$column} Real %s",
       $this->getColumnRequired( $column )
     );    
   }
@@ -160,7 +154,7 @@ extends AbstractSchemaManager
   public function columnJSON( 
     string $column
   ): string {
-    return sprintf( "{$column} LongText %s",
+    return sprintf( "{$column} Jsonb %s",
       $this->getColumnRequired( $column )
     );    
   }
@@ -168,7 +162,7 @@ extends AbstractSchemaManager
   public function columnLongBlob(
     string $column
   ): string {
-    return sprintf( "{$column} LongBlob %s",
+    return sprintf( "{$column} Bytea %s",
       $this->getColumnRequired( $column )
     );    
   }
@@ -176,7 +170,7 @@ extends AbstractSchemaManager
   public function columnLongText(
     string $column
   ): string {
-    return sprintf( "{$column} LongText %s",
+    return sprintf( "{$column} Text %s",
       $this->getColumnRequired( $column )
     );    
   }
@@ -184,7 +178,7 @@ extends AbstractSchemaManager
   public function columnMediumBlob(
     string $column
   ): string {
-    return sprintf( "{$column} MediumBlob %s",
+    return sprintf( "{$column} Bytea %s",
       $this->getColumnRequired( $column )
     );    
   }
@@ -192,7 +186,7 @@ extends AbstractSchemaManager
   public function columnMediumInt(
     string $column
   ): string {
-    return sprintf( "{$column} MediumInt %s",
+    return sprintf( "{$column} Integer %s",
       $this->getColumnRequired( $column )
     );    
   }
@@ -200,7 +194,7 @@ extends AbstractSchemaManager
   public function columnMediumText(
     string $column
   ): string {
-    return sprintf( "{$column} MediumText %s",
+    return sprintf( "{$column} Text %s",
       $this->getColumnRequired( $column )
     );    
   }
@@ -241,7 +235,7 @@ extends AbstractSchemaManager
   public function columnTinyBlob(
     string $column
   ): string {
-    return sprintf( "{$column} TinyBlob %s",
+    return sprintf( "{$column} Bytea %s",
       $this->getColumnRequired( $column )
     );    
   }
@@ -249,7 +243,7 @@ extends AbstractSchemaManager
   public function columnTinyInt(
     string $column
   ): string {
-    return sprintf( "{$column} TinyInt %s",
+    return sprintf( "{$column} SmallInt %s",
       $this->getColumnRequired( $column )
     );     
   }
@@ -257,7 +251,7 @@ extends AbstractSchemaManager
   public function columnUUID(
     string $column
   ): string {
-    return sprintf( "{$column} Varchar(36) %s",
+    return sprintf( "{$column} UUID %s",
       $this->getColumnRequired( $column )
     );     
   }
@@ -265,7 +259,7 @@ extends AbstractSchemaManager
   public function columnYear(
     string $column
   ): string {
-    return sprintf( "{$column} Year %s",
+    return sprintf( "{$column} SmallInt %s",
       $this->getColumnRequired( $column )
     );    
   } 

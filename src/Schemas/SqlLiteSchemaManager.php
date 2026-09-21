@@ -56,10 +56,7 @@ extends AbstractSchemaManager
   public function columnAutoIncrement(
     string $column
   ): string {
-    return sprintf( "{$column} BigInt %s %s auto_increment",
-      $this->getColumnRequired( $column ),
-      $this->getColumnPrimaryKey( $column )
-    );
+    return "{$column} Integer Primary Key Autoincrement";
   }
 
   public function columnAutoUUID(
@@ -90,7 +87,7 @@ extends AbstractSchemaManager
   public function columnBoolean(
     string $column
   ): string {
-    return sprintf( "{$column} Boolean %s",
+    return sprintf( "{$column} Integer %s",
       $this->getColumnRequired( $column )
     );
   }
@@ -123,7 +120,7 @@ extends AbstractSchemaManager
   public function columnDouble(
     string $column
   ): string {
-    return sprintf( "{$column} Double %s",
+    return sprintf( "{$column} Real %s",
       $this->getColumnRequired( $column )
     );    
   }
@@ -161,7 +158,7 @@ extends AbstractSchemaManager
   public function columnJSON( 
     string $column
   ): string {
-    return sprintf( "{$column} LongText %s",
+    return sprintf( "{$column} Text %s",
       $this->getColumnRequired( $column )
     );    
   }
@@ -169,7 +166,7 @@ extends AbstractSchemaManager
   public function columnLongBlob(
     string $column
   ): string {
-    return sprintf( "{$column} LongBlob %s",
+    return sprintf( "{$column} Blob %s",
       $this->getColumnRequired( $column )
     );    
   }
@@ -177,7 +174,7 @@ extends AbstractSchemaManager
   public function columnLongText(
     string $column
   ): string {
-    return sprintf( "{$column} LongText %s",
+    return sprintf( "{$column} Text %s",
       $this->getColumnRequired( $column )
     );    
   }
@@ -185,7 +182,7 @@ extends AbstractSchemaManager
   public function columnMediumBlob(
     string $column
   ): string {
-    return sprintf( "{$column} MediumBlob %s",
+    return sprintf( "{$column} Blob %s",
       $this->getColumnRequired( $column )
     );    
   }
@@ -193,7 +190,7 @@ extends AbstractSchemaManager
   public function columnMediumInt(
     string $column
   ): string {
-    return sprintf( "{$column} MediumInt %s",
+    return sprintf( "{$column} Integer %s",
       $this->getColumnRequired( $column )
     );    
   }
@@ -201,7 +198,7 @@ extends AbstractSchemaManager
   public function columnMediumText(
     string $column
   ): string {
-    return sprintf( "{$column} MediumText %s",
+    return sprintf( "{$column} Text %s",
       $this->getColumnRequired( $column )
     );    
   }
@@ -234,7 +231,7 @@ extends AbstractSchemaManager
   public function columnTimeStamp(
     string $column
   ): string {
-    return sprintf( "{$column} TimeStamp %s",
+    return sprintf( "{$column} Text %s",
       $this->getColumnRequired( $column )
     );    
   }
@@ -242,7 +239,7 @@ extends AbstractSchemaManager
   public function columnTinyBlob(
     string $column
   ): string {
-    return sprintf( "{$column} TinyBlob %s",
+    return sprintf( "{$column} Blob %s",
       $this->getColumnRequired( $column )
     );    
   }
@@ -266,7 +263,7 @@ extends AbstractSchemaManager
   public function columnYear(
     string $column
   ): string {
-    return sprintf( "{$column} Year %s",
+    return sprintf( "{$column} Integer %s",
       $this->getColumnRequired( $column )
     );    
   }
