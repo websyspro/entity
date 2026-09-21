@@ -2,6 +2,15 @@
 
 namespace Websyspro\Entity\Schemas;
 
+use Websyspro\Entity\Decorators\Column;
+use Websyspro\Entity\Decorators\ForeignKey;
+use Websyspro\Entity\Decorators\Index;
+use Websyspro\Entity\Decorators\InitialDefault;
+use Websyspro\Entity\Decorators\Length;
+use Websyspro\Entity\Decorators\Precision;
+use Websyspro\Entity\Decorators\PrimaryKey;
+use Websyspro\Entity\Decorators\Required;
+use Websyspro\Entity\Decorators\Unique;
 use Websyspro\Entity\Interfaces\ForeignKeyStructure;
 use Websyspro\Entity\Interfaces\PrecisionDetails;
 use Websyspro\Entity\Types\ColumnAutoIncrement;
