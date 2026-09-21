@@ -2,10 +2,10 @@
 
 namespace Websyspro\Entity\Schemas;
 
-use Stringable;
 use Websyspro\Connection\Database;
 use Websyspro\Entity\Interfaces\ColumnType;
 use Websyspro\Entity\Interfaces\CommandScript;
+use function is_string;
 use function sprintf;
 use function array_slice;
 
