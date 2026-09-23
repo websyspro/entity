@@ -134,9 +134,9 @@ extends AbstractEntityStructurePersisteds
         $this->primaryKeys->items[ $column->name ] = $column->name;
       }
 
-      /* Define Indexes */
-      $this->indexes->items = $this->getIndexesFromEntityPersisteds();
-      $this->uniques->items = $this->getUniquesFromEntityPersisteds();
+      /* Define Indexes e Uniques */
+      $this->indexes->items = array_values( $this->getIndexesFromEntityPersisteds());
+      $this->uniques->items = array_values( $this->getUniquesFromEntityPersisteds());
     }
   }
 }
