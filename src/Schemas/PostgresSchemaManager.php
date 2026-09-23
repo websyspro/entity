@@ -46,7 +46,23 @@ extends AbstractSchemaManager
 
         $this->commandScritps[] = new CommandScript(
           command: "Create Index {$indexName} On {$this->getAliasFromEntity()} ({$columns})",
-          message: "Creating table {$this->getAliasFromEntity()}"
+          message: "Creating Index {$indexName} on {$this->getAliasFromEntity()}"
+        );        
+      }
+    }
+  }
+
+  public function entityCreateUniques(
+  ): void {
+    foreach( $this->entityStructure->uniques->items as $uniqueName ){
+      if( is_string( $uniqueName )){
+        $columns = implode( ", ", array_slice(
+          explode( "_", $uniqueName ), 2
+        ));
+
+        $this->commandScritps[] = new CommandScript(
+          command: "Alter Table {$this->getAliasFromEntity()} Add Constraint {$uniqueName} UNIQUE ({$columns});",
+          message: "Creating Constraint Unique {$uniqueName} on {$this->getAliasFromEntity()}"
         );        
       }
     }
