@@ -52,6 +52,9 @@ extends AbstractSchemaManager
     }
   }
 
+  public function entityUpdateIndexes(
+  ): void {}
+
   public function entityCreateUniques(
   ): void {
     foreach( $this->entityStructure->uniques->items as $uniqueName ){
@@ -67,6 +70,9 @@ extends AbstractSchemaManager
       }
     }
   }  
+
+  public function entityUpdateUniques(
+  ): void {}  
 
   public function columnAutoIncrement(
     string $column

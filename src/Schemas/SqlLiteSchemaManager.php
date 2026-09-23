@@ -52,6 +52,9 @@ extends AbstractSchemaManager
       }
     }
   }
+
+  public function entityUpdateIndexes(
+  ): void {}  
   
   public function entityCreateUniques(
   ): void {
@@ -67,7 +70,10 @@ extends AbstractSchemaManager
         );        
       }
     }
-  }  
+  }
+
+  public function entityUpdateUniques(
+  ): void {}  
 
   public function columnAutoIncrement(
     string $column

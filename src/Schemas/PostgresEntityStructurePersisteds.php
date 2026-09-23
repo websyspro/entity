@@ -50,12 +50,37 @@ extends AbstractEntityStructurePersisteds
     );
   }
 
+  public function getIndexesFromEntityPersisteds(
+  ): array {
+    return Database::query(
+      "", [
+        $this->entityNames->alias
+      ]
+    );
+  }
+  
+  public function getUniquesFromEntityPersisteds(
+  ): array {
+    return Database::query(
+      "", [
+        $this->entityNames->alias
+      ]
+    );
+  }
+  
+  public function getForeignKeysFromEntityPersisteds(
+  ): array {
+    return Database::query(
+      "", [
+        $this->entityNames->alias
+      ]
+    );
+  }  
+
   public function getEntityColumns(
   ): void {
     foreach( $this->getColumnsFromEntityPersisteds() as $column ){
       $this->columns->items[] = $column->name;
-
-      print_r($column);
 
       /* Define Column Type */
       $this->types->items[ $column->name ] = match(
