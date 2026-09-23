@@ -3,11 +3,13 @@
 namespace Websyspro\Entity\Schemas;
 
 use Websyspro\Connection\Database;
+use Websyspro\Entity\Interfaces\PrecisionDetails;
 use Websyspro\Entity\Types\ColumnBigInt;
 use Websyspro\Entity\Types\ColumnDatetime;
 use Websyspro\Entity\Types\ColumnDecimal;
 use Websyspro\Entity\Types\ColumnFlag;
 use Websyspro\Entity\Types\ColumnInt;
+use Websyspro\Entity\Types\ColumnSmallInt;
 use Websyspro\Entity\Types\ColumnText;
 use Websyspro\Entity\Types\ColumnTime;
 
@@ -44,7 +46,9 @@ extends AbstractEntityStructurePersisteds
         "varchar" => ColumnText::class,
         "tinyint" => ColumnFlag::class,
         "bigint" => ColumnBigInt::class,
+        "int" => ColumnInt::class,
         "integer" => ColumnInt::class,
+        "smallint" => ColumnSmallInt::class,
         "decimal" => ColumnDecimal::class,
         "datetime" => ColumnDatetime::class,
         "date" => ColumnDatetime::class,

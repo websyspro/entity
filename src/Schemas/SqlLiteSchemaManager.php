@@ -62,7 +62,7 @@ extends AbstractSchemaManager
         ));
 
         $this->commandScritps[] = new CommandScript(
-          command: "Alter Table {$this->getAliasFromEntity()} Add Constraint {$uniqueName} UNIQUE ({$columns});",
+          command: "Create Unique Index {$uniqueName} On {$this->getAliasFromEntity()} ({$columns})",
           message: "Creating Constraint Unique {$uniqueName} on {$this->getAliasFromEntity()}"
         );        
       }

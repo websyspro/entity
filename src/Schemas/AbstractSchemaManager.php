@@ -63,7 +63,9 @@ abstract class AbstractSchemaManager
   abstract protected function columnYear( string $column ): string;  
   abstract protected function entityCreateScript(): void;
   abstract protected function entityCreateIndexes(): void;
+  abstract protected function entityUpdateIndexes(): void;
   abstract protected function entityCreateUniques(): void;
+  abstract protected function entityUpdateUniques(): void;
   abstract protected function getColumnsFromEntityPersisteds(): array;
 
   public function asyncEntity(
@@ -74,7 +76,11 @@ abstract class AbstractSchemaManager
         $this->entityCreateIndexes();
         $this->entityCreateUniques();
       } else {
+        $this->entityUpdateIndexes();
+        $this->entityUpdateUniques();
+
         $this->getColumnsFromEntityPersisteds();
+
       }
 
       $this->asyncUpdate();
