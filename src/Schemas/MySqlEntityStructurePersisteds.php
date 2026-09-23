@@ -71,8 +71,8 @@ extends AbstractEntityStructurePersisteds
       };
 
       /* Define Column Primary Key */
-      if( (int)$column->pk === 1 ){
-        if( $column->extra === "auto_increment" ){
+      if(( int )$column->pk === 1 ){
+        if(( string )$column->extra === "auto_increment" ){
           $this->types->items[ $column->name ] = ColumnAutoIncrement::class;
         }
       }
