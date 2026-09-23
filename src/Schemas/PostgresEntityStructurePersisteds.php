@@ -3,6 +3,8 @@
 namespace Websyspro\Entity\Schemas;
 
 use Websyspro\Connection\Database;
+use Websyspro\Entity\Types\ColumnAutoIncrement;
+use Websyspro\Entity\Types\ColumnAutoUUID;
 use Websyspro\Entity\Types\ColumnBlob;
 use Websyspro\Entity\Types\ColumnDate;
 use Websyspro\Entity\Types\ColumnDatetime;
@@ -35,20 +37,21 @@ extends AbstractEntityStructurePersisteds
          Else information_schema.columns.udt_name
           End As type
         ,Case information_schema.columns.is_nullable When 'YES' Then 0 Else 1 End As notnull
-        ,Null as diff_value
-         ,Case 
-          When (
-        Select information_schema.key_column_usage.column_name
-	        From information_schema.key_column_usage 
-	    	      ,information_schema.table_constraints
-	       Where information_schema.key_column_usage.table_name = information_schema.columns.table_name
-	         And information_schema.key_column_usage.column_name = information_schema.columns.column_name
-	         And information_schema.key_column_usage.table_name = information_schema.table_constraints.table_name
-	         And information_schema.key_column_usage.constraint_name = information_schema.table_constraints.constraint_name ) Is Null then 0 else 1 
-	         End As pk
-		      From information_schema.columns 
-		     Where information_schema.columns.table_name = ?
-	    Order by information_schema.columns.ordinal_position Asc", [
+             ,information_schema.columns.column_default as extra
+        ,Case 
+         When Exists (
+       Select 1
+         From information_schema.key_column_usage kcu
+   Inner Join information_schema.table_constraints tc On tc.constraint_name = kcu.constraint_name
+          And tc.table_schema = kcu.table_schema
+          And tc.table_name = kcu.table_name
+        Where kcu.table_schema = information_schema.columns.table_schema
+              And kcu.table_name = information_schema.columns.table_name
+              And kcu.column_name = information_schema.columns.column_name
+              And tc.constraint_type = 'PRIMARY KEY' ) Then 1 Else 0 End As pk
+		     From information_schema.columns 
+		    Where information_schema.columns.table_name = ?
+	   Order by information_schema.columns.ordinal_position Asc", [
         strtolower( $this->entityNames->alias )
       ]
     );
@@ -66,7 +69,7 @@ extends AbstractEntityStructurePersisteds
           And t.relname = ?
           And ix.indisunique = false
      Group By t.relname, i.relname", [
-        $this->entityNames->alias
+        strtolower( $this->entityNames->alias )
       ]
     );
   }
@@ -74,7 +77,7 @@ extends AbstractEntityStructurePersisteds
   public function getUniquesFromEntityPersisteds(
   ): array {
     return Database::query(
-      "Select i.relname AS index_name
+      "Select i.relname AS unique_name
          From pg_class t
    Inner Join pg_index ix On ix.indrelid = t.oid
    Inner Join pg_class i On i.oid = ix.indexrelid
@@ -84,7 +87,7 @@ extends AbstractEntityStructurePersisteds
           And ix.indisunique = true
           And ix.indisprimary = false
      Group By t.relname, i.relname", [
-        $this->entityNames->alias
+        strtolower( $this->entityNames->alias )
       ]
     );
   }
@@ -92,8 +95,16 @@ extends AbstractEntityStructurePersisteds
   public function getForeignKeysFromEntityPersisteds(
   ): array {
     return Database::query(
-      "", [
-        $this->entityNames->alias
+      "Select con.conname AS constraint_name
+         From pg_constraint con
+   Inner Join pg_class t On t.oid = con.conrelid
+   Inner Join pg_namespace n On n.oid = t.relnamespace
+        Where n.nspname = current_schema()
+          And t.relname = ?
+          And con.contype = 'f'
+     Group By t.relname
+             ,con.conname", [
+        strtolower( $this->entityNames->alias )
       ]
     );
   }  
@@ -124,6 +135,20 @@ extends AbstractEntityStructurePersisteds
           default => $this->extractColumnType( $column->type )
       };
 
+      /* Define Column Primary Key */
+      if(( int )$column->pk === 1 ){
+        if( $column->type === "bigint" && ( string )$column->extra === "nextval('test_fieldautoincrement_seq'::regclass)" ){
+          $this->types->items[ $column->name ] = ColumnAutoIncrement::class;
+        } else if( $column->type === "uuid" && ( string )$column->extra === "gen_random_uuid()" ){
+          $this->types->items[ $column->name ] = ColumnAutoUUID::class;
+        }
+      }
+
+      /* Define Generateds */
+      if( in_array( $this->types->items[ $column->name ], [ ColumnAutoIncrement::class , ColumnAutoUUID::class ])){
+        $this->generateds->items[ $column->name ] = $column->name;
+      }
+
       /* Define Length */
       if( $this->extractColumnLength( $column->type ) !== 0 ){
         $this->lengths->items[ $column->name ] = $this->extractColumnLength( $column->type );
@@ -140,7 +165,7 @@ extends AbstractEntityStructurePersisteds
       }
 
       /* Define Column PrimaryKey */
-      if( (int)$column->pk === 1 ){
+      if( (int)$column->pk === 1  ){
         $this->primaryKeys->items[ $column->name ] = $column->name;
       } 
       
