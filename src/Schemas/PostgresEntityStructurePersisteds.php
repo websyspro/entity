@@ -53,7 +53,15 @@ extends AbstractEntityStructurePersisteds
   public function getIndexesFromEntityPersisteds(
   ): array {
     return Database::query(
-      "", [
+      "Select i.relname AS index_name
+         From pg_class t
+   Inner Join pg_index ix On ix.indrelid = t.oid
+   Inner Join pg_class i On i.oid = ix.indexrelid
+   Inner Join pg_namespace n On n.oid = t.relnamespace
+        Where n.nspname = current_schema()
+          And t.relname = ?
+          And ix.indisunique = false
+     Group By t.relname, i.relname", [
         $this->entityNames->alias
       ]
     );
@@ -62,7 +70,16 @@ extends AbstractEntityStructurePersisteds
   public function getUniquesFromEntityPersisteds(
   ): array {
     return Database::query(
-      "", [
+      "Select i.relname AS index_name
+         From pg_class t
+   Inner Join pg_index ix On ix.indrelid = t.oid
+   Inner Join pg_class i On i.oid = ix.indexrelid
+   Inner Join pg_namespace n On n.oid = t.relnamespace
+        Where n.nspname = current_schema()
+          And t.relname = ?
+          And ix.indisunique = true
+          And ix.indisprimary = false
+     Group By t.relname, i.relname", [
         $this->entityNames->alias
       ]
     );
