@@ -3,14 +3,18 @@
 namespace Websyspro\Entity\Schemas;
 
 use Websyspro\Connection\Database;
+use Websyspro\Entity\Types\ColumnBlob;
 use Websyspro\Entity\Types\ColumnDate;
 use Websyspro\Entity\Types\ColumnDatetime;
 use Websyspro\Entity\Types\ColumnDecimal;
+use Websyspro\Entity\Types\ColumnDouble;
 use Websyspro\Entity\Types\ColumnFlag;
 use Websyspro\Entity\Types\ColumnInt;
+use Websyspro\Entity\Types\ColumnSmallInt;
 use Websyspro\Entity\Types\ColumnText;
 use Websyspro\Entity\Types\ColumnTime;
 use Websyspro\Entity\Types\ColumnUUID;
+use stdClass;
 
 class PostgresEntityStructurePersisteds
 extends AbstractEntityStructurePersisteds
@@ -104,15 +108,19 @@ extends AbstractEntityStructurePersisteds
         $this->extractColumnType( $column->type )
       ){
         "uuid" => ColumnUUID::class,
+        "int" => ColumnInt::class,
+        "int2" => ColumnSmallInt::class,
         "bigint" => ColumnInt::class,
         "boolean" => ColumnInt::class,
         "varchar" => ColumnText::class,
         "tinyint" => ColumnFlag::class,
         "integer" => ColumnInt::class,
         "decimal" => ColumnDecimal::class,
+        "float8" => ColumnDouble::class,
         "datetime" => ColumnDatetime::class,
         "date" => ColumnDate::class,
         "time" => ColumnTime::class,
+        "bytea" => ColumnBlob::class,
           default => $this->extractColumnType( $column->type )
       };
 
@@ -134,7 +142,25 @@ extends AbstractEntityStructurePersisteds
       /* Define Column PrimaryKey */
       if( (int)$column->pk === 1 ){
         $this->primaryKeys->items[ $column->name ] = $column->name;
-      }      
+      } 
+      
+      /* Define Indexes */
+      $this->indexes->items = array_map(
+        fn( stdClass $object ) => $object->index_name,
+          $this->getIndexesFromEntityPersisteds()
+      );
+      
+      /* Define Uniques */
+      $this->uniques->items = array_map(
+        fn( stdClass $object ) => $object->unique_name, 
+          $this->getUniquesFromEntityPersisteds()
+      );
+
+      /* Define ForeignKeys */
+      $this->foreignKeys->items = array_map(
+        fn( stdClass $object ) => $object->constraint_name,
+          $this->getForeignKeysFromEntityPersisteds()
+      );      
     }
   }
 }
