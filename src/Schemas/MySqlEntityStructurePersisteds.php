@@ -161,7 +161,7 @@ extends AbstractEntityStructurePersisteds
       );
 
       /* Define ForeignKeys */
-      $this->foreignKeys = array_map(
+      $this->foreignKeys->items = array_map(
         fn( stdClass $object ) => $object->constraint_name,
           $this->getForeignKeysFromEntityPersisteds()
       );

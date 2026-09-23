@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d031a92f360fc2c3899e508f4aaf9c12",
+    "content-hash": "0c76f2af219c1670d9dffde35dbae53b",
     "packages": [
         {
             "name": "websyspro/connection",
