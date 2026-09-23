@@ -82,7 +82,7 @@ extends AbstractEntityStructurePersisteds
       }
 
       /* Define Generateds */
-      if( in_array( $this->types->items, [ ColumnAutoIncrement::class, ColumnAutoUUID::class ])){
+      if( in_array( $this->types->items[ $column->name ], [ ColumnAutoIncrement::class , ColumnAutoUUID::class ])){
         $this->generateds->items[ $column->name ] = $column->name;
       }
 
