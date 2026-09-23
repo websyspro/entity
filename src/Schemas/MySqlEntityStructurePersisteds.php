@@ -5,6 +5,7 @@ namespace Websyspro\Entity\Schemas;
 use Websyspro\Connection\Database;
 use Websyspro\Entity\Interfaces\PrecisionDetails;
 use Websyspro\Entity\Types\ColumnAutoIncrement;
+use Websyspro\Entity\Types\ColumnAutoUUID;
 use Websyspro\Entity\Types\ColumnBigInt;
 use Websyspro\Entity\Types\ColumnBlob;
 use Websyspro\Entity\Types\ColumnDatetime;
@@ -19,6 +20,7 @@ use Websyspro\Entity\Types\ColumnSmallInt;
 use Websyspro\Entity\Types\ColumnText;
 use Websyspro\Entity\Types\ColumnTime;
 use Websyspro\Entity\Types\ColumnTimeStamp;
+use function in_array;
 
 class MySqlEntityStructurePersisteds
 extends AbstractEntityStructurePersisteds
@@ -74,7 +76,14 @@ extends AbstractEntityStructurePersisteds
       if(( int )$column->pk === 1 ){
         if(( string )$column->extra === "auto_increment" ){
           $this->types->items[ $column->name ] = ColumnAutoIncrement::class;
+        } else if(( string )$column->type === "varchar(36)" ){
+          $this->types->items[ $column->name ] = ColumnAutoUUID::class;
         }
+      }
+
+      /* Define Generateds */
+      if( in_array( $this->types->items, [ ColumnAutoIncrement::class, ColumnAutoUUID::class ])){
+        $this->generateds->items[ $column->name ] = $column->name;
       }
 
       /* Define Length */
