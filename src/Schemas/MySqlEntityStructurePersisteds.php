@@ -4,14 +4,21 @@ namespace Websyspro\Entity\Schemas;
 
 use Websyspro\Connection\Database;
 use Websyspro\Entity\Interfaces\PrecisionDetails;
+use Websyspro\Entity\Types\ColumnAutoIncrement;
 use Websyspro\Entity\Types\ColumnBigInt;
+use Websyspro\Entity\Types\ColumnBlob;
 use Websyspro\Entity\Types\ColumnDatetime;
 use Websyspro\Entity\Types\ColumnDecimal;
+use Websyspro\Entity\Types\ColumnDouble;
 use Websyspro\Entity\Types\ColumnFlag;
 use Websyspro\Entity\Types\ColumnInt;
+use Websyspro\Entity\Types\ColumnLongBlob;
+use Websyspro\Entity\Types\ColumnLongText;
+use Websyspro\Entity\Types\ColumnMediumText;
 use Websyspro\Entity\Types\ColumnSmallInt;
 use Websyspro\Entity\Types\ColumnText;
 use Websyspro\Entity\Types\ColumnTime;
+use Websyspro\Entity\Types\ColumnTimeStamp;
 
 class MySqlEntityStructurePersisteds
 extends AbstractEntityStructurePersisteds
@@ -24,6 +31,7 @@ extends AbstractEntityStructurePersisteds
 		         ,information_schema.columns.column_type As type
 	      ,Case information_schema.columns.is_nullable When 'YES' Then 0 Else 1 End As notnull
 	           ,Null as diff_value
+             ,information_schema.columns.extra as extra
         ,Case information_schema.columns.column_key When 'PRI' Then 1 Else 0 End As pk 
          From information_schema.columns 
         Where table_schema = database() 
@@ -43,6 +51,8 @@ extends AbstractEntityStructurePersisteds
       $this->types->items[ $column->name ] = match(
         $this->extractColumnType( $column->type )
       ){
+        "mediumtext" => ColumnMediumText::class,
+        "longtext" => ColumnLongText::class,
         "varchar" => ColumnText::class,
         "tinyint" => ColumnFlag::class,
         "bigint" => ColumnBigInt::class,
@@ -50,11 +60,22 @@ extends AbstractEntityStructurePersisteds
         "integer" => ColumnInt::class,
         "smallint" => ColumnSmallInt::class,
         "decimal" => ColumnDecimal::class,
+        "double" => ColumnDouble::class,
         "datetime" => ColumnDatetime::class,
+        "timestamp" => ColumnTimeStamp::class,
         "date" => ColumnDatetime::class,
         "time" => ColumnTime::class,
+        "blob" => ColumnBlob::class,
+        "longblob" => ColumnLongBlob::class,
           default => $this->extractColumnType( $column->type )
       };
+
+      /* Define Column Primary Key */
+      if( (int)$column->pk === 1 ){
+        if( $column->extra === "auto_increment" ){
+          $this->types->items[ $column->name ] = ColumnAutoIncrement::class;
+        }
+      }
 
       /* Define Length */
       if( $this->extractColumnLength( $column->type ) !== 0 ){

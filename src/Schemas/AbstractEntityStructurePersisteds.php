@@ -82,6 +82,12 @@ abstract class AbstractEntityStructurePersisteds
     );
   }
 
+  public function extractColumnGenerateds(
+    string $type    
+  ): bool {
+    return false;
+  }
+
   public function extractColumnLength(
     string $type
   ): int {
