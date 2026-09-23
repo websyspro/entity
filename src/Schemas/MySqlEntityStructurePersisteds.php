@@ -44,6 +44,34 @@ extends AbstractEntityStructurePersisteds
     );
   }
 
+  public function getIndexesFromEntityPersisteds(
+  ): array {
+    return Database::query(
+      "Select information_schema.statistics.index_name as index_names
+         From information_schema.statistics
+        Where information_schema.statistics.table_schema = database()
+          And information_schema.statistics.table_name = ?
+          And information_schema.statistics.non_unique = 1
+     Group By information_schema.statistics.table_name
+             ,information_schema.statistics.index_name", [
+        $this->entityNames->alias
+      ]
+    );
+  }
+  
+  public function getUniquesFromEntityPersisteds(
+  ): array {
+    return Database::query(
+      "select information_schema.table_constraints.constraint_name as unique_name
+         from information_schema.table_constraints
+        where information_schema.table_constraints.table_schema = database()
+          and information_schema.table_constraints.constraint_type = 'UNIQUE'
+          and information_schema.table_constraints.table_name = ?", [
+        $this->entityNames->alias
+      ]
+    );
+  }  
+
   public function getEntityColumns(
   ): void {
     foreach( $this->getColumnsFromEntityPersisteds() as $column ){
@@ -104,7 +132,11 @@ extends AbstractEntityStructurePersisteds
       /* Define Column PrimaryKey */
       if( (int)$column->pk === 1 ){
         $this->primaryKeys->items[ $column->name ] = $column->name;
-      }      
+      }
+
+      /* Define Indexes */
+      $this->indexes->items = $this->getIndexesFromEntityPersisteds();
+      $this->uniques->items = $this->getUniquesFromEntityPersisteds();
     }
   }
 }
