@@ -2,6 +2,7 @@
 
 namespace Websyspro\Entity\Schemas;
 
+use stdClass;
 use Websyspro\Connection\Database;
 use Websyspro\Entity\Interfaces\PrecisionDetails;
 use Websyspro\Entity\Types\ColumnAutoIncrement;
@@ -47,7 +48,7 @@ extends AbstractEntityStructurePersisteds
   public function getIndexesFromEntityPersisteds(
   ): array {
     return Database::query(
-      "Select information_schema.statistics.index_name as index_names
+      "Select information_schema.statistics.index_name as index_name
          From information_schema.statistics
         Where information_schema.statistics.table_schema = database()
           And information_schema.statistics.table_name = ?
@@ -62,15 +63,28 @@ extends AbstractEntityStructurePersisteds
   public function getUniquesFromEntityPersisteds(
   ): array {
     return Database::query(
-      "select information_schema.table_constraints.constraint_name as unique_name
-         from information_schema.table_constraints
-        where information_schema.table_constraints.table_schema = database()
-          and information_schema.table_constraints.constraint_type = 'UNIQUE'
-          and information_schema.table_constraints.table_name = ?", [
+      "Select information_schema.table_constraints.constraint_name as unique_name
+         From information_schema.table_constraints
+        Where information_schema.table_constraints.table_schema = database()
+          And information_schema.table_constraints.constraint_type = 'UNIQUE'
+          And information_schema.table_constraints.table_name = ?", [
         $this->entityNames->alias
       ]
     );
-  }  
+  }
+  
+  public function getForeignKeysFromEntityPersisteds(
+  ): array {
+    return Database::query(
+      "Select information_schema.key_column_usage.constraint_name as constraint_name
+         From information_schema.key_column_usage 
+        Where information_schema.key_column_usage.table_schema = database()
+          And information_schema.key_column_usage.table_name = ?
+          And information_schema.key_column_usage.referenced_table_name is not null", [
+        $this->entityNames->alias
+      ]
+    );
+  }
 
   public function getEntityColumns(
   ): void {
@@ -134,9 +148,23 @@ extends AbstractEntityStructurePersisteds
         $this->primaryKeys->items[ $column->name ] = $column->name;
       }
 
-      /* Define Indexes e Uniques */
-      $this->indexes->items = array_values( $this->getIndexesFromEntityPersisteds());
-      $this->uniques->items = array_values( $this->getUniquesFromEntityPersisteds());
+      /* Define Indexes */
+      $this->indexes->items = array_map(
+        fn( stdClass $object ) => $object->index_name,
+          $this->getIndexesFromEntityPersisteds()
+      );
+      
+      /* Define Uniques */
+      $this->uniques->items = array_map(
+        fn( stdClass $object ) => $object->unique_name, 
+          $this->getUniquesFromEntityPersisteds()
+      );
+
+      /* Define ForeignKeys */
+      $this->foreignKeys = array_map(
+        fn( stdClass $object ) => $object->constraint_name,
+          $this->getForeignKeysFromEntityPersisteds()
+      );
     }
   }
 }
