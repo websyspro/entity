@@ -27,18 +27,18 @@ extends BaseEntity
     public ColumnDatetime $Created;
 
     #[Nullable()]
-    public ColumnUUID $CreatedById = null;
+    public ColumnUUID $CreatedById;
 
     #[Nullable]
     #[InitialDefault(AutoDatetime::class)]
-    public ColumnDatetime $Updated = null;
+    public ColumnDatetime $Updated;
 
     #[Nullable]
-    public ColumnUUID $UpdatedById = null;
+    public ColumnUUID $UpdatedById;
 
     #[Nullable]
-    public ColumnDatetime $Deleted = null;
+    public ColumnDatetime $Deleted;
 
     #[Nullable]
-    public ColumnUUID $DeletedById = null;
+    public ColumnUUID $DeletedById;
 }
