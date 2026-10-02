@@ -23,6 +23,5 @@ extends ColumnAbstract
   ): void {}
 
   public function toDate(
-    string $datetime
   ): void {}
 }
