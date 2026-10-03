@@ -8,7 +8,7 @@ use Websyspro\Entity\Interfaces\CommandScript;
 use function array_slice;
 use function sprintf;
 
-class SqlLiteSchemaManager
+class SqLiteSchemaManager
 extends AbstractSchemaManager
 {
   public function entityExists(

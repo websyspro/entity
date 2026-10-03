@@ -11,7 +11,7 @@ use Websyspro\Entity\Types\ColumnInt;
 use Websyspro\Entity\Types\ColumnText;
 use Websyspro\Entity\Types\ColumnTime;
 
-class SqlLiteEntityStructurePersisteds
+class SqLiteEntityStructurePersisteds
 extends AbstractEntityStructurePersisteds
 {
   public function getColumnsFromEntityPersisteds(

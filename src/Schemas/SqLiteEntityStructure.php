@@ -19,7 +19,7 @@ use Websyspro\Entity\Types\ColumnUUID;
 use ReflectionClass;
 use function in_array;
 
-class SqlLiteEntityStructure 
+class SqLiteEntityStructure 
 extends AbstractEntityStructure
 {
   public function defineTypes(
