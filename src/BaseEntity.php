@@ -8,6 +8,10 @@ namespace Websyspro\Entity;
  */
 abstract class BaseEntity
 {
+  public function as(
+    string $alias    
+  ): void {}
+
   public function sum(
     mixed $expr
   ): void {}

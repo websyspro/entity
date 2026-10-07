@@ -38,4 +38,8 @@ abstract class ColumnAbstract
   ): mixed {
     return $this->value;
   }
+
+  public function as(
+    string $alias    
+  ): void {}
 }
