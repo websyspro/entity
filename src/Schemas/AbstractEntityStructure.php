@@ -221,4 +221,15 @@ abstract class AbstractEntityStructure
     $this->getGroupList( $this->indexes, Index::class );
     $this->getGroupList( $this->uniques, Unique::class );
   }
+
+  public function getEntityAlias(
+  ): string {
+    return $this->entityNames->alias;
+  }
+
+  public function getColumnType(
+    string $column
+  ): string {
+    return $this->types->items[$column];
+  }  
 }
