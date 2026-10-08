@@ -95,6 +95,14 @@ abstract class AbstractSchemaManager
     }
   }
 
+  public function asyncForeignKeys(
+  ): void {
+    if( $this->entityStructure->synchronize === true ){
+      $this->entityCreateForeignKeys();
+      $this->asyncUpdate();
+    }
+  }  
+
   public function getColumnLength(
     string $column
   ): int {
