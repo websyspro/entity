@@ -57,7 +57,10 @@ abstract class AbstractEntityStructurePersisteds
 
   private function getEntityShortNames(
   ): string {
-    return preg_replace( "#Entite#", "", $this->reflectionClass->getShortName());
+    return preg_replace(
+      "#Entity#", "", 
+        $this->reflectionClass->getShortName()
+    );
   }  
 
   private function getEntityNames(
