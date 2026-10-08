@@ -227,6 +227,14 @@ abstract class AbstractEntityStructure
     return $this->entityNames->alias;
   }
 
+  public function getColumnName(
+    string $column
+  ): string {
+    return $this->columns->items[
+      array_search( $column, $this->columns->items )
+    ];
+  }  
+
   public function getColumnType(
     string $column
   ): string {
