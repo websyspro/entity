@@ -36,37 +36,49 @@ extends AbstractSchemaManager
     );
   }
 
+  public function entityCreateIndexesScript(
+    string $indexName
+  ): void {
+    $columns = implode( ", ", array_slice(
+      explode( "_", $indexName ), 2
+    ));
+
+    $this->commandScritps[] = new CommandScript(
+      command: "Create Index {$indexName} On {$this->getAliasFromEntity()} ({$columns})",
+      message: "Creating table {$this->getAliasFromEntity()}"
+    );  
+  }  
+
   public function entityCreateIndexes(
   ): void {
     foreach( $this->entityStructure->indexes->items as $indexName ){
       if( is_string( $indexName )){
-        $columns = implode( ", ", array_slice(
-          explode( "_", $indexName ), 2
-        ));
-
-        $this->commandScritps[] = new CommandScript(
-          command: "Create Index {$indexName} On {$this->getAliasFromEntity()} ({$columns})",
-          message: "Creating table {$this->getAliasFromEntity()}"
-        );        
+        $this->entityCreateIndexesScript( $indexName );       
       }
     }
   }
 
   public function entityUpdateIndexes(
-  ): void {}  
+  ): void {}
+  
+  public function entityCreateUniquesScript(
+    string $uniqueName
+  ): void {
+    $columns = implode( ", ", array_slice(
+      explode( "_", $uniqueName ), 2
+    ));
+
+    $this->commandScritps[] = new CommandScript(
+      command: "Alter Table {$this->getAliasFromEntity()} Add Constraint {$uniqueName} UNIQUE ({$columns});",
+      message: "Creating Constraint Unique {$uniqueName} on {$this->getAliasFromEntity()}"
+    );
+  }  
   
   public function entityCreateUniques(
   ): void {
     foreach( $this->entityStructure->uniques->items as $uniqueName ){
       if( is_string( $uniqueName )){
-        $columns = implode( ", ", array_slice(
-          explode( "_", $uniqueName ), 2
-        ));
-
-        $this->commandScritps[] = new CommandScript(
-          command: "Alter Table {$this->getAliasFromEntity()} Add Constraint {$uniqueName} UNIQUE ({$columns});",
-          message: "Creating Constraint Unique {$uniqueName} on {$this->getAliasFromEntity()}"
-        );        
+        $this->entityCreateUniquesScript( $uniqueName );       
       }
     }
   }

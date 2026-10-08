@@ -15,30 +15,30 @@ use Websyspro\Entity\Types\ColumnUUID;
 abstract class BaseUUIDEntity 
 extends BaseEntity
 {
-    #[PrimaryKey()]
-    #[Required()]
-    public ColumnAutoUUID $id;
+  #[PrimaryKey()]
+  #[Required()]
+  public ColumnAutoUUID $id;
 
-    public ColumnFlag $isActive;
+  public ColumnFlag $isActive;
 
-    public ColumnFlag $isDeleted;
+  public ColumnFlag $isDeleted;
 
-    #[InitialDefault(AutoDatetime::class)]
-    public ColumnDatetime $created;
+  #[InitialDefault(AutoDatetime::class)]
+  public ColumnDatetime $created;
 
-    #[Nullable()]
-    public ColumnUUID $createdById;
+  #[Nullable()]
+  public ColumnUUID $createdById;
 
-    #[Nullable]
-    #[InitialDefault(AutoDatetime::class)]
-    public ColumnDatetime $updated;
+  #[Nullable]
+  #[InitialDefault(AutoDatetime::class)]
+  public ColumnDatetime $updated;
 
-    #[Nullable]
-    public ColumnUUID $updatedById;
+  #[Nullable]
+  public ColumnUUID $updatedById;
 
-    #[Nullable]
-    public ColumnDatetime $deleted;
+  #[Nullable]
+  public ColumnDatetime $deleted;
 
-    #[Nullable]
-    public ColumnUUID $deletedById;
+  #[Nullable]
+  public ColumnUUID $deletedById;
 }

@@ -1,6 +1,6 @@
 {
   "name": "websyspro/entity",
-  "version": "1.0.54",
+  "version": "1.0.55",
   "description": "Library for managing controllers and services",
   "minimum-stability": "dev",
   "prefer-stable": true,
