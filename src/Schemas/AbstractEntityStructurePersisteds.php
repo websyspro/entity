@@ -55,23 +55,35 @@ abstract class AbstractEntityStructurePersisteds
     $this->initialDefaults = new EntityColumns();
   }
 
+  private function getEntityShortNames(
+  ): string {
+    return preg_replace( "#Entite#", "", $this->reflectionClass->getShortName());
+  }  
+
   private function getEntityNames(
   ): void {
     $entityNames = $this->reflectionClass
       ->getAttributes( Entity::class );
 
-    foreach( $entityNames as $entityName ){
-      if( $entityName instanceof ReflectionAttribute ){
-        $entityInstance = $entityName->newInstance();
+    if(empty( $entityNames ) === false){
+      foreach( $entityNames as $entityName ){
+        if( $entityName instanceof ReflectionAttribute ){
+          $entityInstance = $entityName->newInstance();
 
-        if( $entityInstance instanceof Entity ){
-          $this->entityNames = new EntityNames(
-            $entityInstance->alias,
-            $entityInstance->alias
-          );
+          if( $entityInstance instanceof Entity ){
+            $this->entityNames = new EntityNames(
+              $entityInstance->alias,
+              $entityInstance->alias
+            );
+          }
         }
       }
-    }    
+    } else {
+      $this->entityNames = new EntityNames(
+        $this->getEntityShortNames(),
+        $this->getEntityShortNames()
+      );      
+    }
   }
 
   public function extractColumnType(
