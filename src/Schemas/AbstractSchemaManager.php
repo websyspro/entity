@@ -3,6 +3,7 @@
 namespace Websyspro\Entity\Schemas;
 
 use Websyspro\Entity\Interfaces\CommandScript;
+use Websyspro\Entity\Interfaces\ForeignKeyStructure;
 use Websyspro\Entity\Types\ColumnAutoIncrement;
 use Websyspro\Entity\Types\ColumnAutoUUID;
 use Websyspro\Entity\Types\ColumnBigInt;
@@ -70,6 +71,9 @@ abstract class AbstractSchemaManager
   abstract protected function entityDropUniquesScript( string $uniqueName ): void;
   abstract protected function entityCreateUniques(): void;
   abstract protected function entityUpdateUniques(): void;
+  abstract protected function entityCreateForeignKeyName( ForeignKeyStructure $foreignKeys, string $key ): string;
+  abstract protected function entityCreateForeignKeysScript( ForeignKeyStructure $foreignKeys, string $key ): void;
+  abstract protected function entityCreateForeignKeys(): void;
   abstract protected function getColumnsFromEntityPersisteds(): array;
 
   public function asyncEntity(

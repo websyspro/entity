@@ -5,6 +5,7 @@ namespace Websyspro\Entity\Schemas;
 use Websyspro\Connection\Database;
 use Websyspro\Entity\Interfaces\ColumnType;
 use Websyspro\Entity\Interfaces\CommandScript;
+use Websyspro\Entity\Interfaces\ForeignKeyStructure;
 use function array_slice;
 use function sprintf;
 
@@ -138,7 +139,37 @@ extends AbstractSchemaManager
         $this->entityDropUniquesScript( $uniqueName );      
       }
     }    
-  }   
+  }
+
+  public function entityCreateForeignKeyName(
+    ForeignKeyStructure $foreignKeys, string $key 
+  ): string {
+    return sprintf( "FK_%s_%s_%s_%s",
+      $this->getAliasFromEntity(), $key, $foreignKeys->entity->alias, $foreignKeys->references
+    );
+  }
+
+  public function entityCreateForeignKeysScript(
+    ForeignKeyStructure $foreignKeys, string $key
+  ): void {
+    $foreignKeyName = $this->entityCreateForeignKeyName( 
+      $foreignKeys, $key
+    );
+
+    $this->commandScritps[] = new CommandScript(
+      command: sprintf( "Alter Table %s Add Constraint %s Foreign Key (%s) References %s (%s) On Delete Cascade On Update Cascade",
+        $this->getAliasFromEntity(), $foreignKeyName, $key, $foreignKeys->entity->alias, $foreignKeys->references
+      ),
+      message: "Create Constraint {$foreignKeyName} on {$this->getAliasFromEntity()}"
+    );    
+  }
+  
+  public function entityCreateForeignKeys(
+  ): void {
+    foreach( $this->entityStructure->foreignKeys->items as $key => $foreignKeys ){
+      $this->entityCreateForeignKeysScript( $foreignKeys, $key );
+    }
+  }  
 
   public function columnAutoIncrement(
     string $column
