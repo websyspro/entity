@@ -2,6 +2,7 @@
 
 namespace Websyspro\Entity\Schemas;
 
+use stdClass;
 use Websyspro\Connection\Database;
 use Websyspro\Entity\Types\ColumnDate;
 use Websyspro\Entity\Types\ColumnDatetime;
@@ -40,6 +41,56 @@ extends AbstractEntityStructurePersisteds
         ]
     );
   }
+
+  public function getIndexesFromEntityPersisteds(
+  ): array {
+    return Database::query(
+      "Select i.name AS index_name
+         From sys.indexes i
+   Inner Join sys.tables t On t.object_id = i.object_id
+   Inner Join sys.schemas s On s.schema_id = t.schema_id
+        Where s.name = SCHEMA_NAME()
+          And t.name = ?
+          And i.is_unique = 0
+          And i.is_primary_key = 0
+          And i.is_unique_constraint = 0
+          And i.type > 0", [
+        $this->entityNames->alias
+      ]
+    );
+  }
+  
+  public function getUniquesFromEntityPersisteds(
+  ): array {
+    return Database::query(
+      "Select i.name AS unique_name
+         From sys.indexes i
+   Inner Join sys.tables t On t.object_id = i.object_id
+   Inner Join sys.schemas s On s.schema_id = t.schema_id
+        Where s.name = SCHEMA_NAME()
+          And t.name = ?
+          And i.is_unique = 1
+          And i.is_primary_key = 0
+          And i.is_unique_constraint = 1
+          And i.type <> 0", [
+        $this->entityNames->alias
+      ]
+    );
+  }
+  
+  public function getForeignKeysFromEntityPersisteds(
+  ): array {
+    return Database::query(
+      "Select LOWER(fk.name) AS constraint_name
+         From sys.foreign_keys fk
+   Inner Join sys.tables t On t.object_id = fk.parent_object_id
+   Inner Join sys.schemas s On s.schema_id = t.schema_id
+        Where s.name = SCHEMA_NAME()
+          And t.name = ?", [
+        $this->entityNames->alias
+      ]
+    );
+  }  
 
   public function getEntityColumns(
   ): void {
@@ -82,7 +133,25 @@ extends AbstractEntityStructurePersisteds
       /* Define Column PrimaryKey */
       if( (int)$column->pk === 1 ){
         $this->primaryKeys->items[ $column->name ] = $column->name;
-      }      
+      } 
+
+      /* Define Indexes */
+      $this->indexes->items = array_map(
+        fn( stdClass $object ) => $object->index_name,
+          $this->getIndexesFromEntityPersisteds()
+      );
+      
+      /* Define Uniques */
+      $this->uniques->items = array_map(
+        fn( stdClass $object ) => $object->unique_name, 
+          $this->getUniquesFromEntityPersisteds()
+      );
+
+      /* Define ForeignKeys */
+      $this->foreignKeys->items = array_map(
+        fn( stdClass $object ) => $object->constraint_name,
+          $this->getForeignKeysFromEntityPersisteds()
+      );      
     }
   }
 }
