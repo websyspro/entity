@@ -63,9 +63,11 @@ abstract class AbstractSchemaManager
   abstract protected function columnYear( string $column ): string;  
   abstract protected function entityCreateScript(): void;
   abstract protected function entityCreateIndexesScript( string $indexName ): void;
+  abstract protected function entityDropIndexesScript( string $indexName ): void;
   abstract protected function entityCreateIndexes(): void;
   abstract protected function entityUpdateIndexes(): void;
   abstract protected function entityCreateUniquesScript( string $uniqueName ): void;
+  abstract protected function entityDropUniquesScript( string $uniqueName ): void;
   abstract protected function entityCreateUniques(): void;
   abstract protected function entityUpdateUniques(): void;
   abstract protected function getColumnsFromEntityPersisteds(): array;

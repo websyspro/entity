@@ -48,6 +48,15 @@ extends AbstractSchemaManager
       command: "Create Index {$indexName} On {$this->getAliasFromEntity()} ({$columns})",
       message: "Creating Index {$indexName} on {$this->getAliasFromEntity()}"
     );   
+  } 
+
+  public function entityDropIndexesScript( 
+    string $indexName
+  ): void {
+    $this->commandScritps[] = new CommandScript(
+      command: "Alter Table {$this->getAliasFromEntity()} Drop Index {$indexName}",
+      message: "Drop Index {$indexName} on {$this->getAliasFromEntity()}"
+    );
   }  
 
   public function entityCreateIndexes(
@@ -69,6 +78,15 @@ extends AbstractSchemaManager
         $this->entityCreateIndexesScript( $indexName );      
       }
     }
+
+    foreach( array_diff( 
+      $this->entityStructurePersisteds->indexes->items,
+      $this->entityStructure->indexes->items
+    ) as $indexName ){
+      if( is_string( $indexName )){
+        $this->entityDropIndexesScript( $indexName );      
+      }
+    }    
   }
 
   public function entityCreateUniquesScript(
@@ -81,6 +99,15 @@ extends AbstractSchemaManager
     $this->commandScritps[] = new CommandScript(
       command: "Alter Table {$this->getAliasFromEntity()} Add Constraint {$uniqueName} UNIQUE ({$columns});",
       message: "Creating Constraint Unique {$uniqueName} on {$this->getAliasFromEntity()}"
+    );
+  }  
+
+  public function entityDropUniquesScript( 
+    string $uniqueName
+  ): void {
+    $this->commandScritps[] = new CommandScript(
+      command: "Alter Table {$this->getAliasFromEntity()} Drop Unique {$uniqueName}",
+      message: "Drop Index {$uniqueName} on {$this->getAliasFromEntity()}"
     );
   }  
 
@@ -103,6 +130,15 @@ extends AbstractSchemaManager
         $this->entityCreateUniquesScript( $uniqueName );      
       }
     }
+
+    foreach( array_diff( 
+      $this->entityStructurePersisteds->uniques->items,
+      $this->entityStructure->uniques->items
+    ) as $uniqueName ){
+      if( is_string( $uniqueName )){
+        $this->entityDropUniquesScript( $uniqueName );      
+      }
+    }    
   }  
 
   public function columnAutoIncrement(
