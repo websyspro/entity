@@ -59,7 +59,16 @@ extends AbstractSchemaManager
   }
 
   public function entityUpdateIndexes(
-  ): void {}
+  ): void {
+    foreach( array_diff( 
+      $this->entityStructure->indexes->items,
+      $this->entityStructurePersisteds->indexes->items
+    ) as $indexName ){
+      if( is_string( $indexName )){
+        $this->entityCreateIndexesScript( $indexName );      
+      }
+    }
+  }
   
   public function entityCreateUniquesScript(
     string $uniqueName
@@ -84,7 +93,16 @@ extends AbstractSchemaManager
   }
 
   public function entityUpdateUniques(
-  ): void {}  
+  ): void {
+    foreach( array_diff( 
+      $this->entityStructure->uniques->items,
+      $this->entityStructurePersisteds->uniques->items
+    ) as $uniqueName ){
+      if( is_string( $uniqueName )){
+        $this->entityCreateUniquesScript( $uniqueName );      
+      }
+    }
+  }   
 
   public function columnAutoIncrement(
     string $column
