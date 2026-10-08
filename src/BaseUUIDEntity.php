@@ -17,28 +17,28 @@ extends BaseEntity
 {
     #[PrimaryKey()]
     #[Required()]
-    public ColumnAutoUUID $Id;
+    public ColumnAutoUUID $id;
 
-    public ColumnFlag $IsActive;
+    public ColumnFlag $isActive;
 
-    public ColumnFlag $IsDeleted;
+    public ColumnFlag $isDeleted;
 
     #[InitialDefault(AutoDatetime::class)]
-    public ColumnDatetime $Created;
+    public ColumnDatetime $created;
 
     #[Nullable()]
-    public ColumnUUID $CreatedById;
+    public ColumnUUID $createdById;
 
     #[Nullable]
     #[InitialDefault(AutoDatetime::class)]
-    public ColumnDatetime $Updated;
+    public ColumnDatetime $updated;
 
     #[Nullable]
-    public ColumnUUID $UpdatedById;
+    public ColumnUUID $updatedById;
 
     #[Nullable]
-    public ColumnDatetime $Deleted;
+    public ColumnDatetime $deleted;
 
     #[Nullable]
-    public ColumnUUID $DeletedById;
+    public ColumnUUID $deletedById;
 }
