@@ -60,7 +60,7 @@ extends AbstractEntityStructurePersisteds
   public function getIndexesFromEntityPersisteds(
   ): array {
     return Database::query(
-      "Select i.relname AS index_name
+      "Select lower(i.relname) AS index_name
          From pg_class t
    Inner Join pg_index ix On ix.indrelid = t.oid
    Inner Join pg_class i On i.oid = ix.indexrelid

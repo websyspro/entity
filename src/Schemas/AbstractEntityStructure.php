@@ -3,6 +3,8 @@
 namespace Websyspro\Entity\Schemas;
 
 
+use Websyspro\Connection\Database;
+use Websyspro\Connection\Enums\DriverType;
 use Websyspro\Entity\Decorators\Entity;
 use Websyspro\Entity\Decorators\Index;
 use Websyspro\Entity\Decorators\Synchronize;
@@ -204,6 +206,13 @@ abstract class AbstractEntityStructure
           ? "IDX_%s_%s" : "UNQ_%s_%s", $this->entityNames->alias, implode( "_", $columns )
       );
     }
+
+    $entityColumns->items = array_values(
+      array_map( fn(string $name) => (
+        Database::driver() === DriverType::PostgreSQL 
+          ? mb_strtolower($name) : $name
+      ), $entityColumns->items )
+    );    
   }
 
   private function getEntityColumnsAttrs(
