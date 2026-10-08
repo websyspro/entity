@@ -112,8 +112,8 @@ extends AbstractEntityStructure
     mixed $instance
   ): void {
     if( $instance instanceof ForeignKey ){
-      $entityInstance = new SqlLiteEntityStructure( new ReflectionClass( $instance->entity ));
-      if( $entityInstance instanceof SqlLiteEntityStructure ){
+      $entityInstance = new SqLiteEntityStructure( new ReflectionClass( $instance->entity ));
+      if( $entityInstance instanceof SqLiteEntityStructure ){
         [ $generatedColumn ] = array_values( $entityInstance->generateds->items );
         
         $this->foreignKeys->items[ $name ] = new ForeignKeyStructure(

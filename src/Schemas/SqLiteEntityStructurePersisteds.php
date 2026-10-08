@@ -2,6 +2,7 @@
 
 namespace Websyspro\Entity\Schemas;
 
+use stdClass;
 use Websyspro\Connection\Database;
 use Websyspro\Entity\Types\ColumnDate;
 use Websyspro\Entity\Types\ColumnDatetime;
@@ -20,6 +21,44 @@ extends AbstractEntityStructurePersisteds
       "PRAGMA table_info({$this->entityNames->alias})"
     );
   }
+
+  public function getIndexesFromEntityPersisteds(
+  ): array {
+    return Database::query(
+      "Select name As index_name
+         From pragma_index_list(?)
+        Where \"unique\" = 0
+          And origin = 'c'", [
+        $this->entityNames->alias
+      ]
+    );
+  }
+  
+  public function getUniquesFromEntityPersisteds(
+  ): array {
+    return Database::query(
+      "Select name As unique_name
+         From pragma_index_list(?)
+        Where \"unique\" = 1
+          And origin = 'c'", [
+        $this->entityNames->alias
+      ]
+    );
+  }
+  
+  public function getForeignKeysFromEntityPersisteds(
+  ): array {
+    return Database::query(
+      "Select 
+     Distinct m.name As constraint_name
+         From sqlite_master m
+             ,pragma_foreign_key_list(m.name) fk
+        Where m.type = 'table'
+          And m.name = ?", [
+        $this->entityNames->alias
+      ]
+    );
+  }  
 
   public function getEntityColumns(
   ): void {
@@ -58,7 +97,25 @@ extends AbstractEntityStructurePersisteds
       /* Define Column PrimaryKey */
       if( (int)$column->pk === 1 ){
         $this->primaryKeys->items[ $column->name ] = $column->name;
-      }      
+      }
+      
+      /* Define Indexes */
+      $this->indexes->items = array_map(
+        fn( stdClass $object ) => $object->index_name,
+          $this->getIndexesFromEntityPersisteds()
+      );
+      
+      /* Define Uniques */
+      $this->uniques->items = array_map(
+        fn( stdClass $object ) => $object->unique_name, 
+          $this->getUniquesFromEntityPersisteds()
+      );
+
+      /* Define ForeignKeys */
+      $this->foreignKeys->items = array_map(
+        fn( stdClass $object ) => $object->constraint_name,
+          $this->getForeignKeysFromEntityPersisteds()
+      );       
     }
   }
 }
