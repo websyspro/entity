@@ -3,7 +3,9 @@
 namespace Websyspro\Entity;
 
 use Websyspro\Entity\BaseEntity;
-use Websyspro\Entity\Decorators\InitialDefault;
+use Websyspro\Entity\Decorators\InitialDeleteDefault;
+use Websyspro\Entity\Decorators\InitialInsertDefault;
+use Websyspro\Entity\Decorators\InitialUpdateDefault;
 use Websyspro\Entity\Decorators\Nullable;
 use Websyspro\Entity\Decorators\PrimaryKey;
 use Websyspro\Entity\Decorators\Required;
@@ -18,29 +20,30 @@ extends BaseEntity
 {
   #[Required()]
   #[PrimaryKey()]
-  #[InitialDefault(AutoGuid::class)]
+  #[InitialInsertDefault(AutoGuid::class)]
   public ColumnAutoUUID $id;
 
-  #[InitialDefault(1)]
+  #[InitialInsertDefault(1)]
   public ColumnFlag $isActive;
 
-  #[InitialDefault(0)]
+  #[InitialInsertDefault(0)]
   public ColumnFlag $isDeleted;
 
-  #[InitialDefault(AutoDatetime::class)]
+  #[InitialInsertDefault(AutoDatetime::class)]
   public ColumnDatetime $created;
 
   #[Nullable()]
   public ColumnUUID $createdById;
 
   #[Nullable]
-  #[InitialDefault(AutoDatetime::class)]
+  #[InitialUpdateDefault(AutoDatetime::class)]
   public ColumnDatetime $updated;
 
   #[Nullable]
   public ColumnUUID $updatedById;
 
   #[Nullable]
+  #[InitialDeleteDefault(AutoDatetime::class)]  
   public ColumnDatetime $deleted;
 
   #[Nullable]
