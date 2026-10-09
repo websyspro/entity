@@ -174,7 +174,7 @@ extends AbstractSchemaManager
   public function columnAutoIncrement(
     string $column
   ): string {
-    return "{$column} Int Identity(1,1) Not Null";
+    return "{$column} BigInt Identity(1,1) Not Null Primary Key";
   }
 
   public function columnAutoUUID(
