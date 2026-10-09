@@ -5,7 +5,7 @@ namespace Websyspro\Entity\Schemas;
 use Websyspro\Entity\Decorators\Column;
 use Websyspro\Entity\Decorators\ForeignKey;
 use Websyspro\Entity\Decorators\Index;
-use Websyspro\Entity\Decorators\InitialDefault;
+use Websyspro\Entity\Decorators\InitialDefaultInsert;
 use Websyspro\Entity\Decorators\Length;
 use Websyspro\Entity\Decorators\Precision;
 use Websyspro\Entity\Decorators\PrimaryKey;
@@ -122,8 +122,8 @@ extends AbstractEntityStructure
     string $name,
     mixed $instance
   ): void {
-    if( $instance instanceof InitialDefault ){
-      $this->initialDefaults->items[ $name ] = $instance->generator;
+    if( $instance instanceof InitialDefaultInsert ){
+      $this->initialDefaultsInsert->items[ $name ] = $instance->generator;
     }    
   }  
 }

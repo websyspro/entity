@@ -33,7 +33,9 @@ abstract class AbstractEntityStructure
   public EntityColumns $indexes;
   public EntityColumns $uniques;
   public EntityColumns $foreignKeys;
-  public EntityColumns $initialDefaults;
+  public EntityColumns $initialDefaultsInsert;
+  public EntityColumns $initialDefaultsUpdate;
+  public EntityColumns $initialDefaultsDelete;
 
   public function __construct(
     public readonly ReflectionClass $reflectionClass
