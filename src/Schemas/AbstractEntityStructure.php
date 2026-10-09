@@ -130,7 +130,9 @@ abstract class AbstractEntityStructure
     $this->indexes = new EntityColumns();
     $this->uniques = new EntityColumns();
     $this->foreignKeys = new EntityColumns();
-    $this->initialDefaults = new EntityColumns();
+    $this->initialInsertDefaults = new EntityColumns();
+    $this->initialUpdateDefaults = new EntityColumns();
+    $this->initialDeleteDefaults = new EntityColumns();
   }
 
   private function getSynchronize(
