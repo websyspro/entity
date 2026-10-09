@@ -34,7 +34,7 @@ extends AbstractSchemaManager
   public function entityCreateScript(
   ): void {
     $this->commandScritps[] = new CommandScript(
-      command: "Create Table {$this->getAliasFromEntity()} ({$this->getColumnsFromEntity()})",
+      command: "Create Table {$this->getAliasFromEntity()} ({$this->getColumnsFromEntity()}{$this->entityCreateForeignKeysToEntity()})",
       message: "Creating table {$this->getAliasFromEntity()}"
     );
   }
@@ -154,23 +154,37 @@ extends AbstractSchemaManager
   public function entityCreateForeignKeysScript(
     ForeignKeyStructure $foreignKeys, string $key
   ): void {
-    $foreignKeyName = $this->entityCreateForeignKeyName( 
-      $foreignKeys, $key
-    );
-
-    $this->commandScritps[] = new CommandScript(
-      command: sprintf( "Alter Table %s Add Constraint %s Foreign Key (%s) References %s (%s) On Delete Cascade On Update Cascade",
-        $this->getAliasFromEntity(), $foreignKeyName, $key, $foreignKeys->entity->alias, $foreignKeys->references
-      ),
-      message: "Create Constraint {$foreignKeyName} on {$this->getAliasFromEntity()}"
-    );    
+    // Implementado no entityCreateForeignKeys
   }
-  
+
   public function entityCreateForeignKeys(
   ): void {
+    // Implementado no entityCreateForeignKeys
+  }  
+  
+  public function entityCreateForeignKeysToEntity(
+  ): string|null {
+    $foreignKeysItems = [];
+
     foreach( $this->entityStructure->foreignKeys->items as $key => $foreignKeys ){
-      $this->entityCreateForeignKeysScript( $foreignKeys, $key );
+      $foreignKeyName = $this->entityCreateForeignKeyName( 
+        $foreignKeys, $key
+      );
+
+      array_push( $foreignKeysItems, sprintf( "Constraint %s Foreign Key (%s) References %s (%s) On Delete Cascade On Update Cascade",
+        $this->getAliasFromEntity(), $foreignKeyName, $key, $foreignKeys->entity->alias, $foreignKeys->references
+      ));
     }
+
+    if( empty( $foreignKeysItems )){
+      return null;
+    }
+
+    return sprintf(
+      ", %s", implode(
+        ",", $foreignKeysItems
+      )
+    );
   }  
 
   public function columnAutoIncrement(
