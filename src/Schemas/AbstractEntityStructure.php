@@ -239,6 +239,7 @@ abstract class AbstractEntityStructure
         $this->defineIndexes( $propertyName, $instance );
         $this->defineUniques( $propertyName, $instance );
         $this->defineForeignKeys( $propertyName, $instance );
+        $this->defineInitialDefaults( $propertyName, $instance );
       }
     }
 
