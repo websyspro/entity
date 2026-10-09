@@ -5,7 +5,9 @@ namespace Websyspro\Entity\Schemas;
 use Websyspro\Entity\Decorators\Column;
 use Websyspro\Entity\Decorators\ForeignKey;
 use Websyspro\Entity\Decorators\Index;
-use Websyspro\Entity\Decorators\InitialDefaultInsert;
+use Websyspro\Entity\Decorators\InitialDeleteDefault;
+use Websyspro\Entity\Decorators\InitialInsertDefault;
+use Websyspro\Entity\Decorators\InitialUpdateDefault;
 use Websyspro\Entity\Decorators\Length;
 use Websyspro\Entity\Decorators\Precision;
 use Websyspro\Entity\Decorators\PrimaryKey;
@@ -123,12 +125,30 @@ extends AbstractEntityStructure
     }    
   }
   
-  public function defineInitialDefaults(
+  public function defineInitialInsertDefaults(
     string $name,
     mixed $instance
   ): void {
-    if( $instance instanceof InitialDefaultInsert ){
-      $this->initialDefaultsInsert->items[ $name ] = $instance->generator;
+    if( $instance instanceof InitialInsertDefault ){
+      $this->initialInsertDefaults->items[ $name ] = $instance->generator;
+    }    
+  }
+
+  public function defineInitialUpdateDefaults(
+    string $name,
+    mixed $instance
+  ): void {
+    if( $instance instanceof InitialUpdateDefault ){
+      $this->initialUpdateDefaults->items[ $name ] = $instance->generator;
+    }    
+  }
+  
+  public function defineInitialDeleteDefaults(
+    string $name,
+    mixed $instance
+  ): void {
+    if( $instance instanceof InitialDeleteDefault ){
+      $this->initialDeleteDefaults->items[ $name ] = $instance->generator;
     }    
   }  
 }

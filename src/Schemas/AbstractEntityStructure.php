@@ -33,9 +33,9 @@ abstract class AbstractEntityStructure
   public EntityColumns $indexes;
   public EntityColumns $uniques;
   public EntityColumns $foreignKeys;
-  public EntityColumns $initialDefaultsInsert;
-  public EntityColumns $initialDefaultsUpdate;
-  public EntityColumns $initialDefaultsDelete;
+  public EntityColumns $initialInsertDefaults;
+  public EntityColumns $initialUpdateDefaults;
+  public EntityColumns $initialDeleteDefaults;
 
   public function __construct(
     public readonly ReflectionClass $reflectionClass
@@ -93,7 +93,17 @@ abstract class AbstractEntityStructure
     mixed $instance
   ): void;
 
-  abstract protected function defineInitialDefaults(
+  abstract protected function defineInitialInsertDefaults(
+    string $name,
+    mixed $instance
+  ): void;
+  
+  abstract protected function defineInitialUpdateDefaults(
+    string $name,
+    mixed $instance
+  ): void;
+  
+  abstract protected function defineInitialDeleteDefaults(
     string $name,
     mixed $instance
   ): void;  
@@ -241,7 +251,9 @@ abstract class AbstractEntityStructure
         $this->defineIndexes( $propertyName, $instance );
         $this->defineUniques( $propertyName, $instance );
         $this->defineForeignKeys( $propertyName, $instance );
-        $this->defineInitialDefaults( $propertyName, $instance );
+        $this->defineInitialInsertDefaults( $propertyName, $instance );
+        $this->defineInitialUpdateDefaults( $propertyName, $instance );
+        $this->defineInitialDeleteDefaults( $propertyName, $instance );
       }
     }
 
