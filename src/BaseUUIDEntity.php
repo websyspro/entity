@@ -16,8 +16,8 @@ use Websyspro\Entity\Types\ColumnUUID;
 abstract class BaseUUIDEntity 
 extends BaseEntity
 {
-  #[PrimaryKey()]
   #[Required()]
+  #[PrimaryKey()]
   #[InitialDefault(AutoGuid::class)]
   public ColumnAutoUUID $id;
 
