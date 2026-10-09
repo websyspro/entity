@@ -7,6 +7,7 @@ use Websyspro\Entity\Decorators\InitialDefault;
 use Websyspro\Entity\Decorators\Nullable;
 use Websyspro\Entity\Decorators\PrimaryKey;
 use Websyspro\Entity\Decorators\Required;
+use Websyspro\Entity\Decorators\Utils\AutoGuid;
 use Websyspro\Entity\Types\ColumnAutoUUID;
 use Websyspro\Entity\Types\ColumnDatetime;
 use Websyspro\Entity\Types\ColumnFlag;
@@ -17,6 +18,7 @@ extends BaseEntity
 {
   #[PrimaryKey()]
   #[Required()]
+  #[InitialDefault(AutoGuid::class)]
   public ColumnAutoUUID $id;
 
   public ColumnFlag $isActive;
