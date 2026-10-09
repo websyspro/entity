@@ -21,8 +21,10 @@ extends BaseEntity
   #[InitialDefault(AutoGuid::class)]
   public ColumnAutoUUID $id;
 
+  #[InitialDefault(1)]
   public ColumnFlag $isActive;
 
+  #[InitialDefault(0)]
   public ColumnFlag $isDeleted;
 
   #[InitialDefault(AutoDatetime::class)]

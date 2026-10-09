@@ -8,6 +8,6 @@ use Attribute;
 class InitialDefault
 {
   public function __construct(
-    public readonly string $generator = ''
+    public readonly mixed $generator = ''
   ){}
 }

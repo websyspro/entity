@@ -15,30 +15,32 @@ use Websyspro\Entity\Types\ColumnInt;
 abstract class BaseIncrementEntity 
 extends BaseEntity
 {
-    #[PrimaryKey()]
-    #[Required()]
-    public ColumnAutoIncrement $id;
+  #[PrimaryKey()]
+  #[Required()]
+  public ColumnAutoIncrement $id;
 
-    public ColumnFlag $isActive;
+  #[InitialDefault(1)]
+  public ColumnFlag $isActive;
 
-    public ColumnFlag $isDeleted;
+  #[InitialDefault(0)]
+  public ColumnFlag $isDeleted;
 
-    #[InitialDefault(AutoDatetime::class)]
-    public ColumnDatetime $created;
+  #[InitialDefault(AutoDatetime::class)]
+  public ColumnDatetime $created;
 
-    #[Nullable()]
-    public ColumnInt $createdById;
+  #[Nullable()]
+  public ColumnInt $createdById;
 
-    #[Nullable]
-    #[InitialDefault(AutoDatetime::class)]
-    public ColumnDatetime $updated;
+  #[Nullable]
+  #[InitialDefault(AutoDatetime::class)]
+  public ColumnDatetime $updated;
 
-    #[Nullable]
-    public ColumnInt $updatedById;
+  #[Nullable]
+  public ColumnInt $updatedById;
 
-    #[Nullable]
-    public ColumnDatetime $deleted;
+  #[Nullable]
+  public ColumnDatetime $deleted;
 
-    #[Nullable]
-    public ColumnInt $deletedById;
+  #[Nullable]
+  public ColumnInt $deletedById;
 }
