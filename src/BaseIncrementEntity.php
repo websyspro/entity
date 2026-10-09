@@ -6,6 +6,7 @@ use Websyspro\Entity\Decorators\InitialDefault;
 use Websyspro\Entity\Decorators\Nullable;
 use Websyspro\Entity\Decorators\PrimaryKey;
 use Websyspro\Entity\Decorators\Required;
+use Websyspro\Entity\Decorators\Utils\AutoDatetime;
 use Websyspro\Entity\Types\ColumnAutoIncrement;
 use Websyspro\Entity\Types\ColumnDatetime;
 use Websyspro\Entity\Types\ColumnFlag;
