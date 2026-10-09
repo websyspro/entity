@@ -95,7 +95,7 @@ abstract class AbstractSchemaManager
     }
   }
 
-  public function asyncForeignKeys(
+  public function asyncConstraint(
   ): void {
     if( $this->entityStructure->synchronize === true ){
       $this->entityCreateForeignKeys();
