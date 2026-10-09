@@ -154,12 +154,14 @@ extends AbstractSchemaManager
   public function entityCreateForeignKeysScript(
     ForeignKeyStructure $foreignKeys, string $key
   ): void {
-    // Implementado no entityCreateForeignKeys
+    // Implemented in entityCreateForeignKeysToEntity
+    // SQLite cannot implement a foreign key constraint after the table has already been created.
   }
 
   public function entityCreateForeignKeys(
   ): void {
-    // Implementado no entityCreateForeignKeys
+    // Implemented in entityCreateForeignKeysToEntity
+    // SQLite cannot implement a foreign key constraint after the table has already been created.
   }  
   
   public function entityCreateForeignKeysToEntity(
@@ -172,7 +174,7 @@ extends AbstractSchemaManager
       );
 
       array_push( $foreignKeysItems, sprintf( "Constraint %s Foreign Key (%s) References %s (%s) On Delete Cascade On Update Cascade",
-        $this->getAliasFromEntity(), $foreignKeyName, $key, $foreignKeys->entity->alias, $foreignKeys->references
+        $foreignKeyName, $key, $foreignKeys->entity->alias, $foreignKeys->references
       ));
     }
 
