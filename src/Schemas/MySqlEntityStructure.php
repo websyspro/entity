@@ -124,6 +124,11 @@ extends AbstractEntityStructure
       }
     }    
   }
+
+  public function defineInitialDefaults(
+    string $name,
+    mixed $instance
+  ): void {}  
   
   public function defineInitialInsertDefaults(
     string $name,

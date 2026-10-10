@@ -93,6 +93,11 @@ abstract class AbstractEntityStructure
     mixed $instance
   ): void;
 
+  abstract protected function defineInitialDefaults(
+    string $name,
+    mixed $instance
+  ): void;
+
   abstract protected function defineInitialInsertDefaults(
     string $name,
     mixed $instance
