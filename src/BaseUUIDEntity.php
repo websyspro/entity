@@ -24,27 +24,27 @@ extends BaseEntity
   public ColumnAutoUUID $id;
 
   #[InitialInsertDefault(1)]
-  public ColumnFlag $isActive;
+  public ColumnFlag $isActived;
 
   #[InitialInsertDefault(0)]
   public ColumnFlag $isDeleted;
 
   #[InitialInsertDefault(AutoDatetime::class)]
-  public ColumnDatetime $created;
+  public ColumnDatetime $createdAt;
 
   #[Nullable()]
   public ColumnUUID $createdById;
 
   #[Nullable]
   #[InitialUpdateDefault(AutoDatetime::class)]
-  public ColumnDatetime $updated;
+  public ColumnDatetime $updatedAt;
 
   #[Nullable]
   public ColumnUUID $updatedById;
 
   #[Nullable]
   #[InitialDeleteDefault(AutoDatetime::class)]  
-  public ColumnDatetime $deleted;
+  public ColumnDatetime $deletedAt;
 
   #[Nullable]
   public ColumnUUID $deletedById;
