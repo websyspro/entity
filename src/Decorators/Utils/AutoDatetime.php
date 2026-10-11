@@ -2,8 +2,8 @@
 
 namespace Websyspro\Entity\Decorators\Utils;
 
-use Websyspro\Connection\Database;
 use Websyspro\Connection\Enums\DriverType;
+use Websyspro\Connection\Database;
 use DateTime;
 
 class AutoDatetime
