@@ -228,7 +228,7 @@ abstract class AbstractEntityStructure
 
     $entityColumns->items = array_values(
       array_map( fn(string $name) => (
-        Database::driver() === DriverType::PostgreSQL 
+        Database::driver() === DriverType::Postgres 
           ? mb_strtolower($name) : $name
       ), $entityColumns->items )
     );    
