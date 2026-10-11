@@ -13,7 +13,7 @@ class AutoDatetime
     return match( Database::driver()){
       DriverType::SqlServer
         => static::dateTime()->format( "Y-m-d H:i:s.v" ),
-      DriverType::PostgreSQL 
+      DriverType::Postgres 
         => static::dateTime()->format( "Y-m-d H:i:s.v" ),
       default 
         => static::dateTime()->format( "Y-m-d H:i:s" ),
