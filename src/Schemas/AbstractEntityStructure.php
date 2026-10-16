@@ -179,6 +179,14 @@ abstract class AbstractEntityStructure
     }
   }
 
+  public function isColumnType(
+    string $type
+  ): bool {
+    return is_subclass_of( 
+      $type, ColumnAbstract::class
+    );
+  }  
+
   private function getEntityShortNames(
     ReflectionClass $reflectionClass
   ): string {
@@ -188,31 +196,20 @@ abstract class AbstractEntityStructure
     );
   }
 
-  public function isColumnType(
-    string $type
-  ): bool {
-    return is_subclass_of( 
-      $type, ColumnAbstract::class
-    );
-  }
-  
-  public function getEntityNames(
-    string|null $entity = null
+  public function getEntityNamesByEntity(
+    ReflectionClass $reflectionClass,
+    EntityNames|null $entityNames = null
   ): EntityNames {
-    $reflectionClass = $entity !== null 
-      ? new ReflectionClass( $entity )
-      : $this->reflectionClass;
-
-    $entityNames = $reflectionClass
-        ->getAttributes( Entity::class );
+    $entityNamesList = $reflectionClass
+      ->getAttributes( Entity::class );
     
-    if( empty( $entityNames ) === false ){
-      foreach( $entityNames as $entityName ){
+    if( empty( $entityNamesList ) === false ){
+      foreach( $entityNamesList as $entityName ){
         if( $entityName instanceof ReflectionAttribute ){
           $entityInstance = $entityName->newInstance();
 
           if( $entityInstance instanceof Entity ){
-            $this->entityNames = new EntityNames(
+            $entityNames = new EntityNames(
               $entityInstance->alias,
               $entityInstance->alias
             );
@@ -220,13 +217,20 @@ abstract class AbstractEntityStructure
         }
       }
     } else {
-      $this->entityNames = new EntityNames(
+      $entityNames = new EntityNames(
         $this->getEntityShortNames( $reflectionClass ),
         $this->getEntityShortNames( $reflectionClass )
       );      
     }
 
-    return $this->entityNames;
+    return $entityNames;    
+  }
+
+  public function getEntityNames(
+  ): void {
+    $this->entityNames = $this->getEntityNamesByEntity(
+      $this->reflectionClass
+    );
   }
 
   private function getEntityColumns(
