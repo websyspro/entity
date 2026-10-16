@@ -25,5 +25,17 @@ extends ColumnAbstract
 
   public function select(
     Closure $closure
-  ): void {}    
+  ): void {}  
+  
+  public function leftJoin(
+    Closure $closure
+  ): void {}
+
+  public function innerJoin(
+    Closure $closure
+  ): void {}
+  
+  public function rightJoin(
+    Closure $closure
+  ): void {}  
 }
