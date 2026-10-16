@@ -125,6 +125,24 @@ extends AbstractEntityStructure
     }    
   }
 
+  public function defineOneToOne(
+    string $name,
+    mixed $instance
+  ): void {
+    if( $instance instanceof HasOneToOne ){
+      $this->oneToOne->items[ $name ] = $instance;
+    } 
+  }  
+
+  public function defineOneToMany(
+    string $name,
+    mixed $instance
+  ): void {
+    if( $instance instanceof HasOneToMany ){
+      $this->oneToMany->items[ $name ] = $instance;
+    }    
+  }  
+
   public function defineInitialDefaults(
     string $name,
     mixed $instance

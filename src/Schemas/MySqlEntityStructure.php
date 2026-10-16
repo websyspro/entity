@@ -4,6 +4,8 @@ namespace Websyspro\Entity\Schemas;
 
 use Websyspro\Entity\Decorators\Column;
 use Websyspro\Entity\Decorators\ForeignKey;
+use Websyspro\Entity\Decorators\HasOneToMany;
+use Websyspro\Entity\Decorators\HasOneToOne;
 use Websyspro\Entity\Decorators\Index;
 use Websyspro\Entity\Decorators\InitialDeleteDefault;
 use Websyspro\Entity\Decorators\InitialInsertDefault;
@@ -122,6 +124,24 @@ extends AbstractEntityStructure
           $entityInstance->entityNames, $this->primaryKeys->items[ $generatedColumn ] ?? $generatedColumn
         );
       }
+    }    
+  }
+
+  public function defineOneToOne(
+    string $name,
+    mixed $instance
+  ): void {
+    if( $instance instanceof HasOneToOne ){
+      $this->oneToOne->items[ $name ] = $instance;
+    } 
+  }  
+
+  public function defineOneToMany(
+    string $name,
+    mixed $instance
+  ): void {
+    if( $instance instanceof HasOneToMany ){
+      $this->oneToMany->items[ $name ] = $instance;
     }    
   }
 

@@ -33,6 +33,8 @@ abstract class AbstractEntityStructure
   public EntityColumns $indexes;
   public EntityColumns $uniques;
   public EntityColumns $foreignKeys;
+  public EntityColumns $oneToOne;
+  public EntityColumns $oneToMany;
   public EntityColumns $initialInsertDefaults;
   public EntityColumns $initialUpdateDefaults;
   public EntityColumns $initialDeleteDefaults;
@@ -93,6 +95,16 @@ abstract class AbstractEntityStructure
     mixed $instance
   ): void;
 
+  abstract protected function defineOneToOne(
+    string $name,
+    mixed $instance
+  ): void;  
+
+  abstract protected function defineOneToMany(
+    string $name,
+    mixed $instance
+  ): void;  
+
   abstract protected function defineInitialDefaults(
     string $name,
     mixed $instance
@@ -135,6 +147,8 @@ abstract class AbstractEntityStructure
     $this->indexes = new EntityColumns();
     $this->uniques = new EntityColumns();
     $this->foreignKeys = new EntityColumns();
+    $this->oneToOne = new EntityColumns();
+    $this->oneToMany = new EntityColumns();
     $this->initialInsertDefaults = new EntityColumns();
     $this->initialUpdateDefaults = new EntityColumns();
     $this->initialDeleteDefaults = new EntityColumns();
@@ -258,6 +272,8 @@ abstract class AbstractEntityStructure
         $this->defineIndexes( $propertyName, $instance );
         $this->defineUniques( $propertyName, $instance );
         $this->defineForeignKeys( $propertyName, $instance );
+        $this->defineOneToOne( $propertyName, $instance );
+        $this->defineOneToMany( $propertyName, $instance );
         $this->defineInitialInsertDefaults( $propertyName, $instance );
         $this->defineInitialUpdateDefaults( $propertyName, $instance );
         $this->defineInitialDeleteDefaults( $propertyName, $instance );
