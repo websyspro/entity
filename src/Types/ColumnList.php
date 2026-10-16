@@ -18,4 +18,12 @@ extends ColumnAbstract
   public function none(
     Closure $arrow
   ): void {}
+
+  public function where(
+    Closure $closure
+  ): void {}
+
+  public function select(
+    Closure $closure
+  ): void {}    
 }
