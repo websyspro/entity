@@ -127,7 +127,7 @@ extends AbstractEntityStructure
     mixed $instance
   ): void {
     if( $instance instanceof HasOneToOne ){
-      $entityInstance = new PostgresEntityStructure( new ReflectionClass( $instance ));
+      $entityInstance = new PostgresEntityStructure( new ReflectionClass( $instance->entity ));
       if( $entityInstance instanceof PostgresEntityStructure ){
         $this->oneToOne->items[ $name ] = $entityInstance->getEntityAlias();
       }
@@ -139,7 +139,7 @@ extends AbstractEntityStructure
     mixed $instance
   ): void {
     if( $instance instanceof HasOneToMany ){
-      $entityInstance = new PostgresEntityStructure( new ReflectionClass( $instance ));
+      $entityInstance = new PostgresEntityStructure( new ReflectionClass( $instance->entity ));
       if( $entityInstance instanceof PostgresEntityStructure ){
         $this->oneToMany->items[ $name ] = $entityInstance->getEntityAlias();
       }

@@ -127,7 +127,7 @@ extends AbstractEntityStructure
     mixed $instance
   ): void {
     if( $instance instanceof HasOneToOne ){
-      $entityInstance = new SqlServerEntityStructure( new ReflectionClass( $instance ));
+      $entityInstance = new SqlServerEntityStructure( new ReflectionClass( $instance->entity ));
       if( $entityInstance instanceof SqlServerEntityStructure ){
         $this->oneToOne->items[ $name ] = $entityInstance->getEntityAlias();
       }
@@ -139,7 +139,7 @@ extends AbstractEntityStructure
     mixed $instance
   ): void {
     if( $instance instanceof HasOneToMany ){
-      $entityInstance = new SqlServerEntityStructure( new ReflectionClass( $instance ));
+      $entityInstance = new SqlServerEntityStructure( new ReflectionClass( $instance->entity ));
       if( $entityInstance instanceof SqlServerEntityStructure ){
         $this->oneToMany->items[ $name ] = $entityInstance->getEntityAlias();
       }
