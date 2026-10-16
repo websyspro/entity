@@ -132,7 +132,10 @@ extends AbstractEntityStructure
     mixed $instance
   ): void {
     if( $instance instanceof HasOneToOne ){
-      $this->oneToOne->items[ $name ] = $instance;
+      $entityInstance = new MySqlEntityStructure( new ReflectionClass( $instance ));
+      if( $entityInstance instanceof MySqlEntityStructure ){
+        $this->oneToOne->items[ $name ] = $entityInstance->getEntityAlias();
+      }
     } 
   }  
 
@@ -141,7 +144,10 @@ extends AbstractEntityStructure
     mixed $instance
   ): void {
     if( $instance instanceof HasOneToMany ){
-      $this->oneToMany->items[ $name ] = $instance;
+      $entityInstance = new MySqlEntityStructure( new ReflectionClass( $instance ));
+      if( $entityInstance instanceof MySqlEntityStructure ){
+        $this->oneToMany->items[ $name ] = $entityInstance->getEntityAlias();
+      }
     }    
   }
 
