@@ -30,10 +30,11 @@ extends AbstractEntityStructure
     string $name,
     string $type
   ): void {
-    $this->types->items[ $name ] = $type;
-
-    if( in_array( $type, [ ColumnUUID::class ])){
-      $this->lengths->items[ $name ] = 36;
+    if( $this->isColumnType( $type )){
+      $this->types->items[ $name ] = $type;
+        if( in_array( $type, [ ColumnUUID::class ])){
+        $this->lengths->items[ $name ] = 36;
+      }
     }
   }
 

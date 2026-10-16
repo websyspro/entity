@@ -6,17 +6,22 @@ namespace Websyspro\Entity\Schemas;
 use Websyspro\Connection\Database;
 use Websyspro\Connection\Enums\DriverType;
 use Websyspro\Entity\Decorators\Entity;
+use Websyspro\Entity\Decorators\HasOneToMany;
+use Websyspro\Entity\Decorators\HasOneToOne;
 use Websyspro\Entity\Decorators\Index;
 use Websyspro\Entity\Decorators\Synchronize;
 use Websyspro\Entity\Decorators\Unique;
 use Websyspro\Entity\Enums\EntityOrigin;
 use Websyspro\Entity\Interfaces\EntityColumns;
 use Websyspro\Entity\Interfaces\EntityNames;
+use Websyspro\Entity\Types\ColumnAbstract;
 use Websyspro\Entity\Types\ColumnList;
 use ReflectionAttribute;
 use ReflectionClass;
+use Websyspro\Entity\Types\ColumnText;
 use function array_slice;
 use function sprintf;
+use function in_array;
 
 abstract class AbstractEntityStructure
 {
@@ -123,7 +128,7 @@ abstract class AbstractEntityStructure
   abstract protected function defineInitialDeleteDefaults(
     string $name,
     mixed $instance
-  ): void;  
+  ): void; 
 
   private function start(
   ): void {
@@ -182,6 +187,14 @@ abstract class AbstractEntityStructure
         $reflectionClass->getShortName()
     );
   }
+
+  public function isColumnType(
+    string $type
+  ): bool {
+    return is_subclass_of( 
+      $type, ColumnAbstract::class
+    );
+  }
   
   public function getEntityNames(
     string|null $entity = null
@@ -237,6 +250,17 @@ abstract class AbstractEntityStructure
     ]);
   }
 
+  private function setColsList(
+    array $types
+  ): void {
+    $this->columns->items = array_values(
+      array_intersect( 
+        $this->columns->items, 
+          array_keys( $types )
+      )
+    );
+  }
+
   private function getGroupList(
     EntityColumns $entityColumns,
     string $type
@@ -287,7 +311,8 @@ abstract class AbstractEntityStructure
         $this->defineInitialDeleteDefaults( $propertyName, $instance );
       }
     }
-
+    
+    $this->setColsList( $this->types->items );
     $this->getGroupList( $this->indexes, Index::class );
     $this->getGroupList( $this->uniques, Unique::class );
   }

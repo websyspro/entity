@@ -29,7 +29,9 @@ extends AbstractEntityStructure
     string $name,
     string $type
   ): void {
-    $this->types->items[ $name ] = $type;
+    if( $this->isColumnType( $type )){
+      $this->types->items[ $name ] = $type;
+    }
   }
 
   public function defineGenerateds(
