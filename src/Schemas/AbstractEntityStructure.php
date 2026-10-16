@@ -175,20 +175,25 @@ abstract class AbstractEntityStructure
   }
 
   private function getEntityShortNames(
+    ReflectionClass $reflectionClass
   ): string {
     return preg_replace(
       "#Entity#", "", 
-        $this->reflectionClass->getShortName()
+        $reflectionClass->getShortName()
     );
   }
   
   public function getEntityNames(
     string|null $entity = null
   ): EntityNames {
-    $entityNames = $this->reflectionClass
-      ->getAttributes( $entity ?? Entity::class );
+    $reflectionClass = $entity !== null 
+      ? new ReflectionClass( $entity )
+      : $this->reflectionClass;
 
-    if( empty( $entityNames ) === false){
+    $entityNames = $reflectionClass
+        ->getAttributes( Entity::class );
+    
+    if( empty( $entityNames ) === false ){
       foreach( $entityNames as $entityName ){
         if( $entityName instanceof ReflectionAttribute ){
           $entityInstance = $entityName->newInstance();
@@ -203,8 +208,8 @@ abstract class AbstractEntityStructure
       }
     } else {
       $this->entityNames = new EntityNames(
-        $this->getEntityShortNames(),
-        $this->getEntityShortNames()
+        $this->getEntityShortNames( $reflectionClass ),
+        $this->getEntityShortNames( $reflectionClass )
       );      
     }
 
