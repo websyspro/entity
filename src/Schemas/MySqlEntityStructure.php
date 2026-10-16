@@ -133,9 +133,7 @@ extends AbstractEntityStructure
     mixed $instance
   ): void {
     if( $instance instanceof HasOneToOne ){
-      $this->oneToOne->items[ $name ] = $this->getEntityNamesByEntity( 
-        new ReflectionClass( $instance->entity  )
-      );
+      $this->oneToOne->items[ $name ] = $instance->entity;
     } 
   }  
 
@@ -144,9 +142,7 @@ extends AbstractEntityStructure
     mixed $instance
   ): void {
     if( $instance instanceof HasOneToMany ){
-      $this->oneToMany->items[ $name ] = $this->getEntityNamesByEntity(
-        new ReflectionClass( $instance->entity  )
-      );
+      $this->oneToMany->items[ $name ] = $instance->entity;
     }
   }
 
