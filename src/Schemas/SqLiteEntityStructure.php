@@ -132,7 +132,7 @@ extends AbstractEntityStructure
     mixed $instance
   ): void {
     if( $instance instanceof HasOneToOne ){
-      $entityInstance = new SqLiteEntityStructure( new ReflectionClass( $instance ));
+      $entityInstance = new SqLiteEntityStructure( new ReflectionClass( $instance->entity ));
       if( $entityInstance instanceof SqLiteEntityStructure ){
         $this->oneToOne->items[ $name ] = $entityInstance->getEntityAlias();
       }
@@ -144,7 +144,7 @@ extends AbstractEntityStructure
     mixed $instance
   ): void {
     if( $instance instanceof HasOneToMany ){
-      $entityInstance = new SqLiteEntityStructure( new ReflectionClass( $instance ));
+      $entityInstance = new SqLiteEntityStructure( new ReflectionClass( $instance->entity ));
       if( $entityInstance instanceof SqLiteEntityStructure ){
         $this->oneToMany->items[ $name ] = $entityInstance->getEntityAlias();
       }
