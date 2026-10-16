@@ -182,12 +182,13 @@ abstract class AbstractEntityStructure
     );
   }
   
-  private function getEntityNames(
-  ): void {
+  public function getEntityNames(
+    string|null $entity = null
+  ): EntityNames {
     $entityNames = $this->reflectionClass
-      ->getAttributes( Entity::class );
+      ->getAttributes( $entity ?? Entity::class );
 
-    if(empty( $entityNames ) === false){
+    if( empty( $entityNames ) === false){
       foreach( $entityNames as $entityName ){
         if( $entityName instanceof ReflectionAttribute ){
           $entityInstance = $entityName->newInstance();
@@ -206,6 +207,8 @@ abstract class AbstractEntityStructure
         $this->getEntityShortNames()
       );      
     }
+
+    return $this->entityNames;
   }
 
   private function getEntityColumns(
