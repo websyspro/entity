@@ -210,8 +210,7 @@ abstract class AbstractEntityStructure
 
           if( $entityInstance instanceof Entity ){
             $entityNames = new EntityNames(
-              $entityInstance->alias,
-              $entityInstance->alias
+              $this->getEntityShortNames( $reflectionClass ), $entityInstance->alias
             );
           }
         }
