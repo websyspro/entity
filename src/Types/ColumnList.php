@@ -27,15 +27,7 @@ extends ColumnAbstract
     Closure $closure
   ): void {}  
   
-  public function leftJoin(
+  public function include(
     Closure $closure
   ): void {}
-
-  public function innerJoin(
-    Closure $closure
-  ): void {}
-  
-  public function rightJoin(
-    Closure $closure
-  ): void {}  
 }
