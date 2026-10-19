@@ -28,6 +28,6 @@ extends ColumnAbstract
   ): void {}  
   
   public function include(
-    Closure $closure
+    mixed ...$closure
   ): void {}
 }
