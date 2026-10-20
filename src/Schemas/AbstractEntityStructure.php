@@ -6,8 +6,6 @@ namespace Websyspro\Entity\Schemas;
 use Websyspro\Connection\Database;
 use Websyspro\Connection\Enums\DriverType;
 use Websyspro\Entity\Decorators\Entity;
-use Websyspro\Entity\Decorators\HasOneToMany;
-use Websyspro\Entity\Decorators\HasOneToOne;
 use Websyspro\Entity\Decorators\Index;
 use Websyspro\Entity\Decorators\Synchronize;
 use Websyspro\Entity\Decorators\Unique;
@@ -18,10 +16,8 @@ use Websyspro\Entity\Types\ColumnAbstract;
 use Websyspro\Entity\Types\ColumnList;
 use ReflectionAttribute;
 use ReflectionClass;
-use Websyspro\Entity\Types\ColumnText;
 use function array_slice;
 use function sprintf;
-use function in_array;
 
 abstract class AbstractEntityStructure
 {
@@ -38,8 +34,7 @@ abstract class AbstractEntityStructure
   public EntityColumns $indexes;
   public EntityColumns $uniques;
   public EntityColumns $foreignKeys;
-  public EntityColumns $oneToOne;
-  public EntityColumns $oneToMany;
+  public EntityColumns $entityLists;
   public EntityColumns $initialInsertDefaults;
   public EntityColumns $initialUpdateDefaults;
   public EntityColumns $initialDeleteDefaults;
@@ -100,17 +95,7 @@ abstract class AbstractEntityStructure
     mixed $instance
   ): void;
 
-  abstract protected function defineOneToOne(
-    string $name,
-    mixed $instance
-  ): void;  
-
-  abstract protected function defineOneToMany(
-    string $name,
-    mixed $instance
-  ): void;  
-
-  abstract protected function defineInitialDefaults(
+  abstract protected function defineEntityList(
     string $name,
     mixed $instance
   ): void;
@@ -152,8 +137,7 @@ abstract class AbstractEntityStructure
     $this->indexes = new EntityColumns();
     $this->uniques = new EntityColumns();
     $this->foreignKeys = new EntityColumns();
-    $this->oneToOne = new EntityColumns();
-    $this->oneToMany = new EntityColumns();
+    $this->entityLists = new EntityColumns();
     $this->initialInsertDefaults = new EntityColumns();
     $this->initialUpdateDefaults = new EntityColumns();
     $this->initialDeleteDefaults = new EntityColumns();
@@ -307,8 +291,7 @@ abstract class AbstractEntityStructure
         $this->defineIndexes( $propertyName, $instance );
         $this->defineUniques( $propertyName, $instance );
         $this->defineForeignKeys( $propertyName, $instance );
-        $this->defineOneToOne( $propertyName, $instance );
-        $this->defineOneToMany( $propertyName, $instance );
+        $this->defineEntityList( $propertyName, $instance );
         $this->defineInitialInsertDefaults( $propertyName, $instance );
         $this->defineInitialUpdateDefaults( $propertyName, $instance );
         $this->defineInitialDeleteDefaults( $propertyName, $instance );

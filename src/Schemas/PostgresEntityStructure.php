@@ -3,6 +3,7 @@
 namespace Websyspro\Entity\Schemas;
 
 use Websyspro\Entity\Decorators\Column;
+use Websyspro\Entity\Decorators\EntityList;
 use Websyspro\Entity\Decorators\ForeignKey;
 use Websyspro\Entity\Decorators\HasOneToMany;
 use Websyspro\Entity\Decorators\HasOneToOne;
@@ -124,21 +125,12 @@ extends AbstractEntityStructure
     }    
   }
 
-  public function defineOneToOne(
+  public function defineEntityList(
     string $name,
     mixed $instance
   ): void {
-    if( $instance instanceof HasOneToOne ){
-      $this->oneToOne->items[ $name ] = $instance->entity;
-    } 
-  }  
-
-  public function defineOneToMany(
-    string $name,
-    mixed $instance
-  ): void {
-    if( $instance instanceof HasOneToMany ){
-      $this->oneToMany->items[ $name ] = $instance->entity;
+    if( $instance instanceof EntityList ){
+      $this->entityLists->items[ $name ] = $instance->entity;
     }
   }  
 
