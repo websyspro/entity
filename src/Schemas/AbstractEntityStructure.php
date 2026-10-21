@@ -12,6 +12,7 @@ use Websyspro\Entity\Decorators\Unique;
 use Websyspro\Entity\Enums\EntityOrigin;
 use Websyspro\Entity\Interfaces\EntityColumns;
 use Websyspro\Entity\Interfaces\EntityNames;
+use Websyspro\Entity\Interfaces\ForeignKeyStructure;
 use Websyspro\Entity\Types\ColumnAbstract;
 use Websyspro\Entity\Types\ColumnList;
 use ReflectionAttribute;
@@ -323,7 +324,6 @@ abstract class AbstractEntityStructure
   }  
 
   public function getPrimaryKey(
-    string $column
   ): string|null {
     [ $columnPrimaryKey ] = array_values(
       $this->primaryKeys->items
@@ -339,4 +339,18 @@ abstract class AbstractEntityStructure
 
     return $columnPrimaryKey;
   }
+
+  public function getColumnForeingKeyByAlias(
+    string $alias
+  ): string|null {
+    foreach( $this->foreignKeys->items as $primaryKey => $foreignKey ){
+      if( $foreignKey instanceof ForeignKeyStructure ){
+        if( $foreignKey->entity->alias === $alias ){
+          return $primaryKey;
+        }
+      }
+    }
+
+    return null;
+  }  
 }
