@@ -314,11 +314,29 @@ abstract class AbstractEntityStructure
     return $this->columns->items[
       array_search( $column, $this->columns->items )
     ];
-  }  
-
+  } 
+  
   public function getColumnType(
     string $column
   ): string {
     return $this->types->items[$column];
   }  
+
+  public function getPrimaryKey(
+    string $column
+  ): string|null {
+    [ $columnPrimaryKey ] = array_values(
+      $this->primaryKeys->items
+    );
+
+    if( isset($this->requireds->items[ $columnPrimaryKey ]) === false ){
+      return null;
+    }
+
+    if( isset($this->generateds->items[ $columnPrimaryKey ]) === false ){
+      return null;
+    }    
+
+    return $columnPrimaryKey;
+  }
 }
