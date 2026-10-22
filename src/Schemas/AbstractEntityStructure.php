@@ -352,5 +352,13 @@ abstract class AbstractEntityStructure
     }
 
     return null;
+  }
+
+  public function getColumnsSelecteds(
+  ): string|null {
+    return array_map(
+      fn( string $column ) => sprintf( "%s_%s", $this->getEntityAlias(), $column ), 
+        $this->columns->items
+    );
   }  
 }
