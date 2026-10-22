@@ -355,7 +355,7 @@ abstract class AbstractEntityStructure
   }
 
   public function getColumnsSelecteds(
-  ): string|null {
+  ): array {
     return array_map(
       fn( string $column ) => sprintf( "%s_%s", $this->getEntityAlias(), $column ), 
         $this->columns->items
