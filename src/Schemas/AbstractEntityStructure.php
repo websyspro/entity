@@ -14,9 +14,17 @@ use Websyspro\Entity\Interfaces\EntityColumns;
 use Websyspro\Entity\Interfaces\EntityNames;
 use Websyspro\Entity\Interfaces\ForeignKeyStructure;
 use Websyspro\Entity\Types\ColumnAbstract;
+use Websyspro\Entity\Types\ColumnAutoIncrement;
+use Websyspro\Entity\Types\ColumnBigInt;
+use Websyspro\Entity\Types\ColumnDecimal;
+use Websyspro\Entity\Types\ColumnDouble;
+use Websyspro\Entity\Types\ColumnFlag;
+use Websyspro\Entity\Types\ColumnFloat;
+use Websyspro\Entity\Types\ColumnInt;
 use Websyspro\Entity\Types\ColumnList;
 use ReflectionAttribute;
 use ReflectionClass;
+use Websyspro\Entity\Types\ColumnSmallInt;
 use function array_slice;
 use function sprintf;
 
@@ -303,6 +311,20 @@ abstract class AbstractEntityStructure
     $this->getGroupList( $this->indexes, Index::class );
     $this->getGroupList( $this->uniques, Unique::class );
   }
+
+  public function numericColumnsType(
+  ): array {
+    return [
+      ColumnInt::class,
+      ColumnBigInt::class,
+      ColumnSmallInt::class,
+      ColumnAutoIncrement::class,
+      ColumnFloat::class,
+      ColumnDouble::class,
+      ColumnDecimal::class,
+      ColumnFlag::class,
+    ];
+  }  
 
   public function getEntityAlias(
   ): string {
