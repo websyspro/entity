@@ -7,6 +7,7 @@ use Closure;
 
 #[Attribute(Attribute::TARGET_PROPERTY)]
 class EntityList
+implements \JsonSerializable
 {
   private array $items = [];
 
@@ -35,6 +36,11 @@ class EntityList
   }
 
   public function getValue(
+  ): array {
+    return $this->items;
+  }
+
+  public function jsonSerialize(
   ): array {
     return $this->items;
   }

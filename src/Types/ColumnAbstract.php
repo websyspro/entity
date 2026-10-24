@@ -3,6 +3,7 @@
 namespace Websyspro\Entity\Types;
 
 abstract class ColumnAbstract
+implements \JsonSerializable
 {
   protected mixed $value = null;
   protected string $columnName = '';
@@ -35,6 +36,11 @@ abstract class ColumnAbstract
   }
 
   public function getValue(
+  ): mixed {
+    return $this->value;
+  }
+
+  public function jsonSerialize(
   ): mixed {
     return $this->value;
   }
