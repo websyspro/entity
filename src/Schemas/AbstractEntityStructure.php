@@ -33,6 +33,7 @@ abstract class AbstractEntityStructure
   public bool $synchronize;
   public EntityNames $entityNames;
   public EntityColumns $columns;
+  public EntityColumns $columnsAlls;
   public EntityColumns $alias;
   public EntityColumns $types;
   public EntityColumns $lengths;
@@ -136,6 +137,7 @@ abstract class AbstractEntityStructure
   private function getInitialArgs(
   ): void {
     $this->columns = new EntityColumns();
+    $this->columnsAlls = new EntityColumns();
     $this->alias = new EntityColumns();
     $this->types = new EntityColumns();
     $this->lengths = new EntityColumns();
@@ -246,6 +248,12 @@ abstract class AbstractEntityStructure
     ]);
   }
 
+  private function setColumnsAll(
+    string $propertyName
+  ): void {
+    $this->columnsAlls->items[] = $propertyName;
+  }
+
   private function setColsList(
     array $types
   ): void {
@@ -282,6 +290,7 @@ abstract class AbstractEntityStructure
       $propertyName = $property->getName();
       $propertyType = $property->getType()->getName();
 
+      $this->setColumnsAll($propertyName);
       if( $propertyName === ColumnList::class ){
         continue;
       }
