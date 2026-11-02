@@ -131,6 +131,7 @@ abstract class AbstractEntityStructure
     $this->getSynchronize();
     $this->getEntityNames();
     $this->getEntityColumns();
+    $this->getEntityColumnsAlls();
     $this->getEntityColumnsAttrs();
   }
 
@@ -248,6 +249,23 @@ abstract class AbstractEntityStructure
     ]);
   }
 
+  private function getEntityColumnsAlls(
+    array $propertys = []
+  ): void {
+    foreach( $this->reflectionClass->getProperties() as $property ){
+      $propertys[
+        $this->reflectionClass->getName() === $property->class 
+          ? EntityOrigin::Self->value : EntityOrigin::Base->value
+      ][] = $property->getName();
+    }
+
+    $this->columnsAlls = new EntityColumns([
+      ...array_slice( $propertys[ EntityOrigin::Base->value ] ?? [], 0, 1 ),
+      ...array_slice( $propertys[ EntityOrigin::Self->value ] ?? [], 0 ),
+      ...array_slice( $propertys[ EntityOrigin::Base->value ] ?? [], 1 ),
+    ]);
+  }
+
   private function setColumnsAll(
     string $propertyName
   ): void {
@@ -290,7 +308,6 @@ abstract class AbstractEntityStructure
       $propertyName = $property->getName();
       $propertyType = $property->getType()->getName();
 
-      $this->setColumnsAll($propertyName);
       if( $propertyName === ColumnList::class ){
         continue;
       }
