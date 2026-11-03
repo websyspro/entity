@@ -405,11 +405,18 @@ abstract class AbstractEntityStructure
   public function getColumnsSelecteds(
   ): array {
     return array_map(
-      fn( string $column ) => sprintf(
-        "%s.%s As %s_%s", 
-        $this->getEntityAlias(), $column, 
-        $this->getEntityAlias(), $column
-      ), $this->columns->items
+      fn( string $column ) => Database::driverIsPostgres()
+        ? sprintf(
+            "%s.%s As \"%s_%s\"",
+            $this->getEntityAlias(), $column,
+            $this->getEntityAlias(), $column
+          )
+        : sprintf(
+            "%s.%s As %s_%s", 
+            $this->getEntityAlias(), $column, 
+            $this->getEntityAlias(), $column
+          ),
+      $this->columns->items
     );
   } 
 }
