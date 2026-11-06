@@ -46,7 +46,7 @@ extends AbstractSchemaManager
 
     $this->commandScritps[] = new CommandScript(
       command: "Create Index {$indexName} On {$this->getAliasFromEntity()} ({$columns})",
-      message: "Creating table {$this->getAliasFromEntity()}"
+      message: "Creating Index {$indexName} on {$this->getAliasFromEntity()}"
     );  
   }  
 
