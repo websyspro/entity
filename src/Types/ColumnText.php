@@ -6,7 +6,7 @@ class ColumnText
 extends ColumnAbstract
 {
   public function equals(
-    string $value
+    mixed $value
   ): void {}
 
   public function in(
