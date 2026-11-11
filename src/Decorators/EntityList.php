@@ -2,48 +2,17 @@
 
 namespace Websyspro\Entity\Decorators;
 
+use Websyspro\Utils\Collection;
 use Attribute;
 use Closure;
 
 #[Attribute(Attribute::TARGET_PROPERTY)]
 class EntityList
-implements \JsonSerializable
 {
-  private array $items = [];
-
   public function __construct(
-    public readonly string $entity = ''
+    public readonly string $entity = "",
+    private array $items = []
   ){}
-
-  public function __set(
-    string $name,
-    mixed $value
-  ): void {
-    $this->$name = $value;
-  }
-
-  public function __get(
-    string $name
-  ): mixed {
-    return $this->$name ?? null;
-  }
-
-  public function setValue(
-    array $value
-  ): static {
-    $this->items = $value;
-    return $this;
-  }
-
-  public function getValue(
-  ): array {
-    return $this->items;
-  }
-
-  public function jsonSerialize(
-  ): array {
-    return $this->items;
-  }
 
   public function any(
     Closure $arrow
@@ -67,5 +36,15 @@ implements \JsonSerializable
   
   public function include(
     mixed ...$closure
-  ): void {}  
+  ): void {} 
+  
+  public function mapper(
+    Closure $closure
+  ): EntityList {
+    return new EntityList(
+      $this->entity, array_map( 
+        $closure, $this->items
+      )
+    );
+  }   
 }
