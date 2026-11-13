@@ -10,9 +10,13 @@ use Closure;
 class EntityList
 {
   public function __construct(
-    public readonly string $entity = "",
-    private array $items = []
+    private string $entity = "",
+    public array $items = []
   ){}
+
+  public function getEntity(): string {
+    return $this->entity;
+  }
 
   public function any(
     Closure $arrow

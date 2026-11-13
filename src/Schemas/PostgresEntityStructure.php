@@ -130,7 +130,7 @@ extends AbstractEntityStructure
     mixed $instance
   ): void {
     if( $instance instanceof EntityList ){
-      $this->entityLists->items[ $name ] = $instance->entity;
+      $this->entityLists->items[ $name ] = $instance->getEntity();
     }
   }  
 

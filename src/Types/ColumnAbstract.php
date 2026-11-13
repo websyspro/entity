@@ -35,6 +35,10 @@ implements \JsonSerializable
     return $this;
   }
 
+  public function __toString(): string {
+    return (string) ( $this->value ?? '' );
+  }
+
   public function getValue(
   ): mixed {
     return $this->value;
