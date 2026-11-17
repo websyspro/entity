@@ -2,6 +2,7 @@
 
 namespace Websyspro\Entity\Decorators;
 
+use Websyspro\ArrowToSql\Repository;
 use Websyspro\Utils\Collection;
 use Attribute;
 use Closure;
@@ -35,7 +36,13 @@ class EntityList
   ): void {}
 
   public function select(
-    Closure $closure
+    Closure|Repository $closure
+  ): EntityList {
+    return $this;
+  }  
+
+  public function as(
+    string $alias
   ): void {}  
   
   public function include(

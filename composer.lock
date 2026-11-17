@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "427efe33d2633ddec7605dd12ca73eee",
+    "content-hash": "b10bc809723440a047e9779804ebdc60",
     "packages": [
         {
             "name": "websyspro/connection",
-            "version": "1.0.20",
+            "version": "1.0.21",
             "source": {
                 "type": "git",
                 "url": "https://github.com/websyspro/connection.git",
-                "reference": "11913cbced332cda05cc0099e562d9a170e78567"
+                "reference": "8a9b953c10c3658b2b9c839c262da88650457a9c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/websyspro/connection/zipball/11913cbced332cda05cc0099e562d9a170e78567",
-                "reference": "11913cbced332cda05cc0099e562d9a170e78567",
+                "url": "https://api.github.com/repos/websyspro/connection/zipball/8a9b953c10c3658b2b9c839c262da88650457a9c",
+                "reference": "8a9b953c10c3658b2b9c839c262da88650457a9c",
                 "shasum": ""
             },
             "require": {
@@ -43,9 +43,9 @@
             "description": "Connection to MySQL, PostgreSQL, and SQL Server databases",
             "support": {
                 "issues": "https://github.com/websyspro/connection/issues",
-                "source": "https://github.com/websyspro/connection/tree/1.0.20"
+                "source": "https://github.com/websyspro/connection/tree/1.0.21"
             },
-            "time": "2026-11-11T00:38:46+00:00"
+            "time": "2026-11-13T23:25:17+00:00"
         },
         {
             "name": "websyspro/package",
