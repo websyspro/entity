@@ -33,6 +33,8 @@ extends AbstractEntityStructure
     if( $this->isColumnType( $type )){
       $this->types->items[ $name ] = $type;
     }
+
+    $this->typesAlls->items[ $name ] = $type;
   }
 
   public function defineGenerateds(

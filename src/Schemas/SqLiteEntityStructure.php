@@ -34,7 +34,9 @@ extends AbstractEntityStructure
       if( in_array( $type, [ ColumnUUID::class ])){
         $this->lengths->items[ $name ] = 36;
       }
-    } 
+    }
+    
+    $this->typesAlls->items[ $name ] = $type;
   }
 
   public function defineGenerateds(

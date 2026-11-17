@@ -36,6 +36,7 @@ abstract class AbstractEntityStructure
   public EntityColumns $columnsAlls;
   public EntityColumns $alias;
   public EntityColumns $types;
+  public EntityColumns $typesAlls;
   public EntityColumns $lengths;
   public EntityColumns $precisions;
   public EntityColumns $requireds;
@@ -141,6 +142,7 @@ abstract class AbstractEntityStructure
     $this->columnsAlls = new EntityColumns();
     $this->alias = new EntityColumns();
     $this->types = new EntityColumns();
+    $this->typesAlls = new EntityColumns();
     $this->lengths = new EntityColumns();
     $this->precisions = new EntityColumns();
     $this->requireds = new EntityColumns();
@@ -368,7 +370,7 @@ abstract class AbstractEntityStructure
   public function getColumnType(
     string $column
   ): string {
-    return $this->types->items[$column];
+    return $this->typesAlls->items[$column];
   }  
 
   public function getPrimaryKey(

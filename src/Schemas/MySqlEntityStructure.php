@@ -5,8 +5,6 @@ namespace Websyspro\Entity\Schemas;
 use Websyspro\Entity\Decorators\Column;
 use Websyspro\Entity\Decorators\EntityList;
 use Websyspro\Entity\Decorators\ForeignKey;
-use Websyspro\Entity\Decorators\HasOneToMany;
-use Websyspro\Entity\Decorators\HasOneToOne;
 use Websyspro\Entity\Decorators\Index;
 use Websyspro\Entity\Decorators\InitialDeleteDefault;
 use Websyspro\Entity\Decorators\InitialInsertDefault;
@@ -37,6 +35,8 @@ extends AbstractEntityStructure
         $this->lengths->items[ $name ] = 36;
       }
     }
+
+    $this->typesAlls->items[ $name ] = $type;
   }
 
   public function defineGenerateds(
