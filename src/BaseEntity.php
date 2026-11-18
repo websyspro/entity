@@ -16,6 +16,10 @@ abstract class BaseEntity {
     mixed $expr
   ): void {}
 
+  public function count(
+    mixed $expr
+  ): void {}  
+
   public function include(
     mixed ...$closure
   ): void {}
