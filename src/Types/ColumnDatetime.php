@@ -24,4 +24,17 @@ extends ColumnAbstract
 
   public function toDate(
   ): void {}
+
+  public function year(
+  ): void {}  
+
+  public function month(
+  ): void {}  
+
+  public function day(
+  ): void {}
+  
+  public function dateFormat(
+    string $formatted
+  ): void {}  
 }

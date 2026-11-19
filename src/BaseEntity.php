@@ -35,4 +35,8 @@ abstract class BaseEntity {
   public function include(
     mixed ...$closure
   ): void {}
+
+  public function distinct(
+    mixed $expr
+  ): void {}  
 }

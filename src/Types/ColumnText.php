@@ -39,4 +39,8 @@ extends ColumnAbstract
   
   public function trim(
   ): void {}
+
+  public function substring(
+    int $start, int $length
+  ): void {}
 }

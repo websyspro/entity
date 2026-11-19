@@ -2,8 +2,10 @@
 
 namespace Websyspro\Entity\Types;
 
+use JsonSerializable;
+
 abstract class ColumnAbstract
-implements \JsonSerializable
+implements JsonSerializable
 {
   protected mixed $value = null;
   protected string $columnName = '';
@@ -52,4 +54,25 @@ implements \JsonSerializable
   public function as(
     string $alias    
   ): void {}
+
+  public function coalesce(
+    mixed $mixed1, mixed $mixed2
+  ): void {}
+
+  public function case(
+  ): ColumnAbstract {
+    return $this;
+  }  
+
+  public function when(
+    mixed $compare, $value
+  ): ColumnAbstract {
+    return $this;
+  }
+
+  public function else(
+    mixed $compare, $value
+  ): ColumnAbstract {
+    return $this;
+  }  
 }
