@@ -18,6 +18,18 @@ abstract class BaseEntity {
 
   public function count(
     mixed $expr
+  ): void {}
+  
+  public function avg(
+    mixed $expr
+  ): void {}
+  
+  public function min(
+    mixed $expr
+  ): void {}  
+
+  public function max(
+    mixed $expr
   ): void {}  
 
   public function include(
