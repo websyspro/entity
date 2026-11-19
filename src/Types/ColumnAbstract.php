@@ -56,7 +56,7 @@ implements JsonSerializable
   ): void {}
 
   public function coalesce(
-    mixed $mixed1, mixed $mixed2
+    mixed $mixed1
   ): void {}
 
   public function case(
