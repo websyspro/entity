@@ -71,7 +71,7 @@ implements JsonSerializable
   }
 
   public function else(
-    mixed $compare, $value
+    mixed $value
   ): ColumnAbstract {
     return $this;
   }  
